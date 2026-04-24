@@ -1,0 +1,33 @@
+{
+  "output_format": "react_project",
+  "complexity": {
+    "total": 66,
+    "components": 32,
+    "interactions": 9,
+    "pages": 15,
+    "data_flow": 10
+  },
+  "intent_plan": {
+    "summary": "基于意图与多模态素材重建页面，并保证可维护结构",
+    "ui_requirements": [
+      "保持输入内容语义与视觉一致性"
+    ],
+    "technical_requirements": [
+      "LangChain 初始化失败，已回退规则模式: No module named 'langchain_openai'"
+    ],
+    "complexity_bias": 0,
+    "output_hint": null,
+    "confidence": 0.5
+  },
+  "warnings": [
+    "模型输出解析为空，使用回退模板"
+  ],
+  "files": [
+    "eg.html\\package.json",
+    "eg.html\\index.html",
+    "eg.html\\src\\main.jsx",
+    "eg.html\\src\\App.jsx",
+    "eg.html\\src\\styles.css"
+  ],
+  "generated_at": "2026-04-24T02:22:34.729767"
+}

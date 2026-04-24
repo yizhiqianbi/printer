@@ -1,151 +1,116 @@
-# 网页复印机 (Web Page Printer)
+# Web Printer
 
-一个使用 Claude API 的智能网页复印工具，能够获取任意 URL 的内容并生成功能相似的 HTML 文件。
+将网页复刻原型升级为一个可扩展项目：
+- 输入从单 URL 扩展为 意图说明 + 多个 URL/截图/MHTML
+- 输出会根据需求复杂度自动选择 单 HTML / 多页面 HTML / React 项目
+- 引入 LangChain（可选）强化意图理解和规划
 
-## 功能特点
+## 核心能力
 
-- 🌐 自动获取并解析网页内容
-- 🧠 使用 Claude Opus 4 理解页面结构和功能
-- 🎨 生成带有现代化 CSS 样式的 HTML
-- 📱 响应式设计，适配移动端
-- 📋 保留表单、链接、图片等元素
-- ✨ 添加基本的 JavaScript 交互功能
-- 🚀 支持两种模式：快速模式（requests）和完整模式（Selenium）
+1. 多模态输入
+- 必填: 意图说明文字
+- 可选多个输入: URL、截图文件（png/jpg/webp 等）、mhtml/mht 文件
 
-## 两种工具对比
+2. 复杂度驱动输出
+- 低复杂度: single_html
+- 中复杂度: multi_html
+- 高复杂度: react_project
 
-### web_printer.py - 快速模式(已移除)
-- ✅ 速度快，无需浏览器
-- ✅ 适合静态HTML页面
-- ❌ 无法处理JavaScript渲染的内容
-- 使用场景：简单网页、博客、文档站
+3. LangChain 增强
+- 使用 LangChain + OpenAI 进行意图规划
+- LangChain 不可用时自动回退到规则引擎
 
-### web_printer_selenium.py - 完整模式
-- ✅ 完整渲染JavaScript应用
-- ✅ 支持React/Vue/Angular等SPA
-- ✅ 提取更多内容和交互元素
-- ❌ 需要安装Chrome和ChromeDriver
-- ❌ 速度较慢
-- 使用场景：现代Web应用、动态内容网站
+## 项目结构
+
+- web_printer_selenium.py: CLI 入口（兼容旧版 URL 调用）
+- src/input_parser.py: 多模态输入解析
+- src/page_extractor.py: URL 渲染采集 + MHTML 提取 + 结构摘要
+- src/complexity_analyzer.py: 页面复杂度评分与输出决策
+- src/intent_planner.py: LangChain 意图理解与规划
+- src/artifact_generator.py: 代码生成（单页/多页/React）
+- src/pipeline.py: 端到端主流程编排
 
 ## 安装
 
 ```bash
-# 安装依赖
 pip install -r requirements.txt
-
-# 如果使用Selenium模式，还需要安装Chrome和ChromeDriver
-# Windows: 下载ChromeDriver并添加到PATH
-# Mac: brew install chromedriver
-# Linux: apt-get install chromium-chromedriver
-
-# 设置 API Key
-export ANTHROPIC_API_KEY='your-api-key-here'  # Linux/Mac
-set ANTHROPIC_API_KEY=your-api-key-here       # Windows CMD
-$env:ANTHROPIC_API_KEY='your-api-key-here'    # Windows PowerShell
 ```
 
-## 使用方法
-
-### 快速模式（推荐用于静态页面）
+环境变量:
 
 ```bash
-# 基本用法
-python web_printer.py https://example.com
+# 必填
+OPENAI_API_KEY=your_api_key
+OPENAI_BASE_URL=https://api.openai.com/v1
 
-# 指定输出文件名
-python web_printer.py https://example.com output.html
-
-# 示例
-python web_printer.py https://news.ycombinator.com
-python web_printer.py https://www.miradesktop.com my_page.html
+# 可选
+OPENAI_MODEL=gpt-4o
+HEADLESS=true
+WAIT_TIME=5
+MAX_TOKENS=16000
+OUTPUT_DIR=output
+USE_LANGCHAIN=true
 ```
 
-### 完整模式（推荐用于JavaScript应用）
+你可以复制 `.env.example` 为 `.env` 并填入你的配置：
 
 ```bash
-# 基本用法
-python web_printer_selenium.py https://example.com
-
-# 指定输出文件和等待时间
-python web_printer_selenium.py https://example.com output.html 10
-
-# 示例
-python web_printer_selenium.py https://react-app.com
-python web_printer_selenium.py https://vue-site.com my_page.html 8
+cp .env.example .env
 ```
 
-## 工作原理
+## 用法
 
-### 快速模式流程
+### 新模式（推荐）
 
-1. **获取网页**: 使用 requests 获取目标 URL 的 HTML 内容
-2. **解析结构**: 使用 BeautifulSoup 提取关键信息：
-   - 标题和元数据
-   - 标题层级结构 (h1-h6)
-   - 主要文本内容
-   - 链接、图片、表单
-   - 页面语义结构
-3. **AI 生成**: 将提取的信息发送给 Claude API，生成功能相似的 HTML
-4. **保存文件**: 将生成的 HTML 保存到本地文件
+```bash
+python web_printer_selenium.py \
+  --intent "做一个简洁的产品官网，强调下载按钮和价格卡" \
+  --input https://example.com \
+  --input ./shots/home.png \
+  --input ./archive/page.mhtml \
+  --output ./output/demo \
+  --show-plan
+```
 
-### 完整模式流程
+参数说明:
+- --intent: 用户目标/意图描述
+- --input: 可重复传入，支持 URL、截图路径、mhtml/mht
+- --output: 输出文件或输出目录
+- --wait-time: Selenium 渲染等待时间
+- --disable-langchain: 禁用 LangChain
+- --headless / --no-headless: 浏览器模式
 
-1. **启动浏览器**: 使用 Selenium 启动 Chrome 浏览器
-2. **渲染页面**: 等待 JavaScript 完全执行，页面完整渲染
-3. **滚动加载**: 自动滚动触发懒加载内容
-4. **提取信息**: 从渲染后的 DOM 提取所有可见内容
-5. **AI 生成**: 使用 Claude API 生成高质量 HTML
-6. **保存文件**: 保存到本地
+### 兼容模式（旧调用）
 
-## 提取的信息
+```bash
+python web_printer_selenium.py https://example.com output.html 5
+```
 
-### 快速模式
-- 页面标题和描述
-- 标题层级结构
-- 主要文本内容（8000字符）
-- 链接（30个）
-- 图片（15个）
-- 表单结构
-- CSS类名
+## 输出类型
 
-### 完整模式
-- 所有快速模式的信息
-- 渲染后的完整内容（10000字符）
-- 按钮和交互元素
-- 更多链接（40个）
-- 更多图片（20个）
-- 动态加载的内容
+1. single_html
+- 输出一个 HTML 文件，可直接双击打开
 
-## 生成的 HTML 特性
+2. multi_html
+- 输出多个互相链接的 HTML 页面
 
-- ✅ 完整的 HTML5 文档结构
-- ✅ 现代化 CSS 样式
-- ✅ 响应式设计
-- ✅ 语义化标签
-- ✅ 基本的 JavaScript 交互
-- ✅ 表单验证（如果有表单）
+3. react_project
+- 输出可运行的 React 多文件项目（Vite 结构）
+- 默认包含:
+  - package.json
+  - index.html
+  - src/main.jsx
+  - src/App.jsx
+  - src/styles.css
+
+## 运行结果
+
+每次执行会生成:
+- 代码文件（单文件或多文件）
+- run_report.json（复杂度评分、意图规划、警告、产物清单）
 
 ## 注意事项
 
-- 需要有效的 Anthropic API Key
-- 生成的 HTML 是对原网页的"功能模仿"，不是完全复制
-- Selenium 模式需要安装 Chrome 浏览器和 ChromeDriver
-- 某些动态内容和复杂交互可能无法完全还原
-- 受 API token 限制，超大页面可能被截断
-
-## 示例输出
-
-运行后会生成类似 `printed_example_com.html` 的文件，包含：
-- 原网页的内容结构
-- 美观的现代化样式
-- 可用的链接和表单
-- 响应式布局
-
-## 技术栈
-
-- Python 3.7+
-- Anthropic Claude API (Opus 4)
-- BeautifulSoup4 (HTML 解析)
-- Requests (HTTP 请求)
-- Selenium (浏览器自动化，可选)
+- URL 采集依赖 Chrome + ChromeDriver
+- 截图会作为多模态参考输入给模型
+- 模型输出不可解析时，系统会自动回退到安全模板，保证有可用结果
