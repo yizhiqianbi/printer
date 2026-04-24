@@ -7,9 +7,8 @@ from typing import Dict, Any
 
 class OutputFormat(Enum):
     """输出格式"""
-    SINGLE_HTML = "single_html"  # 单个 HTML 文件
-    MULTI_HTML = "multi_html"    # 多个 HTML 页面
-    REACT_PROJECT = "react_project"  # React 项目
+    SINGLE_HTML = "single_html"  # 单个 HTML 文件（所有内容内联）
+    MULTI_HTML = "multi_html"    # 多个 HTML 页面（独立文件）
 
 
 @dataclass
@@ -23,12 +22,10 @@ class ComplexityScore:
 
     def get_format(self) -> OutputFormat:
         """根据复杂度决定输出格式"""
-        if self.total < 30:
+        if self.total < 40:
             return OutputFormat.SINGLE_HTML
-        elif self.total < 60:
-            return OutputFormat.MULTI_HTML
         else:
-            return OutputFormat.REACT_PROJECT
+            return OutputFormat.MULTI_HTML
 
 
 class ComplexityAnalyzer:

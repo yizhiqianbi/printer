@@ -11,6 +11,7 @@ from .complexity_analyzer import ComplexityAnalyzer, ComplexityScore, OutputForm
 from .config import Config
 from .input_parser import InputParser
 from .intent_planner import IntentPlan, IntentPlanner
+from .logger import get_logger
 from .page_extractor import ExtractionResult, PageExtractor
 
 
@@ -54,15 +55,33 @@ class WebPrinterPipeline:
         inputs: List[str],
         output_path: Optional[str] = None,
         wait_time: Optional[int] = None,
+        auto_screenshot: Optional[bool] = None,
     ) -> PipelineResult:
-        """运行端到端流程。"""
+        """运行端到端流程。
+
+        Args:
+            intent: 用户意图描述
+            inputs: 输入列表（URL、截图路径、MHTML 路径）
+            output_path: 输出路径
+            wait_time: 等待时间（秒）
+            auto_screenshot: 是否为 URL 自动截图（None 则使用配置文件默认值）
+        """
+        # 如果未指定，使用配置文件中的默认值
+        if auto_screenshot is None:
+            auto_screenshot = self.config.auto_screenshot
+
         print(f"\n{'='*60}")
         print(f"Web Printer Pipeline 开始执行")
         print(f"{'='*60}")
         print(f"Intent: {intent}")
         print(f"Inputs: {inputs}")
         print(f"Output Path: {output_path}")
+        print(f"Auto Screenshot: {auto_screenshot}")
         print(f"{'='*60}\n")
+
+        # 初始化会话日志
+        logger = get_logger()
+        logger.init_session()
 
         parsed = self.input_parser.parse(intent=intent, inputs=inputs)
         print(f"\n[STEP 1] 输入解析完成:")
@@ -72,6 +91,7 @@ class WebPrinterPipeline:
         extraction = self.extractor.extract_from_parsed_input(
             parsed_input=parsed,
             wait_time=wait_time or self.config.default_wait_time,
+            auto_screenshot=auto_screenshot,
         )
 
         if not extraction.pages and not extraction.screenshots:
@@ -81,6 +101,28 @@ class WebPrinterPipeline:
         print(f"  - Pages: {len(extraction.pages)}")
         print(f"  - Screenshots: {len(extraction.screenshots)}")
         print(f"  - Warnings: {len(extraction.warnings)}")
+
+        # 记录采集结果
+        logger.log_extraction({
+            "pages_count": len(extraction.pages),
+            "screenshots_count": len(extraction.screenshots),
+            "warnings": extraction.warnings,
+            "pages_summary": [
+                {
+                    "source": page.get("source"),
+                    "title": page.get("title"),
+                    "structure": page.get("structure"),
+                }
+                for page in extraction.pages
+            ],
+        })
+
+        # 保存截图到日志目录
+        for idx, shot in enumerate(extraction.screenshots):
+            screenshot_bytes = shot.get("bytes")
+            if screenshot_bytes:
+                filename = shot.get("filename", f"screenshot_{idx}.png")
+                logger.save_screenshot(screenshot_bytes, filename)
 
         merged_page_info = self._merge_pages_for_complexity(extraction)
         base_complexity = self.complexity_analyzer.analyze(merged_page_info)
@@ -92,6 +134,16 @@ class WebPrinterPipeline:
         print(f"  - Pages: {base_complexity.pages}")
         print(f"  - Data Flow: {base_complexity.data_flow}")
         print(f"  - Suggested Format: {base_complexity.get_format().value}")
+
+        # 记录复杂度分析
+        logger.log_complexity({
+            "total": base_complexity.total,
+            "components": base_complexity.components,
+            "interactions": base_complexity.interactions,
+            "pages": base_complexity.pages,
+            "data_flow": base_complexity.data_flow,
+            "suggested_format": base_complexity.get_format().value,
+        })
 
         planner_context = self._build_planner_context(extraction)
         intent_plan = self.intent_planner.plan(intent=intent, extraction_context=planner_context)
@@ -157,6 +209,29 @@ class WebPrinterPipeline:
         print(f"\n[STEP 8] 文件写入完成:")
         print(f"  - Output Root: {output_root}")
         print(f"  - Written Files: {len(written_files)}")
+
+        # 记录会话摘要
+        logger.log_session_summary({
+            "intent": intent,
+            "inputs": inputs,
+            "output_path": output_root,
+            "output_format": output_format.value,
+            "files_count": len(written_files),
+            "warnings_count": len(warnings),
+            "complexity": {
+                "total": enhanced_complexity.total,
+                "components": enhanced_complexity.components,
+                "interactions": enhanced_complexity.interactions,
+                "pages": enhanced_complexity.pages,
+                "data_flow": enhanced_complexity.data_flow,
+            },
+            "intent_plan": {
+                "summary": intent_plan.summary,
+                "complexity_bias": intent_plan.complexity_bias,
+                "confidence": intent_plan.confidence,
+            },
+        })
+
         print(f"\n{'='*60}")
         print(f"Pipeline 执行完成")
         print(f"{'='*60}\n")

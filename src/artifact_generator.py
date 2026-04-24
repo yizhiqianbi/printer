@@ -10,6 +10,7 @@ from openai import OpenAI
 
 from .complexity_analyzer import OutputFormat
 from .intent_planner import IntentPlan
+from .logger import get_logger
 
 
 @dataclass
@@ -78,17 +79,51 @@ class ArtifactGenerator:
             )
 
             raw_response = response.choices[0].message.content
+            finish_reason = response.choices[0].finish_reason
+
             print(f"\n[DEBUG] API 响应成功:")
             print(f"  - Response Length: {len(raw_response)} chars")
+            print(f"  - Finish Reason: {finish_reason}")
             print(f"  - First 500 chars: {raw_response[:500]}")
 
-            parsed_files = self._parse_files(raw_response)
-            print(f"\n[DEBUG] 文件解析结果:")
-            print(f"  - Parsed Files: {len(parsed_files)}")
-            if parsed_files:
-                print(f"  - File Paths: {list(parsed_files.keys())}")
+            # 检查是否因为长度限制被截断
+            if finish_reason == "length":
+                error_msg = (
+                    f"模型输出因达到 max_tokens 限制 ({self.max_tokens}) 而被截断。"
+                    f"响应长度: {len(raw_response)} 字符。"
+                    f"请检查日志文件查看完整输出，或增加 MAX_TOKENS 配置。"
+                )
+                print(f"\n[ERROR] {error_msg}")
+                warnings.append(error_msg)
+                # 仍然尝试解析，但如果失败则报错而不是回退
+                parsed_files = self._parse_files(raw_response)
+                if not parsed_files:
+                    raise RuntimeError(error_msg)
+                files = self._normalize_files(parsed_files)
+            else:
+                # 记录 API 调用
+                logger = get_logger()
+                logger.log_api_call(
+                    agent_type="artifact_generator",
+                    model=self.model,
+                    base_url=str(self.client.base_url),
+                    prompt=prompt,
+                    response=raw_response,
+                    metadata={
+                        "max_tokens": self.max_tokens,
+                        "output_format": output_format.value,
+                        "image_count": len(content_parts) - 1,
+                        "finish_reason": finish_reason,
+                    },
+                )
 
-            files = self._normalize_files(parsed_files)
+                parsed_files = self._parse_files(raw_response)
+                print(f"\n[DEBUG] 文件解析结果:")
+                print(f"  - Parsed Files: {len(parsed_files)}")
+                if parsed_files:
+                    print(f"  - File Paths: {list(parsed_files.keys())}")
+
+                files = self._normalize_files(parsed_files)
         except Exception as exc:
             print(f"\n[ERROR] 模型调用失败: {exc}")
             import traceback
@@ -120,44 +155,67 @@ class ArtifactGenerator:
         compact_context = self._compact_context(extraction_context)
 
         format_requirements = {
-            OutputFormat.SINGLE_HTML: "输出 1 个可直接打开的 HTML 文件（建议 index.html）",
-            OutputFormat.MULTI_HTML: "输出至少 2 个 HTML 文件，包含清晰导航与互链",
-            OutputFormat.REACT_PROJECT: (
-                "输出可运行的 React 项目文件，至少包含 "
-                "package.json、index.html、src/main.jsx、src/App.jsx、src/styles.css"
+            OutputFormat.SINGLE_HTML: (
+                "输出 1 个完全独立的 HTML 文件，所有内容必须内联：\n"
+                "- CSS 必须写在 <style> 标签内\n"
+                "- JavaScript 必须写在 <script> 标签内\n"
+                "- 如需使用库（如 jQuery、Chart.js 等），通过 CDN 引入\n"
+                "- 不允许外部文件引用（除 CDN）\n"
+                "- 文件可以直接双击在浏览器中打开运行"
+            ),
+            OutputFormat.MULTI_HTML: (
+                "输出 2-5 个独立的 HTML 文件，每个文件都是完整的：\n"
+                "- 每个 HTML 文件都包含完整的 <head>、<style>、<script>\n"
+                "- CSS 和 JavaScript 必须内联在各自的 HTML 文件中\n"
+                "- 如需使用库，通过 CDN 引入\n"
+                "- 页面间通过相对路径链接（如 <a href=\"page2.html\">）\n"
+                "- 每个文件都可以独立在浏览器中打开"
             ),
         }
 
         return (
-            "你是资深前端工程师。请基于用户意图与页面线索生成代码。\n"
-            "必须严格返回 JSON，不要 markdown，不要解释。\n"
-            "JSON 格式:\n"
-            "{\n"
-            "  \"files\": [\n"
-            "    {\"path\": \"relative/path\", \"content\": \"file text\"}\n"
-            "  ]\n"
-            "}\n\n"
+            "你是资深前端工程师。请基于用户意图与页面线索实现一个功能完整的web前端，必须具体实现全部功能，让用户直接可用。\n\n"
             f"目标输出类型: {output_format.value}\n"
             f"格式要求: {format_requirements[output_format]}\n"
             f"用户意图: {intent}\n"
             f"规划摘要: {intent_plan.summary}\n"
-            f"UI 要求: {json.dumps(intent_plan.ui_requirements, ensure_ascii=False)}\n"
-            f"技术要求: {json.dumps(intent_plan.technical_requirements, ensure_ascii=False)}\n"
+            f"UI 说明: {json.dumps(intent_plan.ui_requirements, ensure_ascii=False)}\n"
+            f"技术说明: {json.dumps(intent_plan.technical_requirements, ensure_ascii=False)}\n"
+            f"交互性要求: {'必须实现' if intent_plan.requires_interactivity else '可选'}\n"
+            f"需要实现的交互功能: {json.dumps(intent_plan.interaction_features, ensure_ascii=False)}\n"
             f"上下文摘要: {json.dumps(compact_context, ensure_ascii=False, indent=2)}\n\n"
-            "补充要求:\n"
-            "1. 保留可见文本语义和页面区块层级。\n"
-            "2. 使用现代化布局与响应式样式。\n"
-            "3. 路径必须是相对路径，不得使用绝对路径。\n"
-            "4. 所有文件内容必须完整可用，不要省略。\n"
-            "5. 不要输出 files 之外的字段。\n\n"
-            "视觉还原要求（重要）:\n"
-            "1. 严格还原原页面的配色方案（背景色、文字色、按钮色）。\n"
-            "2. 保持原页面的字体大小、粗细、行高比例。\n"
-            "3. 精确复刻布局间距（padding、margin、gap）。\n"
-            "4. 还原圆角、阴影、边框等视觉细节。\n"
-            "5. 保持按钮、卡片等组件的视觉层次感。\n"
-            "6. 使用渐变、阴影等效果提升视觉质量。\n"
-            "7. 确保响应式设计在不同屏幕尺寸下都美观。"
+            "注意:\n"
+            "1. 尽可能实现网页中需要的功能。如果采集的信息不足，你需要推断并实现。\n"
+            "2. 对于涉及文件或设备交互的功能（如图片上传、文件选择、相机调用等），在 HTML 中实现：\n"
+            "   - 使用 <input type=\"file\"> 实现文件选择和上传\n"
+            "   - 使用 <input type=\"file\" accept=\"image/*\" capture=\"camera\"> 调用相机\n"
+            "   - 使用 localStorage/sessionStorage 或内存数组管理数据\n"
+            "3. 除非特殊情况，否则你应该创建<script>块并给出交互逻辑的完整实现。交互结果应当是用户可见的，而非console日志。\n"
+            + (
+                "\n4. **关键要求 - 必须实现交互功能**:\n"
+                "   - 页面包含交互元素（按钮、表单、输入框等），必须实现完整的功能逻辑\n"
+                "   - 所有按钮必须有实际的点击事件处理，不能只是静态展示\n"
+                "   - 如需复杂交互，可通过 CDN 引入轻量级库（如 Alpine.js、Petite Vue 等）\n"
+                "   - 确保用户可以实际使用这些功能，而不是空壳界面\n"
+                if intent_plan.requires_interactivity
+                else ""
+            )
+            + "\n\n输出格式要求:\n"
+            "使用代码块格式输出每个文件，格式如下：\n"
+            "```filepath:relative/path/to/file.ext\n"
+            "文件内容\n"
+            "```\n\n"
+            "示例:\n"
+            "```filepath:index.html\n"
+            "<!DOCTYPE html>\n"
+            "<html>...</html>\n"
+            "```\n\n"
+            "```filepath:page2.html\n"
+            "<!DOCTYPE html>\n"
+            "<html>...</html>\n"
+            "```\n\n"
+            "- 代码块标记必须是 ```filepath:路径\n"
+            "- 不要添加任何解释文字，只输出代码块\n"
         )
 
     @staticmethod
@@ -204,9 +262,24 @@ class ArtifactGenerator:
 
     @staticmethod
     def _parse_files(response_text: str) -> Dict[str, str]:
-        data = ArtifactGenerator._safe_json(response_text)
+        """从响应中解析文件。优先使用代码块格式，兼容 JSON 格式。"""
         files: Dict[str, str] = {}
 
+        # 方法1: 解析 ```filepath:path 格式的代码块
+        filepath_pattern = r"```filepath:([^\n]+)\n(.*?)```"
+        matches = re.findall(filepath_pattern, response_text, re.DOTALL)
+
+        if matches:
+            print(f"[DEBUG] Found {len(matches)} filepath code blocks")
+            for path, content in matches:
+                path = path.strip()
+                if path:
+                    files[path] = content
+            if files:
+                return files
+
+        # 方法2: 尝试解析 JSON 格式（兼容旧格式）
+        data = ArtifactGenerator._safe_json(response_text)
         if isinstance(data, dict):
             file_items = data.get("files", [])
             if isinstance(file_items, list):
@@ -222,11 +295,12 @@ class ArtifactGenerator:
         if files:
             return files
 
-        # 兜底：尝试从 markdown 代码块中提取单个 HTML
+        # 方法3: 兜底 - 尝试从 markdown 代码块中提取单个 HTML
         html_match = re.search(r"```html\s*(.*?)\s*```", response_text, re.DOTALL)
         if html_match:
             return {"index.html": html_match.group(1)}
 
+        # 方法4: 兜底 - 检查是否直接是 HTML
         stripped = response_text.strip()
         if stripped.startswith("<!DOCTYPE") or stripped.startswith("<html"):
             return {"index.html": stripped}
@@ -236,24 +310,68 @@ class ArtifactGenerator:
     @staticmethod
     def _safe_json(text: str) -> Dict[str, Any]:
         stripped = text.strip()
+
+        # 尝试直接解析
         try:
             return json.loads(stripped)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[DEBUG] Direct JSON parse failed: {e}")
 
+        # 尝试从 markdown 代码块提取
         fenced = re.search(r"```json\s*(.*?)\s*```", stripped, re.DOTALL)
         if fenced:
             try:
                 return json.loads(fenced.group(1))
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[DEBUG] Fenced JSON parse failed: {e}")
 
-        obj_match = re.search(r"\{.*\}", stripped, re.DOTALL)
-        if obj_match:
-            try:
-                return json.loads(obj_match.group(0))
-            except Exception:
-                pass
+        # 使用更精确的方法：逐字符解析找到第一个完整的 JSON 对象
+        try:
+            start_idx = stripped.find('{')
+            if start_idx != -1:
+                brace_count = 0
+                in_string = False
+                escape_next = False
+
+                for i in range(start_idx, len(stripped)):
+                    char = stripped[i]
+
+                    if escape_next:
+                        escape_next = False
+                        continue
+
+                    if char == '\\':
+                        escape_next = True
+                        continue
+
+                    if char == '"' and not escape_next:
+                        in_string = not in_string
+                        continue
+
+                    if not in_string:
+                        if char == '{':
+                            brace_count += 1
+                        elif char == '}':
+                            brace_count -= 1
+                            if brace_count == 0:
+                                json_str = stripped[start_idx:i+1]
+                                print(f"[DEBUG] Extracted JSON length: {len(json_str)} chars")
+                                try:
+                                    return json.loads(json_str)
+                                except json.JSONDecodeError as je:
+                                    print(f"[DEBUG] JSON decode error: {je}")
+                                    print(f"[DEBUG] Error at position {je.pos}")
+                                    if je.pos < len(json_str):
+                                        context_start = max(0, je.pos - 100)
+                                        context_end = min(len(json_str), je.pos + 100)
+                                        print(f"[DEBUG] Context around error: {json_str[context_start:context_end]}")
+                                    # 尝试使用 strict=False 解析
+                                    try:
+                                        return json.loads(json_str, strict=False)
+                                    except Exception:
+                                        pass
+        except Exception as e:
+            print(f"[DEBUG] Character-by-character JSON parse failed: {e}")
 
         return {}
 
@@ -289,16 +407,6 @@ class ArtifactGenerator:
                 files.update(fallback)
             return files
 
-        # React 项目
-        required = {
-            "package.json": self._default_package_json(),
-            "index.html": self._default_index_html(),
-            "src/main.jsx": self._default_main_jsx(),
-            "src/App.jsx": self._default_app_jsx(intent),
-            "src/styles.css": self._default_styles_css(),
-        }
-        for path, content in required.items():
-            files.setdefault(path, content)
         return files
 
     def _fallback_files(self, intent: str, output_format: OutputFormat) -> Dict[str, str]:
@@ -307,114 +415,72 @@ class ArtifactGenerator:
                 "index.html": (
                     "<!DOCTYPE html>\n"
                     "<html lang=\"zh-CN\">\n"
-                    "<head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>"
-                    "<title>Generated Page</title>"
-                    "<style>body{font-family:system-ui;margin:0;padding:40px;background:#f5f7fb;color:#1c2430;}"
-                    ".card{max-width:920px;margin:0 auto;background:#fff;border-radius:16px;padding:28px;box-shadow:0 20px 50px rgba(22,37,66,.08);}"
-                    "h1{margin:0 0 12px;}p{line-height:1.7;color:#475569;}</style></head>\n"
-                    f"<body><main class=\"card\"><h1>页面草稿</h1><p>{intent}</p></main></body></html>"
+                    "<head>\n"
+                    "  <meta charset=\"UTF-8\"/>\n"
+                    "  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>\n"
+                    "  <title>Generated Page</title>\n"
+                    "  <style>\n"
+                    "    body { font-family: system-ui; margin: 0; padding: 40px; background: #f5f7fb; color: #1c2430; }\n"
+                    "    .card { max-width: 920px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 28px; box-shadow: 0 20px 50px rgba(22,37,66,.08); }\n"
+                    "    h1 { margin: 0 0 12px; }\n"
+                    "    p { line-height: 1.7; color: #475569; }\n"
+                    "  </style>\n"
+                    "</head>\n"
+                    "<body>\n"
+                    "  <main class=\"card\">\n"
+                    "    <h1>页面草稿</h1>\n"
+                    f"    <p>{intent}</p>\n"
+                    "  </main>\n"
+                    "</body>\n"
+                    "</html>"
                 )
             }
 
         if output_format == OutputFormat.MULTI_HTML:
             return {
                 "index.html": (
-                    "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\"/>"
-                    "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/><title>主页</title>"
-                    "<style>body{font-family:system-ui;margin:0;padding:32px;}nav a{margin-right:12px;}</style></head>"
-                    "<body><nav><a href=\"index.html\">首页</a><a href=\"details.html\">详情页</a></nav>"
-                    f"<h1>主页</h1><p>{intent}</p></body></html>"
+                    "<!DOCTYPE html>\n"
+                    "<html lang=\"zh-CN\">\n"
+                    "<head>\n"
+                    "  <meta charset=\"UTF-8\"/>\n"
+                    "  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>\n"
+                    "  <title>主页</title>\n"
+                    "  <style>\n"
+                    "    body { font-family: system-ui; margin: 0; padding: 32px; }\n"
+                    "    nav a { margin-right: 12px; }\n"
+                    "  </style>\n"
+                    "</head>\n"
+                    "<body>\n"
+                    "  <nav>\n"
+                    "    <a href=\"index.html\">首页</a>\n"
+                    "    <a href=\"details.html\">详情页</a>\n"
+                    "  </nav>\n"
+                    "  <h1>主页</h1>\n"
+                    f"  <p>{intent}</p>\n"
+                    "</body>\n"
+                    "</html>"
                 ),
                 "details.html": (
-                    "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"UTF-8\"/>"
-                    "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/><title>详情页</title></head>"
-                    "<body><nav><a href=\"index.html\">返回首页</a></nav><h1>详情页</h1><p>这是自动生成的详情页占位。</p></body></html>"
+                    "<!DOCTYPE html>\n"
+                    "<html lang=\"zh-CN\">\n"
+                    "<head>\n"
+                    "  <meta charset=\"UTF-8\"/>\n"
+                    "  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>\n"
+                    "  <title>详情页</title>\n"
+                    "  <style>\n"
+                    "    body { font-family: system-ui; margin: 0; padding: 32px; }\n"
+                    "    nav a { margin-right: 12px; }\n"
+                    "  </style>\n"
+                    "</head>\n"
+                    "<body>\n"
+                    "  <nav>\n"
+                    "    <a href=\"index.html\">返回首页</a>\n"
+                    "  </nav>\n"
+                    "  <h1>详情页</h1>\n"
+                    "  <p>这是自动生成的详情页占位。</p>\n"
+                    "</body>\n"
+                    "</html>"
                 ),
             }
 
-        return {
-            "package.json": self._default_package_json(),
-            "index.html": self._default_index_html(),
-            "src/main.jsx": self._default_main_jsx(),
-            "src/App.jsx": self._default_app_jsx(intent),
-            "src/styles.css": self._default_styles_css(),
-        }
-
-    @staticmethod
-    def _default_package_json() -> str:
-        return json.dumps(
-            {
-                "name": "web-printer-output",
-                "private": True,
-                "version": "0.0.1",
-                "type": "module",
-                "scripts": {
-                    "dev": "vite",
-                    "build": "vite build",
-                    "preview": "vite preview",
-                },
-                "dependencies": {"react": "^18.3.1", "react-dom": "^18.3.1"},
-                "devDependencies": {"vite": "^5.4.10"},
-            },
-            ensure_ascii=False,
-            indent=2,
-        )
-
-    @staticmethod
-    def _default_index_html() -> str:
-        return (
-            "<!doctype html>\n"
-            "<html lang=\"zh-CN\">\n"
-            "  <head>\n"
-            "    <meta charset=\"UTF-8\" />\n"
-            "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n"
-            "    <title>Web Printer React Output</title>\n"
-            "  </head>\n"
-            "  <body>\n"
-            "    <div id=\"root\"></div>\n"
-            "    <script type=\"module\" src=\"/src/main.jsx\"></script>\n"
-            "  </body>\n"
-            "</html>\n"
-        )
-
-    @staticmethod
-    def _default_main_jsx() -> str:
-        return (
-            "import React from 'react';\n"
-            "import { createRoot } from 'react-dom/client';\n"
-            "import App from './App';\n"
-            "import './styles.css';\n\n"
-            "createRoot(document.getElementById('root')).render(\n"
-            "  <React.StrictMode>\n"
-            "    <App />\n"
-            "  </React.StrictMode>\n"
-            ");\n"
-        )
-
-    @staticmethod
-    def _default_app_jsx(intent: str) -> str:
-        safe_text = intent.replace("'", "\\'")
-        return (
-            "export default function App() {\n"
-            "  return (\n"
-            "    <main className=\"layout\">\n"
-            "      <section className=\"card\">\n"
-            "        <h1>React 项目骨架</h1>\n"
-            f"        <p>{safe_text}</p>\n"
-            "      </section>\n"
-            "    </main>\n"
-            "  );\n"
-            "}\n"
-        )
-
-    @staticmethod
-    def _default_styles_css() -> str:
-        return (
-            ":root { font-family: 'Segoe UI', Tahoma, sans-serif; }\n"
-            "* { box-sizing: border-box; }\n"
-            "body { margin: 0; background: #eef2ff; color: #111827; }\n"
-            ".layout { min-height: 100vh; display: grid; place-items: center; padding: 24px; }\n"
-            ".card { max-width: 780px; background: white; border-radius: 18px; padding: 28px; box-shadow: 0 15px 45px rgba(30, 41, 59, 0.12); }\n"
-            "h1 { margin-top: 0; }\n"
-            "p { line-height: 1.8; color: #374151; }\n"
-        )
+        return {}

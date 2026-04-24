@@ -5,7 +5,8 @@
       "Bash(python *)",
       "Bash(pip install *)",
       "Bash(pip list *)",
-      "Bash(uv pip *)"
+      "Bash(uv pip *)",
+      "Bash(python3 *)"
     ]
   }
 }

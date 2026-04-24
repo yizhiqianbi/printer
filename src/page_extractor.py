@@ -188,13 +188,23 @@ class PageExtractor:
         snapshot["dominant_fonts"] = [font for font, _ in font_counter.most_common(4)]
         return snapshot
 
-    def fetch_url_with_selenium(self, url: str, wait_time: int = 5) -> Tuple[Optional[str], Optional[str], Optional[Dict[str, Any]], Optional[str]]:
-        """使用 Selenium 获取 URL 的渲染结果。"""
+    def fetch_url_with_selenium(self, url: str, wait_time: int = 5, capture_screenshot: bool = True) -> Tuple[Optional[str], Optional[str], Optional[Dict[str, Any]], Optional[bytes], Optional[str]]:
+        """使用 Selenium 获取 URL 的渲染结果。
+
+        Args:
+            url: 目标 URL
+            wait_time: 等待时间（秒）
+            capture_screenshot: 是否自动截图
+
+        Returns:
+            (html_content, title, visual_snapshot, screenshot_bytes, error_message)
+        """
         driver = None
         try:
             print(f"\n[DEBUG] Selenium 采集 URL: {url}")
             print(f"  - Wait Time: {wait_time}s")
             print(f"  - Headless: {self.headless}")
+            print(f"  - Auto Screenshot: {capture_screenshot}")
 
             driver = self.setup_driver()
             driver.get(url)
@@ -218,15 +228,23 @@ class PageExtractor:
             html_content = driver.page_source
             title = driver.title
 
+            screenshot_bytes = None
+            if capture_screenshot:
+                try:
+                    screenshot_bytes = driver.get_screenshot_as_png()
+                    print(f"  - Screenshot: {len(screenshot_bytes)} bytes")
+                except Exception as screenshot_exc:
+                    print(f"  - Screenshot Failed: {screenshot_exc}")
+
             print(f"  - Title: {title}")
             print(f"  - HTML Size: {len(html_content)} chars")
             print(f"  - Visual Blocks: {len(visual_snapshot.get('blocks', []))}")
             print(f"  - Headings: {len(visual_snapshot.get('headings', []))}")
             print(f"  - Buttons: {len(visual_snapshot.get('buttons', []))}")
 
-            return html_content, title, visual_snapshot, None
+            return html_content, title, visual_snapshot, screenshot_bytes, None
         except Exception as exc:
-            return None, None, None, f"URL 采集失败 {url}: {exc}"
+            return None, None, None, None, f"URL 采集失败 {url}: {exc}"
         finally:
             if driver:
                 driver.quit()
@@ -313,16 +331,22 @@ class PageExtractor:
 
         return info
 
-    def extract_from_parsed_input(self, parsed_input: ParsedInput, wait_time: int = 5) -> ExtractionResult:
-        """将 ParsedInput 转成统一上下文。"""
+    def extract_from_parsed_input(self, parsed_input: ParsedInput, wait_time: int = 5, auto_screenshot: bool = True) -> ExtractionResult:
+        """将 ParsedInput 转成统一上下文。
+
+        Args:
+            parsed_input: 解析后的输入
+            wait_time: 等待时间（秒）
+            auto_screenshot: 是否为 URL 自动截图
+        """
         pages: List[Dict[str, Any]] = []
         screenshots: List[Dict[str, Any]] = []
         warnings = list(parsed_input.warnings)
 
         for item in parsed_input.items:
             if item.type == "url":
-                html_content, title, visual_snapshot, warning = self.fetch_url_with_selenium(
-                    str(item.content), wait_time
+                html_content, title, visual_snapshot, screenshot_bytes, warning = self.fetch_url_with_selenium(
+                    str(item.content), wait_time, capture_screenshot=auto_screenshot
                 )
                 if warning:
                     warnings.append(warning)
@@ -338,6 +362,16 @@ class PageExtractor:
                         visual_snapshot=visual_snapshot,
                     )
                 )
+
+                if screenshot_bytes and auto_screenshot:
+                    screenshots.append(
+                        {
+                            "bytes": screenshot_bytes,
+                            "filename": f"auto_{len(screenshots)}.png",
+                            "mime_type": "image/png",
+                            "source": f"auto_screenshot:{item.source}",
+                        }
+                    )
                 continue
 
             if item.type == "mhtml":

@@ -20,6 +20,7 @@ class Config:
     max_tokens: int = 16000
     output_dir: str = "output"
     use_langchain: bool = True
+    auto_screenshot: bool = True  # 是否自动截图
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -39,4 +40,5 @@ class Config:
             max_tokens=int(os.environ.get("MAX_TOKENS", "16000")),
             output_dir=os.environ.get("OUTPUT_DIR", "output"),
             use_langchain=os.environ.get("USE_LANGCHAIN", "true").lower() == "true",
+            auto_screenshot=os.environ.get("AUTO_SCREENSHOT", "true").lower() == "true",
         )

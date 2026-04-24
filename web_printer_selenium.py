@@ -16,7 +16,7 @@ from typing import List, Optional, Tuple
 from src import Config, WebPrinterPipeline
 from src.complexity_analyzer import OutputFormat
 
-DEFAULT_LEGACY_INTENT = "请根据该网页重建页面，在尽可能实现其基本功能的基础上，保持内容结构和视觉风格。"
+DEFAULT_LEGACY_INTENT = "根据提供的信息重建网页，完整实现其功能和外观。"
 
 
 class WebPrinterSelenium:
@@ -68,13 +68,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no-headless", action="store_true", help="禁用无头浏览器")
     parser.add_argument("--disable-langchain", action="store_true", help="禁用 LangChain 意图规划")
     parser.add_argument("--show-plan", action="store_true", help="打印复杂度和规划摘要")
+    parser.add_argument("--no-auto-screenshot", action="store_true", help="禁用 URL 自动截图")
 
     return parser.parse_args()
 
 
-def resolve_runtime_input(args: argparse.Namespace) -> Tuple[str, List[str], Optional[str], Optional[int]]:
+def resolve_runtime_input(args: argparse.Namespace) -> Tuple[str, List[str], Optional[str], Optional[int], Optional[bool]]:
     """统一解析新旧模式输入。"""
     inputs = list(args.inputs)
+
+    # 如果命令行指定了 --no-auto-screenshot，则为 False
+    # 否则为 None，让 pipeline 使用配置文件默认值
+    auto_screenshot = False if args.no_auto_screenshot else None
 
     if args.intent:
         intent = args.intent.strip()
@@ -86,7 +91,7 @@ def resolve_runtime_input(args: argparse.Namespace) -> Tuple[str, List[str], Opt
             raise ValueError("请至少提供一个 --input（或附带 legacy_url）")
         output_path = args.output or args.legacy_output
         wait_time = args.wait_time if args.wait_time is not None else args.legacy_wait
-        return intent, inputs, output_path, wait_time
+        return intent, inputs, output_path, wait_time, auto_screenshot
 
     if not args.legacy_url:
         raise ValueError(
@@ -97,7 +102,7 @@ def resolve_runtime_input(args: argparse.Namespace) -> Tuple[str, List[str], Opt
     inputs = [args.legacy_url] + inputs
     output_path = args.output or args.legacy_output
     wait_time = args.wait_time if args.wait_time is not None else args.legacy_wait
-    return intent, inputs, output_path, wait_time
+    return intent, inputs, output_path, wait_time, auto_screenshot
 
 
 def apply_runtime_overrides(config: Config, args: argparse.Namespace) -> Config:
@@ -166,7 +171,7 @@ def main() -> None:
     args = parse_args()
 
     try:
-        intent, inputs, output_path, wait_time = resolve_runtime_input(args)
+        intent, inputs, output_path, wait_time, auto_screenshot = resolve_runtime_input(args)
 
         config = Config.from_env()
         config = apply_runtime_overrides(config, args)
@@ -177,6 +182,7 @@ def main() -> None:
             inputs=inputs,
             output_path=output_path,
             wait_time=wait_time,
+            auto_screenshot=auto_screenshot,
         )
 
         print_result_summary(result)

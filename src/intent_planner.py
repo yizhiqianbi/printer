@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from .complexity_analyzer import OutputFormat
+from .logger import get_logger
 
 
 @dataclass
@@ -18,6 +19,8 @@ class IntentPlan:
     complexity_bias: int = 0
     output_hint: Optional[OutputFormat] = None
     confidence: float = 0.5
+    requires_interactivity: bool = False  # 是否需要交互功能
+    interaction_features: List[str] = field(default_factory=list)  # 需要实现的交互功能列表
     raw_response: str = ""
 
 
@@ -84,8 +87,23 @@ class IntentPlanner:
             "ui_requirements: string[]\n"
             "technical_requirements: string[]\n"
             "complexity_bias: integer (-10 到 20)\n"
-            "output_hint: string (single_html/multi_html/react_project/auto)\n"
-            "confidence: number (0-1)\n\n"
+            "output_hint: string (single_html/multi_html/auto)\n"
+            "confidence: number (0-1)\n"
+            "requires_interactivity: boolean (是否需要实现交互功能)\n"
+            "interaction_features: string[] (需要实现的具体交互功能列表)\n\n"
+            "交互性判断标准：\n"
+            "- 如果页面包含表单、按钮、输入框、下拉菜单等交互元素，requires_interactivity 应为 true\n"
+            "- 如果页面包含动态内容、状态管理、数据提交等功能，requires_interactivity 应为 true\n"
+            "- 如果页面只是静态展示内容（如文章、介绍页），requires_interactivity 可为 false\n"
+            "- interaction_features 应列出所有需要实现的交互功能，例如：\n"
+            "  * '表单提交和验证'\n"
+            "  * '按钮点击响应'\n"
+            "  * '数据增删改查'\n"
+            "  * '文件上传和预览'\n"
+            "  * '搜索和筛选'\n"
+            "  * '模态框/弹窗交互'\n"
+            "  * '拖拽排序'\n"
+            "  * '实时数据更新'\n\n"
             f"用户意图:\n{intent}\n\n"
             f"多模态上下文:\n{context_text}"
         )
@@ -101,6 +119,17 @@ class IntentPlanner:
         print(f"  - Response Length: {len(response_text)} chars")
         print(f"  - Response Preview: {response_text[:300]}")
 
+        # 记录 API 调用
+        logger = get_logger()
+        logger.log_api_call(
+            agent_type="intent_planner",
+            model=str(self._chat_model.model_name) if hasattr(self._chat_model, 'model_name') else "unknown",
+            base_url=str(self._chat_model.openai_api_base) if hasattr(self._chat_model, 'openai_api_base') else "unknown",
+            prompt=input_text,
+            response=response_text,
+            metadata={"intent": intent[:200]},
+        )
+
         data = self._safe_json(response_text)
         return IntentPlan(
             summary=data.get("summary", "根据输入重建页面"),
@@ -109,6 +138,8 @@ class IntentPlanner:
             complexity_bias=int(data.get("complexity_bias", 0)),
             output_hint=self._parse_output_hint(data.get("output_hint")),
             confidence=float(data.get("confidence", 0.6)),
+            requires_interactivity=bool(data.get("requires_interactivity", False)),
+            interaction_features=self._normalize_list(data.get("interaction_features")),
             raw_response=response_text,
         )
 
@@ -121,18 +152,84 @@ class IntentPlanner:
         technical_requirements: List[str] = []
         complexity_bias = 0
         output_hint = None
+        requires_interactivity = False
+        interaction_features: List[str] = []
+
+        # 分析交互性需求
+        pages = extraction_context.get("pages", [])
+        for page in pages:
+            buttons = page.get("buttons", [])
+            links = page.get("links", [])
+
+            # 检测表单相关元素
+            button_texts = [btn.get("text", "").lower() for btn in buttons]
+            has_form_buttons = any(
+                keyword in text
+                for text in button_texts
+                for keyword in ["提交", "submit", "登录", "login", "注册", "register", "搜索", "search", "保存", "save", "确认", "confirm", "添加", "add", "删除", "delete"]
+            )
+
+            if has_form_buttons:
+                requires_interactivity = True
+                interaction_features.append("表单提交和验证")
+                technical_requirements.append("实现表单交互逻辑，包括输入验证和提交处理")
+                complexity_bias += 10
+
+            # 检测按钮数量（排除纯链接）
+            if len(buttons) >= 3:
+                requires_interactivity = True
+                if "按钮点击响应" not in interaction_features:
+                    interaction_features.append("按钮点击响应")
+                technical_requirements.append("实现所有按钮的点击事件处理")
+                complexity_bias += 5
+
+            # 检测文本内容中的交互关键词
+            text_content = page.get("text_content", "").lower()
+
+            if any(kw in text_content for kw in ["上传", "upload", "选择文件", "choose file"]):
+                requires_interactivity = True
+                interaction_features.append("文件上传和预览")
+                technical_requirements.append("实现文件选择、上传和预览功能")
+                complexity_bias += 8
+
+            if any(kw in text_content for kw in ["搜索", "search", "筛选", "filter"]):
+                requires_interactivity = True
+                interaction_features.append("搜索和筛选")
+                technical_requirements.append("实现搜索和筛选功能")
+                complexity_bias += 6
+
+            if any(kw in text_content for kw in ["排序", "sort", "拖拽", "drag"]):
+                requires_interactivity = True
+                interaction_features.append("拖拽排序")
+                technical_requirements.append("实现拖拽排序功能")
+                complexity_bias += 10
+
+            if any(kw in text_content for kw in ["弹窗", "modal", "对话框", "dialog"]):
+                requires_interactivity = True
+                interaction_features.append("模态框/弹窗交互")
+                technical_requirements.append("实现模态框的打开、关闭和交互")
+                complexity_bias += 5
+
+        # 用户意图中的交互关键词
+        if any(word in intent_lower for word in ["交互", "功能", "操作", "点击", "输入", "提交"]):
+            requires_interactivity = True
+            if not interaction_features:
+                interaction_features.append("基础交互功能")
+            complexity_bias += 5
 
         if any(word in intent_lower for word in ["后台", "dashboard", "管理", "admin"]):
             ui_requirements.append("需要信息密度较高的仪表盘布局")
+            requires_interactivity = True
+            if "数据增删改查" not in interaction_features:
+                interaction_features.append("数据增删改查")
+            technical_requirements.append("实现完整的 CRUD 操作")
             complexity_bias += 8
 
         if any(word in intent_lower for word in ["动效", "动画", "交互", "状态"]):
+            requires_interactivity = True
+            if "实时数据更新" not in interaction_features:
+                interaction_features.append("实时数据更新")
             technical_requirements.append("需要可维护的交互状态管理")
-            complexity_bias += 10
-
-        if any(word in intent_lower for word in ["react", "组件", "hooks", "typescript"]):
-            technical_requirements.append("用户偏向组件化工程输出")
-            output_hint = OutputFormat.REACT_PROJECT
             complexity_bias += 10
 
         if pages_count >= 2:
@@ -144,6 +241,9 @@ class IntentPlanner:
             complexity_bias += 5
 
         summary = "基于意图与多模态素材重建页面，并保证可维护结构"
+        if requires_interactivity:
+            summary += "，实现完整的交互功能"
+
         if self._init_error:
             technical_requirements.append(f"LangChain 初始化失败，已回退规则模式: {self._init_error}")
 
@@ -154,6 +254,8 @@ class IntentPlanner:
             complexity_bias=complexity_bias,
             output_hint=output_hint,
             confidence=0.5,
+            requires_interactivity=requires_interactivity,
+            interaction_features=interaction_features or [],
             raw_response="heuristic_fallback",
         )
 
