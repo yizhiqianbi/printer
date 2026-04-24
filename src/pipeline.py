@@ -56,7 +56,19 @@ class WebPrinterPipeline:
         wait_time: Optional[int] = None,
     ) -> PipelineResult:
         """运行端到端流程。"""
+        print(f"\n{'='*60}")
+        print(f"Web Printer Pipeline 开始执行")
+        print(f"{'='*60}")
+        print(f"Intent: {intent}")
+        print(f"Inputs: {inputs}")
+        print(f"Output Path: {output_path}")
+        print(f"{'='*60}\n")
+
         parsed = self.input_parser.parse(intent=intent, inputs=inputs)
+        print(f"\n[STEP 1] 输入解析完成:")
+        print(f"  - Items: {len(parsed.items)}")
+        print(f"  - Types: {[item.type for item in parsed.items]}")
+        print(f"  - Warnings: {len(parsed.warnings)}")
         extraction = self.extractor.extract_from_parsed_input(
             parsed_input=parsed,
             wait_time=wait_time or self.config.default_wait_time,
@@ -65,11 +77,30 @@ class WebPrinterPipeline:
         if not extraction.pages and not extraction.screenshots:
             raise RuntimeError("未提取到有效内容，请至少提供可访问 URL、可解析 MHTML 或截图")
 
+        print(f"\n[STEP 2] 页面采集完成:")
+        print(f"  - Pages: {len(extraction.pages)}")
+        print(f"  - Screenshots: {len(extraction.screenshots)}")
+        print(f"  - Warnings: {len(extraction.warnings)}")
+
         merged_page_info = self._merge_pages_for_complexity(extraction)
         base_complexity = self.complexity_analyzer.analyze(merged_page_info)
 
+        print(f"\n[STEP 3] 复杂度分析:")
+        print(f"  - Total: {base_complexity.total}")
+        print(f"  - Components: {base_complexity.components}")
+        print(f"  - Interactions: {base_complexity.interactions}")
+        print(f"  - Pages: {base_complexity.pages}")
+        print(f"  - Data Flow: {base_complexity.data_flow}")
+        print(f"  - Suggested Format: {base_complexity.get_format().value}")
+
         planner_context = self._build_planner_context(extraction)
         intent_plan = self.intent_planner.plan(intent=intent, extraction_context=planner_context)
+
+        print(f"\n[STEP 4] 意图规划完成:")
+        print(f"  - Summary: {intent_plan.summary}")
+        print(f"  - Complexity Bias: {intent_plan.complexity_bias}")
+        print(f"  - Output Hint: {intent_plan.output_hint}")
+        print(f"  - Confidence: {intent_plan.confidence}")
 
         enhanced_complexity = ComplexityScore(
             total=max(base_complexity.total + intent_plan.complexity_bias, 0),
@@ -81,17 +112,27 @@ class WebPrinterPipeline:
 
         output_format = intent_plan.output_hint or enhanced_complexity.get_format()
 
+        print(f"\n[STEP 5] 最终输出格式: {output_format.value}")
+        print(f"  - Enhanced Complexity: {enhanced_complexity.total}")
+
         generation_context = {
             "pages": extraction.pages,
             "screenshots": extraction.screenshots,
             "warnings": extraction.warnings,
         }
+        print(f"\n[STEP 6] 开始代码生成...")
+
         artifacts = self.generator.generate(
             intent=intent,
             extraction_context=generation_context,
             intent_plan=intent_plan,
             output_format=output_format,
         )
+
+        print(f"\n[STEP 7] 代码生成完成:")
+        print(f"  - Files Generated: {len(artifacts.files)}")
+        print(f"  - File Paths: {list(artifacts.files.keys())}")
+        print(f"  - Warnings: {len(artifacts.warnings)}")
 
         output_root, written_files = self._write_artifacts(
             artifacts=artifacts,
@@ -112,6 +153,13 @@ class WebPrinterPipeline:
             warnings=warnings,
             files=written_files,
         )
+
+        print(f"\n[STEP 8] 文件写入完成:")
+        print(f"  - Output Root: {output_root}")
+        print(f"  - Written Files: {len(written_files)}")
+        print(f"\n{'='*60}")
+        print(f"Pipeline 执行完成")
+        print(f"{'='*60}\n")
 
         return PipelineResult(
             success=True,

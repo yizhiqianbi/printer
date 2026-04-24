@@ -192,6 +192,10 @@ class PageExtractor:
         """使用 Selenium 获取 URL 的渲染结果。"""
         driver = None
         try:
+            print(f"\n[DEBUG] Selenium 采集 URL: {url}")
+            print(f"  - Wait Time: {wait_time}s")
+            print(f"  - Headless: {self.headless}")
+
             driver = self.setup_driver()
             driver.get(url)
 
@@ -213,6 +217,13 @@ class PageExtractor:
             visual_snapshot = self._collect_visual_snapshot(driver)
             html_content = driver.page_source
             title = driver.title
+
+            print(f"  - Title: {title}")
+            print(f"  - HTML Size: {len(html_content)} chars")
+            print(f"  - Visual Blocks: {len(visual_snapshot.get('blocks', []))}")
+            print(f"  - Headings: {len(visual_snapshot.get('headings', []))}")
+            print(f"  - Buttons: {len(visual_snapshot.get('buttons', []))}")
+
             return html_content, title, visual_snapshot, None
         except Exception as exc:
             return None, None, None, f"URL 采集失败 {url}: {exc}"

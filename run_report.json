@@ -1,33 +1,37 @@
 {
-  "output_format": "react_project",
+  "output_format": "single_html",
   "complexity": {
-    "total": 66,
-    "components": 32,
-    "interactions": 9,
-    "pages": 15,
-    "data_flow": 10
+    "total": 48,
+    "components": 19,
+    "interactions": 4,
+    "pages": 0,
+    "data_flow": 20
   },
   "intent_plan": {
-    "summary": "基于意图与多模态素材重建页面，并保证可维护结构",
+    "summary": "根据提供的 draw.io 网页信息，重建一个具有基本功能、保持内容结构和视觉风格的页面。",
     "ui_requirements": [
-      "保持输入内容语义与视觉一致性"
+      "页面标题为 '未命名绘图 - draw.io'",
+      "页面结构为基本 HTML",
+      "包含一级标题 'Heading'",
+      "包含导航按钮：文件、编辑、查看、排列、其它、帮助",
+      "包含主要按钮：共享、更多结果",
+      "包含便笺本和通用部分的标题",
+      "包含 'Text' 选项"
     ],
     "technical_requirements": [
-      "LangChain 初始化失败，已回退规则模式: No module named 'langchain_openai'"
+      "使用 HTML 和 CSS 重建页面",
+      "确保页面的视觉风格与原页面一致",
+      "实现导航按钮的基本功能",
+      "实现主要按钮的基本功能",
+      "确保页面内容结构与原页面一致"
     ],
-    "complexity_bias": 0,
-    "output_hint": null,
-    "confidence": 0.5
+    "complexity_bias": 5,
+    "output_hint": "single_html",
+    "confidence": 0.85
   },
-  "warnings": [
-    "模型输出解析为空，使用回退模板"
-  ],
+  "warnings": [],
   "files": [
-    "eg.html\\package.json",
-    "eg.html\\index.html",
-    "eg.html\\src\\main.jsx",
-    "eg.html\\src\\App.jsx",
-    "eg.html\\src\\styles.css"
+    "drawio.html"
   ],
-  "generated_at": "2026-04-24T02:22:34.729767"
+  "generated_at": "2026-04-25T00:51:27.395098"
 }

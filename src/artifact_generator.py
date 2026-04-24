@@ -65,19 +65,40 @@ class ArtifactGenerator:
         raw_response = ""
 
         try:
+            print(f"\n[DEBUG] 调用 OpenAI API:")
+            print(f"  - Model: {self.model}")
+            print(f"  - Base URL: {self.client.base_url}")
+            print(f"  - Max Tokens: {self.max_tokens}")
+            print(f"  - Content Parts: {len(content_parts)} (text + {len(content_parts)-1} images)")
+
             response = self.client.chat.completions.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 messages=[{"role": "user", "content": content_parts}],
             )
+
             raw_response = response.choices[0].message.content
+            print(f"\n[DEBUG] API 响应成功:")
+            print(f"  - Response Length: {len(raw_response)} chars")
+            print(f"  - First 500 chars: {raw_response[:500]}")
+
             parsed_files = self._parse_files(raw_response)
+            print(f"\n[DEBUG] 文件解析结果:")
+            print(f"  - Parsed Files: {len(parsed_files)}")
+            if parsed_files:
+                print(f"  - File Paths: {list(parsed_files.keys())}")
+
             files = self._normalize_files(parsed_files)
         except Exception as exc:
+            print(f"\n[ERROR] 模型调用失败: {exc}")
+            import traceback
+            traceback.print_exc()
             warnings.append(f"模型调用失败，使用回退模板: {exc}")
             files = self._fallback_files(intent, output_format)
 
         if not files:
+            print(f"\n[WARNING] 模型输出解析为空")
+            print(f"  - Raw Response Preview: {raw_response[:1000]}")
             warnings.append("模型输出解析为空，使用回退模板")
             files = self._fallback_files(intent, output_format)
 
@@ -128,7 +149,15 @@ class ArtifactGenerator:
             "2. 使用现代化布局与响应式样式。\n"
             "3. 路径必须是相对路径，不得使用绝对路径。\n"
             "4. 所有文件内容必须完整可用，不要省略。\n"
-            "5. 不要输出 files 之外的字段。"
+            "5. 不要输出 files 之外的字段。\n\n"
+            "视觉还原要求（重要）:\n"
+            "1. 严格还原原页面的配色方案（背景色、文字色、按钮色）。\n"
+            "2. 保持原页面的字体大小、粗细、行高比例。\n"
+            "3. 精确复刻布局间距（padding、margin、gap）。\n"
+            "4. 还原圆角、阴影、边框等视觉细节。\n"
+            "5. 保持按钮、卡片等组件的视觉层次感。\n"
+            "6. 使用渐变、阴影等效果提升视觉质量。\n"
+            "7. 确保响应式设计在不同屏幕尺寸下都美观。"
         )
 
     @staticmethod
@@ -136,6 +165,7 @@ class ArtifactGenerator:
         pages = extraction_context.get("pages", [])
         compact_pages = []
         for page in pages[:4]:
+            visual_summary = page.get("visual_summary", {})
             compact_pages.append(
                 {
                     "source": page.get("source"),
@@ -147,9 +177,14 @@ class ArtifactGenerator:
                     "links": page.get("links", [])[:20],
                     "images": page.get("images", [])[:16],
                     "visual_summary": {
-                        "dominant_colors": page.get("visual_summary", {}).get("dominant_colors", []),
-                        "dominant_fonts": page.get("visual_summary", {}).get("dominant_fonts", []),
-                        "top_blocks": page.get("visual_summary", {}).get("top_blocks", [])[:8],
+                        "viewport": visual_summary.get("viewport", {}),
+                        "body": visual_summary.get("body", {}),
+                        "dominant_colors": visual_summary.get("dominant_colors", []),
+                        "dominant_fonts": visual_summary.get("dominant_fonts", []),
+                        "top_blocks": visual_summary.get("top_blocks", [])[:8],
+                        "prominent_headings": visual_summary.get("prominent_headings", [])[:6],
+                        "prominent_buttons": visual_summary.get("prominent_buttons", [])[:8],
+                        "prominent_images": visual_summary.get("prominent_images", [])[:6],
                     },
                     "text_excerpt": page.get("text_content", "")[:3000],
                 }

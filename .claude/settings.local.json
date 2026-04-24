@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python web_printer.py https://www.miradesktop.com test_output.html)",
       "Bash(python *)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(pip list *)",
+      "Bash(uv pip *)"
     ]
   }
 }

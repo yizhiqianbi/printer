@@ -16,7 +16,7 @@ from typing import List, Optional, Tuple
 from src import Config, WebPrinterPipeline
 from src.complexity_analyzer import OutputFormat
 
-DEFAULT_LEGACY_INTENT = "请根据该网页重建页面，保持内容结构和视觉风格。"
+DEFAULT_LEGACY_INTENT = "请根据该网页重建页面，在尽可能实现其基本功能的基础上，保持内容结构和视觉风格。"
 
 
 class WebPrinterSelenium:

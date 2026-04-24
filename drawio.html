@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>未命名绘图 - draw.io</title>
+  <style>
+    body {
+      background-color: rgb(241, 243, 244);
+      color: rgb(63, 63, 63);
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .geMenubarContainer {
+      display: flex;
+      align-items: center;
+      background-color: rgb(241, 243, 244);
+      color: rgb(63, 63, 63);
+      font-size: 14px;
+      padding: 4px 0 0 4px;
+      height: 60px;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .geMenubarContainer a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: rgb(63, 63, 63);
+      text-decoration: none;
+      margin-right: 4px;
+    }
+    .geMenubarContainer a:hover {
+      background-color: rgb(236, 236, 236);
+    }
+    .geDiagramContainer {
+      background-color: rgb(236, 236, 236);
+      margin-left: -10px;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid rgb(218, 218, 218);
+      box-shadow: 0px 0px 3px 0px rgb(160, 160, 160);
+    }
+    .geBackgroundPage {
+      background-color: rgb(255, 255, 255);
+      border: 1px solid rgb(255, 255, 255);
+      box-shadow: 0px 0px 3px 0px rgb(160, 160, 160);
+      width: 828px;
+      height: 1170px;
+    }
+    .geSidebarContainer {
+      font-size: 14px;
+      padding: 0 4px;
+      background-color: rgb(255, 255, 255);
+      border-right: 1px solid rgb(218, 218, 218);
+      width: 232px;
+      min-width: 232px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .geSidebarContainer h1 {
+      font-size: 18px;
+      margin: 0;
+      padding: 8px 0;
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      color: rgb(63, 63, 63);
+      width: 100%;
+    }
+    .geFormatContainer {
+      width: 240px;
+      background-color: rgb(255, 255, 255);
+      border-left: 1px solid rgb(218, 218, 218);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      font-size: 12px;
+      padding: 0 8px 0 12px;
+    }
+    .geFormatTitle {
+      font-size: 16px;
+      margin: 8px 0;
+      padding: 8px 0;
+      width: 100%;
+    }
+    .geFormatContent {
+      margin: 0 8px;
+      padding: 0;
+    }
+    .geFormatContent a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 6px;
+      color: rgb(63, 63, 63);
+      text-decoration: none;
+      margin-right: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+    }
+    .geFormatContent a:hover {
+      background-color: rgb(236, 236, 236);
+    }
+    .geBtn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      padding: 0 8px;
+      margin: 0 4px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 550;
+      background-color: rgb(194, 231, 255);
+      color: rgb(63, 63, 63);
+      text-decoration: none;
+      height: 32px;
+    }
+    .geAppIcon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgb(240, 135, 5);
+      border-radius: 4px;
+      width: 32px;
+      height: 36px;
+      background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOSIgaGVpZ2h0PTExIHI9IjcuMzgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTUuNyAzLjRIMTcuNkMxNC4yLjkgMTcuOSAuOCAxNiAyLjRMNy40IDIuNEMuOS42IDIgLjkgMiAyLjRMNy40IDEwLjJDMzYuOSAxMC4yIDMuOSAxNC4yIDYgMTMuOHYyLjRoOS4yTDE0LjcgOS42Yy45LTEuNyAyLjEtMy44IDEuOC0zLjhsNy40IDE4LjZjMS4yLTAuMiAxLjYtLjYgMi0uNFQuNC4zQzIuMS41IDMuOSAyLjcgNiA0Ljh6TTEwIDE4SDVWNmguOVYxOFoiIGZpbGw9IiNGRkYiLz48L3N2Zz4=");
+      background-repeat: no-repeat;
+      background-position: center;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="geMenubarContainer">
+    <a class="geItem" href="#">文件</a>
+    <a class="geItem" href="#">编辑</a>
+    <a class="geItem" href="#">查看</a>
+    <a class="geItem" href="#">排列</a>
+    <a class="geItem" href="#">其它</a>
+    <a class="geItem" href="#">帮助</a>
+    <button class="geBtn gePrimaryBtn" id="shareBtn">共享</button>
+    <a class="geFilename" href="#">未命名绘图</a>
+    <button class="geBtn gePrimaryBtn" id="moreResultsBtn">更多结果</button>
+  </div>
+  <div class="geDiagramContainer">
+    <div class="geBackgroundPage">
+      <!-- Drawing area goes here -->
+    </div>
+  </div>
+  <div class="geSidebarContainer">
+    <h1>便笺本</h1>
+    <div>把元素拖至此处</div>
+    <h1>通用</h1>
+    <a class="geItem" href="#">Text</a>
+    <a class="geItem" href="#">Heading</a>
+    <div>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</div>
+  </div>
+  <div class="geFormatContainer">
+    <h1 class="geFormatTitle">绘制样式</h1>
+    <div class="geFormatContent">
+      <a class="geItem" href="#">查看</a>
+      <a class="geItem" href="#">网格</a>
+      <a class="geItem" href="#">页面视图</a>
+      <a class="geItem" href="#">背景</a>
+      <a class="geItem" href="#">更改...</a>
+      <a class="geItem" href="#">背景色</a>
+      <a class="geItem" href="#">阴影</a>
+      <a class="geItem" href="#">选项</a>
+      <a class="geItem" href="#">连接箭头</a>
+      <a class="geItem" href="#">连接点</a>
+      <a class="geItem" href="#">参考线</a>
+      <a class="geItem" href="#">纸张尺寸</a>
+      <a class="geItem" href="#">编辑数据...</a>
+      <a class="geItem" href="#">清除默认风格</a>
+    </div>
+  </div>
+  <script>
+    document.getElementById('shareBtn').addEventListener('click', function() {
+      alert('共享功能尚未实现');
+    });
+    document.getElementById('moreResultsBtn').addEventListener('click', function() {
+      alert('更多结果功能尚未实现');
+    });
+  </script>
+</body>
+</html>

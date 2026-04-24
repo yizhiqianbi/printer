@@ -56,6 +56,9 @@ class IntentPlanner:
                 ]
             )
         except Exception as exc:
+            print(f"\n[WARNING] LangChain 初始化失败: {exc}")
+            import traceback
+            traceback.print_exc()
             self._init_error = str(exc)
             self._chat_model = None
             self._prompt_builder = None
@@ -87,9 +90,16 @@ class IntentPlanner:
             f"多模态上下文:\n{context_text}"
         )
 
+        print(f"\n[DEBUG] LangChain 意图规划:")
+        print(f"  - Intent: {intent[:100]}")
+        print(f"  - Context Size: {len(context_text)} chars")
+
         chain = self._prompt_builder | self._chat_model
         message = chain.invoke({"input_text": input_text})
         response_text = message.content if isinstance(message.content, str) else str(message.content)
+
+        print(f"  - Response Length: {len(response_text)} chars")
+        print(f"  - Response Preview: {response_text[:300]}")
 
         data = self._safe_json(response_text)
         return IntentPlan(
