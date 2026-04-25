@@ -814,6 +814,480 @@ const games = [
     `,
   },
   {
+    id: 'qingjiao-sim',
+    file: 'qingjiao-sim.html',
+    title: '青椒模拟器',
+    kind: '经营',
+    sourceGame: '青椒模拟器式高校青年教师生存经营',
+    accent: '#21c26b',
+    summary: '申请教职、招学生、投基金、发论文，在非升即走里保住心态。',
+    markup: `
+      <section class="panel" id="applyPanel">
+        <label class="field-label">学科大类<select id="disciplineSelect" class="input"><option>计算机</option><option>材料</option><option>外语</option><option>医学</option><option>人文社科</option></select></label>
+        <label class="field-label">院系气质<select id="schoolSelect" class="input"><option>双一流卷王学院</option><option>地方重点实验室</option><option>新校区交叉中心</option><option>沿海产业学院</option></select></label>
+        <button class="primary" id="applyBtn">申请教职</button>
+      </section>
+      <section class="panel compact">
+        <div class="sim-header"><b id="jobTitle">待入职</b><span id="quarterText">申请系统</span></div>
+        <div class="stat-grid" id="qjStats"></div>
+      </section>
+      <section class="panel compact" id="actionPanel"></section>
+      <section class="panel compact"><p class="kicker">团队</p><div class="student-list" id="studentList"></div></section>
+      <section class="result-card"><p class="kicker">校园动态</p><div class="timeline" id="qjLog"></div></section>
+    `,
+    script: `
+      const disciplineSelect=document.getElementById('disciplineSelect');
+      const schoolSelect=document.getElementById('schoolSelect');
+      const quarterActions=[
+        {id:'fund',label:'投国自然',cost:{mindset:-8,funding:-6},gain:{funding:24,reputation:8},risk:'reject'},
+        {id:'paper',label:'改论文',cost:{mindset:-12,funding:-3},gain:{papers:1,reputation:6},risk:'revise'},
+        {id:'student',label:'招学生',cost:{funding:-8,mindset:-4},gain:{students:1,papers:.35},risk:'drama'},
+        {id:'walk',label:'校园漫步',cost:{funding:0},gain:{mindset:14},risk:'sales'},
+        {id:'massage',label:'全身按摩',cost:{funding:-12},gain:{mindset:24},risk:'receipt'},
+        {id:'industry',label:'横向项目',cost:{mindset:-6},gain:{funding:18,reputation:2},risk:'scope'}
+      ];
+      const promotionTrack=[
+        {title:'讲师',need:{papers:0,reputation:0}},
+        {title:'副教授',need:{papers:3,reputation:22}},
+        {title:'特聘教授',need:{papers:8,reputation:55}},
+        {title:'院士候选',need:{papers:15,reputation:96}},
+        {title:'诺奖传说',need:{papers:24,reputation:150}}
+      ];
+      const studentNames=['只会开会的博士','夜间爆肝硕士','转码预备役','实验室保安型选手','小红书科研博主','沉默但会写代码的人','永远失联联培生'];
+      const randomEvents=[
+        {text:'学院突然要求补一版代表作清单。',delta:{mindset:-7,reputation:2}},
+        {text:'销售来推 3000 型服务器，报价像科幻小说。',delta:{mindset:-5,funding:-4}},
+        {text:'学生把图注写成了表情包。',delta:{mindset:-9,papers:.2}},
+        {text:'企业横向款到账，但需求也一起变多了。',delta:{funding:12,mindset:-6}},
+        {text:'审稿人 2 说有趣但不够有趣。',delta:{mindset:-8,papers:.25}},
+        {text:'学术会议茶歇遇到潜在合作者。',delta:{reputation:5,mindset:3}}
+      ];
+      window.__QINGJIAO_SIM__={reference:'academic early-career simulator',disciplineSelect:true,quarterActions:quarterActions.map(a=>a.id),promotionTrack:promotionTrack.map(p=>p.title),coreStats:['funding','papers','mindset','reputation','students']};
+      const state={mode:'apply',discipline:'计算机',school:'双一流卷王学院',year:1,quarter:1,title:'待入职',funding:28,papers:0,mindset:78,reputation:5,students:[],log:[],ending:null};
+      function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
+      function seeded(text){let h=53;for(const ch of text)h=(h*33+ch.charCodeAt(0))%99991;return h;}
+      function pushLog(text){state.log.unshift('Y'+state.year+'Q'+state.quarter+' · '+text);state.log=state.log.slice(0,8);}
+      function applyDelta(delta){Object.entries(delta).forEach(([key,value])=>{if(key==='students')return;state[key]=(state[key]||0)+value;});state.mindset=clamp(state.mindset,0,100);state.funding=clamp(state.funding,0,999);state.reputation=clamp(state.reputation,0,999);state.papers=Math.max(0,Number(state.papers.toFixed(2)));}
+      function currentRank(){let rank=promotionTrack[0];for(const item of promotionTrack){if(state.papers>=item.need.papers&&state.reputation>=item.need.reputation)rank=item;}return rank;}
+      function updateTitle(){state.title=currentRank().title;}
+      function applyJob(){
+        state.mode='play';state.discipline=disciplineSelect.value;state.school=schoolSelect.value;state.year=1;state.quarter=1;state.funding=28;state.papers=0;state.mindset=78;state.reputation=5;state.students=[];state.log=[];state.ending=null;updateTitle();
+        pushLog('入职 '+state.school+'，方向是'+state.discipline+'，启动经费像试用装。');
+        render();
+      }
+      function recruitStudent(){
+        const idx=(state.students.length*3+seeded(state.discipline+state.school))%studentNames.length;
+        state.students.push({name:studentNames[idx],mood:62+state.students.length*4,output:.25+state.students.length*.08});
+      }
+      function resolveRisk(action){
+        const tick=seeded(action.id+state.year+'-'+state.quarter+state.discipline)+state.students.length*17+Math.round(state.papers*10);
+        if(tick%5!==0)return null;
+        const copy={reject:'基金未中，系统建议明年继续努力。',revise:'返修意见要求补实验和补灵魂。',drama:'学生说想 gap 一周整理人生。',sales:'散步时被科研设备销售精准捕获。',receipt:'按摩发票被财务退回。',scope:'企业说只是顺便加一个小需求。'}[action.risk];
+        return {text:copy,delta:{mindset:-6,reputation: action.risk==='scope'?2:0}};
+      }
+      function doAction(id){
+        if(state.mode!=='play')return;
+        const action=quarterActions.find(item=>item.id===id);
+        if(!action)return;
+        applyDelta(action.cost||{});
+        applyDelta(action.gain||{});
+        if(id==='student')recruitStudent();
+        state.students.forEach(s=>{s.mood=clamp(s.mood-3+Math.round(state.mindset/40),12,100);state.papers+=s.output*(s.mood/100);});
+        const risk=resolveRisk(action);
+        if(risk){applyDelta(risk.delta);pushLog(risk.text);}else pushLog(action.label+'完成，CV 多了一行但头发少了一点。');
+        const event=randomEvents[(state.year*4+state.quarter+state.students.length)%randomEvents.length];
+        applyDelta(event.delta);pushLog(event.text);
+        advanceQuarter();
+        render();
+      }
+      function advanceQuarter(){
+        state.quarter+=1;
+        if(state.quarter>4){state.quarter=1;state.year+=1;pushLog('年度考核：论文 '+state.papers.toFixed(1)+'，经费 '+Math.round(state.funding)+'，心态 '+Math.round(state.mindset)+'。');}
+        updateTitle();
+        if(state.mindset<=0)finish('心态清零，转岗去图书馆守门。');
+        if(state.funding<=0&&state.year>2)finish('经费断供，课题组进入省电模式。');
+        if(state.year>6&&state.title==='讲师')finish('非升即走考核失败，被迫体面告别。');
+        if(state.title==='诺奖传说')finish('你把评审意见写进获奖感言，青椒人生圆满。');
+      }
+      function finish(text){state.mode='ended';state.ending=text;pushLog(text);}
+      function reset(){state.mode='apply';state.title='待入职';state.log=[];state.students=[];state.ending=null;render();}
+      function render(){
+        document.getElementById('applyPanel').classList.toggle('hidden',state.mode!=='apply');
+        document.getElementById('jobTitle').textContent=state.title;
+        document.getElementById('quarterText').textContent=state.mode==='apply'?'申请系统':'第 '+state.year+' 年 Q'+state.quarter;
+        document.getElementById('qjStats').innerHTML=[
+          ['经费',Math.round(state.funding)],['论文',state.papers.toFixed(1)],['心态',Math.round(state.mindset)],['声望',Math.round(state.reputation)],['学生',state.students.length]
+        ].map(([k,v])=>'<span><b>'+v+'</b><i>'+k+'</i></span>').join('');
+        const panel=document.getElementById('actionPanel');
+        if(state.mode==='apply')panel.innerHTML='<p class="kicker">入职须知</p><p class="summary">选择学科和院系后开始六年考核。目标是升职、发论文、别把心态耗光。</p>';
+        else if(state.mode==='ended')panel.innerHTML='<p class="kicker">结局</p><h2>'+state.ending+'</h2><button class="primary" id="qjRestart">重新申请</button>';
+        else panel.innerHTML='<p class="kicker">本季度行动</p><div class="action-grid">'+quarterActions.map(a=>'<button class="choice" data-qj-action="'+a.id+'"><b>'+a.label+'</b><span>'+Object.entries(a.gain||{}).map(([k,v])=>k+' '+(v>0?'+':'')+v).join(' · ')+'</span></button>').join('')+'</div>';
+        panel.querySelectorAll('[data-qj-action]').forEach(btn=>btn.addEventListener('click',()=>doAction(btn.dataset.qjAction)));
+        const restart=document.getElementById('qjRestart');if(restart)restart.addEventListener('click',reset);
+        document.getElementById('studentList').innerHTML=state.students.length?state.students.map(s=>'<span><b>'+s.name+'</b><i>心气 '+s.mood+' · 产出 '+s.output.toFixed(2)+'</i></span>').join(''):'<span><b>暂无学生</b><i>先去招生</i></span>';
+        document.getElementById('qjLog').innerHTML=(state.log.length?state.log:['等待教职申请。']).map(item=>'<span>'+item+'</span>').join('');
+      }
+      document.getElementById('applyBtn').addEventListener('click',applyJob);
+      render();
+      window.advanceTime=(ms)=>{const steps=Math.max(1,Math.floor(ms/1200));for(let i=0;i<steps&&state.mode==='play';i++)doAction(quarterActions[i%quarterActions.length].id);};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM academic simulator',mode:state.mode,discipline:state.discipline,school:state.school,year:state.year,quarter:state.quarter,title:state.title,funding:state.funding,papers:Number(state.papers.toFixed(2)),mindset:state.mindset,reputation:state.reputation,students:state.students,ending:state.ending,log:state.log});
+    `,
+  },
+  {
+    id: 'life-restart-fake',
+    file: 'life-restart-fake.html',
+    title: '人生重开模拟器',
+    kind: '重开',
+    sourceGame: 'LifeRestart 式天赋属性人生事件流',
+    accent: '#ffcf33',
+    summary: '抽天赋、分配属性、逐岁推进，看这一局人生如何离谱收束。',
+    markup: `
+      <section class="panel" id="lifeSetup">
+        <p class="kicker">天赋池</p>
+        <div class="chip-pool" id="talentPool"></div>
+        <p class="kicker">属性点</p>
+        <div class="alloc-grid" id="allocatePoints"></div>
+        <button class="primary" id="startLife">开始重开</button>
+      </section>
+      <section class="panel compact">
+        <div class="sim-header"><b id="lifeAge">等待出生</b><span id="lifeRank">未评价</span></div>
+        <div class="stat-grid" id="lifeStats"></div>
+      </section>
+      <section class="panel compact"><button class="primary" id="nextYear">下一岁</button><button class="primary" id="autoLife">自动到结局</button><button class="primary" id="restartLife">重新抽卡</button></section>
+      <section class="result-card"><p class="kicker">人生事件</p><div class="timeline" id="eventTimeline"></div></section>
+    `,
+    script: `
+      const talentPool=[
+        {id:'rich',name:'家境殷实',desc:'家境+3，快乐+1',delta:{money:3,happy:1}},
+        {id:'genius',name:'天赋异禀',desc:'智力+3',delta:{intelligence:3}},
+        {id:'fit',name:'身体倍棒',desc:'体质+3',delta:{health:3}},
+        {id:'pretty',name:'人见人爱',desc:'魅力+3',delta:{charm:3}},
+        {id:'late',name:'大器晚成',desc:'40 岁后全属性补偿',delta:{}},
+        {id:'otaku',name:'互联网原住民',desc:'快乐+2，体质-1',delta:{happy:2,health:-1}},
+        {id:'lucky',name:'祖传锦鲤',desc:'随机事件更容易变好',delta:{luck:3}},
+        {id:'fragile',name:'玻璃心',desc:'快乐-2，魅力+1',delta:{happy:-2,charm:1}}
+      ];
+      const allocatePoints=['颜值','智力','体质','家境'];
+      const statMap={颜值:'charm',智力:'intelligence',体质:'health',家境:'money'};
+      const eventTimeline=[
+        {age:0,text:'你出生了，全家正在研究你像谁。',effect:{happy:1}},
+        {age:3,text:'你学会抢遥控器，人生第一次掌握控制权。',effect:{charm:1}},
+        {age:6,text:'你进入小学，作业开始刷新。',effect:{intelligence:1,happy:-1}},
+        {age:12,text:'你发现排名是一种大型多人游戏。',effect:{intelligence:1,happy:-2}},
+        {age:18,text:'高考结束，你对概率有了全新理解。',effect:{intelligence:2,happy:1}},
+        {age:22,text:'毕业时你同时拥有理想和账单。',effect:{money:-1,intelligence:1}},
+        {age:28,text:'你开始在工作群里熟练使用收到。',effect:{money:2,happy:-2}},
+        {age:35,text:'你意识到体检报告比朋友圈更诚实。',effect:{health:-2,money:1}},
+        {age:45,text:'你学会把焦虑包装成稳定。',effect:{happy:-1,money:2}},
+        {age:60,text:'你终于拥有了慢下来的资格。',effect:{happy:2,health:-1}},
+        {age:75,text:'你开始给年轻人讲你当年也很抽象。',effect:{happy:1,health:-2}},
+        {age:90,text:'你把这一生压缩成几句没人能反驳的话。',effect:{happy:2,health:-3}}
+      ];
+      window.__LIFE_RESTART_SIM__={reference:'life restart simulator clone',talentPool:talentPool.map(t=>t.id),allocatePoints,eventTimeline:eventTimeline.map(e=>e.age),stats:['charm','intelligence','health','money','happy','luck']};
+      const state={mode:'setup',age:0,lifespan:80,pointsLeft:20,alloc:{颜值:5,智力:5,体质:5,家境:5},talents:[],stats:{charm:5,intelligence:5,health:5,money:5,happy:5,luck:0},events:[],summaryRank:'未评价'};
+      function hash(text){let h=61;for(const ch of text)h=(h*31+ch.charCodeAt(0))%104729;return h;}
+      function drawTalents(){
+        const seed=hash(new Date().toDateString());
+        state.talents=[];
+        const used=new Set();
+        let cursor=0;
+        while(state.talents.length<5&&cursor<talentPool.length*2){
+          const talent=talentPool[(seed+cursor*3+cursor*cursor)%talentPool.length];
+          if(!used.has(talent.id)){used.add(talent.id);state.talents.push(talent);}
+          cursor++;
+        }
+        talentPool.forEach(talent=>{if(state.talents.length<5&&!used.has(talent.id)){used.add(talent.id);state.talents.push(talent);}});
+      }
+      function totalAlloc(){return Object.values(state.alloc).reduce((a,b)=>a+b,0);}
+      function setAlloc(name,delta){const next=state.alloc[name]+delta;if(next<0||next>10)return;const total=totalAlloc()+delta;if(total>20)return;state.alloc[name]=next;render();}
+      function applyEffect(effect){Object.entries(effect||{}).forEach(([key,value])=>{state.stats[key]=(state.stats[key]||0)+value;});Object.keys(state.stats).forEach(key=>state.stats[key]=Math.max(0,Math.min(18,state.stats[key])));}
+      function restartLife(){state.mode='setup';state.age=0;state.lifespan=80;state.pointsLeft=20;state.alloc={颜值:5,智力:5,体质:5,家境:5};state.stats={charm:5,intelligence:5,health:5,money:5,happy:5,luck:0};state.events=[];state.summaryRank='未评价';drawTalents();render();}
+      function start(){
+        state.mode='life';state.age=0;state.events=[];state.stats={charm:state.alloc.颜值,intelligence:state.alloc.智力,health:state.alloc.体质,money:state.alloc.家境,happy:5,luck:0};
+        state.talents.forEach(t=>applyEffect(t.delta));
+        state.lifespan=62+state.stats.health*3+state.stats.money+state.stats.luck;
+        pushEvent('0岁：带着 '+state.talents.map(t=>t.name).join('、')+' 开局。');
+        render();
+      }
+      function pushEvent(text){state.events.unshift(text);state.events=state.events.slice(0,12);}
+      function yearlyEvent(){
+        const base=eventTimeline.filter(e=>e.age<=state.age).slice(-1)[0]||eventTimeline[0];
+        applyEffect(base.effect);
+        let text=state.age+'岁：'+base.text;
+        if(state.talents.some(t=>t.id==='late')&&state.age===40){applyEffect({charm:2,intelligence:2,health:2,money:2,happy:2});text+=' 大器晚成触发，人生突然开始回本。';}
+        if((state.age+state.stats.luck)%9===0){applyEffect({happy:2,money:1});text+=' 锦鲤事件发生，今天没有被生活暴击。';}
+        if(state.stats.health<=0){state.lifespan=state.age;text+=' 体质归零，人生提前结算。';}
+        pushEvent(text);
+      }
+      function nextYear(){
+        if(state.mode==='setup')start();
+        if(state.mode!=='life')return;
+        state.age+=1;
+        yearlyEvent();
+        if(state.age>=state.lifespan||state.stats.health<=0)finish();
+        render();
+      }
+      function finish(){state.mode='ended';const score=state.stats.charm+state.stats.intelligence+state.stats.health+state.stats.money+state.stats.happy+state.stats.luck+Math.floor(state.age/5);state.summaryRank=score>70?'SSR 传奇重开':score>54?'SR 体面人生':score>38?'R 普通但能截图':'N 建议再开';pushEvent('结局：活到 '+state.age+' 岁，评级 '+state.summaryRank+'。');}
+      function autoRun(){if(state.mode==='setup')start();let guard=0;while(state.mode==='life'&&guard<110){nextYear();guard++;}render();}
+      function render(){
+        document.getElementById('lifeSetup').classList.toggle('hidden',state.mode!=='setup');
+        document.getElementById('talentPool').innerHTML=state.talents.map(t=>'<button class="chip picked" type="button"><b>'+t.name+'</b><small>'+t.desc+'</small></button>').join('');
+        document.getElementById('allocatePoints').innerHTML=allocatePoints.map(name=>'<div class="alloc-row"><span>'+name+'</span><button data-alloc="'+name+'" data-delta="-1">-</button><b>'+state.alloc[name]+'</b><button data-alloc="'+name+'" data-delta="1">+</button></div>').join('');
+        document.querySelectorAll('[data-alloc]').forEach(btn=>btn.addEventListener('click',()=>setAlloc(btn.dataset.alloc,Number(btn.dataset.delta))));
+        document.getElementById('lifeAge').textContent=state.mode==='setup'?'等待出生':state.age+' 岁';
+        document.getElementById('lifeRank').textContent=state.summaryRank;
+        document.getElementById('lifeStats').innerHTML=[
+          ['颜值',state.stats.charm],['智力',state.stats.intelligence],['体质',state.stats.health],['家境',state.stats.money],['快乐',state.stats.happy],['幸运',state.stats.luck]
+        ].map(([k,v])=>'<span><b>'+v+'</b><i>'+k+'</i></span>').join('');
+        document.getElementById('nextYear').disabled=state.mode==='ended';
+        document.getElementById('eventTimeline').innerHTML=(state.events.length?state.events:['分配属性后开始重开。']).map(item=>'<span>'+item+'</span>').join('');
+      }
+      document.getElementById('startLife').addEventListener('click',start);
+      document.getElementById('nextYear').addEventListener('click',nextYear);
+      document.getElementById('autoLife').addEventListener('click',autoRun);
+      document.getElementById('restartLife').addEventListener('click',restartLife);
+      window.restartLife=restartLife;
+      drawTalents();render();
+      window.advanceTime=(ms)=>{const steps=Math.max(1,Math.floor(ms/350));for(let i=0;i<steps;i++)nextYear();};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM life timeline simulator',mode:state.mode,age:state.age,lifespan:state.lifespan,summaryRank:state.summaryRank,talents:state.talents.map(t=>t.name),allocatePoints:state.alloc,stats:state.stats,eventTimeline:state.events});
+    `,
+  },
+  {
+    id: 'twitter-governance',
+    file: 'twitter-governance.html',
+    title: '推特治国',
+    kind: '模拟',
+    sourceGame: '特朗普式社交媒体治国恶搞模拟',
+    accent: '#2aa3ff',
+    summary: '刷新闻、语音/文本发帖、给幕僚下命令，用一条条动态维持混乱热度。',
+    markup: `
+      <section class="x-app" aria-label="X parody governance simulator">
+        <header class="x-header">
+          <button type="button" aria-label="profile">T</button>
+          <b>X</b>
+          <button type="button" id="agentBtn">AI</button>
+        </header>
+        <nav class="x-top-tabs" id="xTopTabs" aria-label="Timeline tabs">
+          <button class="active" id="forYouTab" type="button">For you</button>
+          <button type="button">Following</button>
+        </nav>
+        <div class="x-status-strip" id="governStats"></div>
+        <section class="x-composer-inline" id="tweetComposer">
+          <span class="x-avatar">T</span>
+          <div class="x-compose-body">
+            <textarea id="tweetInput" maxlength="220" placeholder="What is happening?!"></textarea>
+            <div class="x-compose-tools">
+              <button type="button" id="voiceBtn">🎙</button>
+              <button type="button" id="commandToggle">命令</button>
+              <button type="button" id="sendTweet">Post</button>
+            </div>
+          </div>
+        </section>
+        <section class="x-timeline" id="xTimeline">
+          <div class="news-feed" id="newsFeed"></div>
+        </section>
+        <section class="x-drawer" id="commandPanel">
+          <div class="x-drawer-head"><b>Executive group chat</b><span id="turnText">第 1 小时</span></div>
+          <div class="advisor-roster" id="advisorRoster"></div>
+          <div class="timeline command-log" id="orderLog"></div>
+          <details class="key-drawer">
+            <summary>OpenRouter agent · <span id="agentState">LOCAL</span></summary>
+            <input id="openRouterKey" type="password" autocomplete="off" placeholder="sk-or-...">
+            <input id="openRouterModel" autocomplete="off" value="openai/gpt-4o-mini">
+            <button class="primary" id="saveKeyBtn">保存</button>
+          </details>
+        </section>
+        <button class="floating-compose" id="floatingCompose" type="button" aria-label="compose">＋</button>
+        <nav class="bottom-nav" id="bottomNav" aria-label="X style bottom navigation">
+          <button type="button">⌂</button>
+          <button type="button">⌕</button>
+          <button type="button">◯</button>
+          <button type="button">✉</button>
+        </nav>
+      </section>
+    `,
+    script: `
+      const OpenRouter={storageKey:'printer_openrouter_key',modelKey:'printer_openrouter_model',endpoint:'https:'+'//openrouter.ai/api/v1/chat/completions'};
+      const advisorRoster=[
+        {id:'press',name:'新闻秘书',order:'开记者会',gain:{approval:3,chaos:4},tone:'把问题改成口号'},
+        {id:'treasury',name:'财政高管',order:'稳住市场',gain:{market:7,budget:-4,chaos:-2},tone:'把曲线画成向上'},
+        {id:'security',name:'安全顾问',order:'边境加压',gain:{diplomacy:-5,approval:4,chaos:6},tone:'把地图涂红'},
+        {id:'staff',name:'幕僚长',order:'收手机',gain:{chaos:-8,approval:-2,market:2},tone:'降低发帖频率'},
+        {id:'campaign',name:'竞选经理',order:'造势巡演',gain:{approval:6,budget:-6,chaos:5},tone:'把每个场馆喊满'}
+      ];
+      const localNews=[
+        '市场等待凌晨动态，期货像心电图。',
+        '外媒统计：一个形容词让三国外交部加班。',
+        '硅谷高管排队解释自己不是那个意思。',
+        '幕僚称总统只是用大写字母表达热情。',
+        '电视台把一条短帖拆成六小时特别节目。',
+        '民调显示支持者更兴奋，反对者更清醒。',
+        '白宫打印机因命令过多进入冷却模式。'
+      ];
+      window.__TWITTER_GOVERNANCE_SIM__={reference:'Trump social-media governance parody',OpenRouter:{supported:true,endpointParts:['https:','//openrouter.ai/api/v1/chat/completions'],modelDefault:'openai/gpt-4o-mini'},speechRecognition:true,newsAgentLoop:true,tweetComposer:true,commandPanel:true,advisorRoster:advisorRoster.map(a=>a.id),stats:['approval','market','chaos','diplomacy','budget']};
+      const state={hour:1,approval:48,market:55,chaos:31,diplomacy:50,budget:72,heat:12,agent:false,agentBusy:false,lastTweet:'',newsFeed:[],orders:[],tweets:[],ending:null};
+      const $=(id)=>document.getElementById(id);
+      function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
+      function esc(value){return String(value).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+      function pushNews(text,source='local'){state.newsFeed.unshift({text:String(text).slice(0,160),source,hour:state.hour});state.newsFeed=state.newsFeed.slice(0,9);}
+      function pushOrder(text){state.orders.unshift('H'+state.hour+' · '+text);state.orders=state.orders.slice(0,8);}
+      function applyDelta(delta){Object.entries(delta||{}).forEach(([key,value])=>{state[key]=clamp((state[key]||0)+value,0,100);});}
+      function tweetImpact(text){
+        const upper=(text.match(/[A-Z]/g)||[]).length;
+        const bangs=(text.match(/[!！]/g)||[]).length;
+        const hasMarket=/tax|tariff|关税|股|币|oil|market/i.test(text);
+        const hasWar=/wall|border|war|边境|战争|制裁/i.test(text);
+        const hasFake=/fake|假|媒体|witch/i.test(text);
+        return {approval:2+Math.min(5,bangs),market:hasMarket?-8:1,chaos:6+Math.min(12,upper)+bangs*2,diplomacy:hasWar?-7:(hasFake?-2:0),heat:10+bangs*3};
+      }
+      function tickConsequences(){
+        state.hour+=1;
+        state.chaos=clamp(state.chaos-1+Math.round(state.heat/22),0,100);
+        state.market=clamp(state.market+(state.chaos>58?-3:1),0,100);
+        state.approval=clamp(state.approval+(state.heat>40?1:0)+(state.market<35?-2:0),0,100);
+        state.diplomacy=clamp(state.diplomacy+(state.chaos>66?-3:1),0,100);
+        state.budget=clamp(state.budget-1,0,100);
+        state.heat=clamp(state.heat-5,0,100);
+        if(state.chaos>=95)state.ending='信息风暴失控，所有幕僚同时开飞行模式。';
+        if(state.approval>=82&&state.market>=55)state.ending='你把混乱包装成增长，粉丝宣布这就是治理。';
+        if(state.market<=8)state.ending='市场闪崩，电视台把走势图做成恐怖片。';
+        if(state.diplomacy<=5)state.ending='外交群聊全员已读不回。';
+      }
+      function sendTweet(){
+        const input=$('tweetInput');
+        const text=input.value.trim();
+        if(!text)return;
+        state.lastTweet=text;
+        state.tweets.unshift(text);
+        state.tweets=state.tweets.slice(0,7);
+        applyDelta(tweetImpact(text));
+        pushNews('特朗普模拟号发帖：'+text,'tweet');
+        pushOrder('发帖完成，热度 +'+Math.min(26,10+(text.match(/[!！]/g)||[]).length*3)+'。');
+        input.value='';
+        tickConsequences();
+        if(state.agent)requestAgentNews('tweet');
+        render();
+      }
+      function issueOrder(id){
+        const advisor=advisorRoster.find(a=>a.id===id);
+        if(!advisor)return;
+        applyDelta(advisor.gain);
+        state.heat=clamp(state.heat+4,0,100);
+        pushOrder(advisor.name+'执行：'+advisor.order+'，'+advisor.tone+'。');
+        pushNews(advisor.name+'收到命令：'+advisor.order+'。','order');
+        tickConsequences();
+        if(state.agent)requestAgentNews('order');
+        render();
+      }
+      function localAgentNews(reason='loop'){
+        const base=localNews[(state.hour+state.newsFeed.length+state.chaos)%localNews.length];
+        const metric=state.chaos>62?'混乱指数飙升':state.market<35?'市场承压':state.approval>60?'粉丝热情上升':'内阁等待下一条动态';
+        pushNews(base+' '+metric+'。',reason==='loop'?'agent':'local');
+      }
+      function getKey(){return (window.OPENROUTER_API_KEY||localStorage.getItem(OpenRouter.storageKey)||'').trim();}
+      function getModel(){return ($('openRouterModel').value||localStorage.getItem(OpenRouter.modelKey)||'openai/gpt-4o-mini').trim();}
+      async function askOpenRouter(reason){
+        const key=getKey();
+        if(!key||key.length<12)return null;
+        const model=getModel();
+        const payload={
+          model,
+          messages:[
+            {role:'system',content:'你是一个讽刺政治游戏的新闻 Agent。生成虚构、短促、像社交媒体热搜的中文新闻。不要声称是真实新闻，不要给现实投票建议。只输出一句，不超过45字。'},
+            {role:'user',content:'状态：支持率'+state.approval+' 市场'+state.market+' 混乱'+state.chaos+' 外交'+state.diplomacy+' 预算'+state.budget+'。最近发帖：'+(state.lastTweet||'无')+'。触发：'+reason}
+          ],
+          max_tokens:70,
+          temperature:.9
+        };
+        const response=await fetch(OpenRouter.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key,'HTTP-Referer':location.origin,'X-Title':'Printer Fake Game Library'},body:JSON.stringify(payload)});
+        if(!response.ok)throw new Error('OpenRouter '+response.status);
+        const data=await response.json();
+        return data&&data.choices&&data.choices[0]&&data.choices[0].message?data.choices[0].message.content:null;
+      }
+      async function requestAgentNews(reason='manual'){
+        if(state.agentBusy)return;
+        state.agentBusy=true;
+        render();
+        try{
+          const text=await askOpenRouter(reason);
+          if(text)pushNews(text.replace(/^["“”]+|["“”]+$/g,''),'OpenRouter');
+          else localAgentNews(reason);
+        }catch(error){
+          pushNews('Agent 连接失败，切回本地热搜引擎。','fallback');
+          localAgentNews(reason);
+        }finally{
+          state.agentBusy=false;
+          render();
+        }
+      }
+      function newsAgentLoop(){
+        if(state.ending)return;
+        if(state.agent)requestAgentNews('loop');
+        else localAgentNews('loop');
+        tickConsequences();
+        render();
+      }
+      let speechRecognition=null;
+      const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(SpeechRecognition){
+        speechRecognition=new SpeechRecognition();
+        speechRecognition.lang='zh-CN';
+        speechRecognition.interimResults=false;
+        speechRecognition.onresult=(event)=>{const text=event.results&&event.results[0]&&event.results[0][0]?event.results[0][0].transcript:'';$('tweetInput').value=($('tweetInput').value+' '+text).trim();pushOrder('语音输入完成。');render();};
+        speechRecognition.onerror=()=>{pushOrder('语音识别失败，改用手打。');render();};
+      }
+      function startVoice(){
+        if(!speechRecognition){pushOrder('当前浏览器不支持 speechRecognition。');render();return;}
+        try{speechRecognition.start();pushOrder('正在听写动态。');render();}catch(error){pushOrder('语音通道已占用。');render();}
+      }
+      function saveKey(){
+        const key=$('openRouterKey').value.trim();
+        const model=$('openRouterModel').value.trim()||'openai/gpt-4o-mini';
+        if(key)localStorage.setItem(OpenRouter.storageKey,key);
+        localStorage.setItem(OpenRouter.modelKey,model);
+        pushOrder(key?'OpenRouter key 已保存在本机浏览器。':'模型已保存，key 为空时使用本地新闻。');
+        render();
+      }
+      function render(){
+        $('turnText').textContent=state.ending?'结局':'第 '+state.hour+' 小时';
+        $('agentState').textContent=state.agentBusy?'AGENT...':(state.agent?(getKey()?'OPENROUTER':'LOCAL AGENT'):'LOCAL');
+        $('governStats').innerHTML=[
+          ['支持',state.approval],['市场',state.market],['混乱',state.chaos],['外交',state.diplomacy],['预算',state.budget],['热度',state.heat]
+        ].map(([k,v])=>'<span><b>'+Math.round(v)+'</b><i>'+k+'</i></span>').join('');
+        const names={system:['模拟白宫','@parodydesk','T','#1d9bf0'],tweet:['Donald J. Parody','@realParodyDesk','T','#1d9bf0'],order:['Executive Office','@cabinet_room','E','#7856ff'],agent:['Breaking News','@trendwire','B','#00ba7c'],local:['Trend Desk','@local_agent','L','#f91880'],OpenRouter:['AI Wire','@openrouter_agent','AI','#1d9bf0'],fallback:['Signal Lost','@fallback','F','#ffd400'],start:['X','@home','X','#273340']};
+        $('newsFeed').innerHTML=(state.newsFeed.length?state.newsFeed:[{text:'凌晨时间线空白，等待第一条动态。',source:'start',hour:1}]).map((item,index)=>{
+          const meta=names[item.source]||names.local;
+          const replies=Math.max(1,Math.round((state.chaos+index*3)/6));
+          const reposts=Math.max(1,Math.round((state.heat+index*5)/5));
+          const likes=Math.max(8,Math.round((state.approval+state.heat)*2.1)+index*11);
+          const views=Math.max(1,Math.round((likes+reposts)*.42));
+          return '<article data-avatar="'+esc(meta[2])+'" style="--tweet-avatar:'+esc(meta[3])+'"><header><b>'+esc(meta[0])+'</b><span>'+esc(meta[1])+'</span><span>·</span><span>'+esc(item.hour)+'h</span></header><p>'+esc(item.text)+'</p><div class="tweet-actions"><span>💬 '+replies+'</span><span>↻ '+reposts+'</span><span>♡ '+likes+'</span><span>▥ '+views+'K</span></div></article>';
+        }).join('');
+        $('advisorRoster').innerHTML=advisorRoster.map(a=>'<button class="choice" data-order="'+a.id+'"><b>'+a.name+'</b><span>'+a.order+'</span></button>').join('');
+        $('advisorRoster').querySelectorAll('[data-order]').forEach(btn=>btn.addEventListener('click',()=>issueOrder(btn.dataset.order)));
+        $('orderLog').innerHTML=(state.ending?[state.ending].concat(state.orders):state.orders.length?state.orders:['等待发帖或命令。']).map(item=>'<span>'+esc(item)+'</span>').join('');
+        $('agentBtn').textContent=state.agent?'ON':'AI';
+        $('sendTweet').disabled=Boolean(state.ending);
+      }
+      $('sendTweet').addEventListener('click',sendTweet);
+      $('tweetInput').addEventListener('keydown',(event)=>{if((event.metaKey||event.ctrlKey)&&event.key==='Enter')sendTweet();});
+      $('voiceBtn').addEventListener('click',startVoice);
+      $('agentBtn').addEventListener('click',()=>{state.agent=!state.agent;pushOrder(state.agent?'新闻 Agent 已开启。':'新闻 Agent 已关闭。');if(state.agent)requestAgentNews('toggle');render();});
+      $('commandToggle').addEventListener('click',()=>$('commandPanel').classList.toggle('is-open'));
+      $('floatingCompose').addEventListener('click',()=>{$('tweetInput').focus();window.scrollTo({top:$('tweetComposer').offsetTop-90,behavior:'smooth'});});
+      $('saveKeyBtn').addEventListener('click',saveKey);
+      $('openRouterModel').value=localStorage.getItem(OpenRouter.modelKey)||'openai/gpt-4o-mini';
+      pushNews('模拟账号上线：所有动态均为恶搞，不代表真实发言。','system');
+      render();
+      const loopTimer=setInterval(newsAgentLoop,7600);
+      window.sendTweet=sendTweet;
+      window.issueOrder=issueOrder;
+      window.newsAgentLoop=newsAgentLoop;
+      window.advanceTime=(ms)=>{const steps=Math.max(1,Math.floor(ms/1800));for(let i=0;i<steps;i++)newsAgentLoop();};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM social timeline simulator',hour:state.hour,agent:state.agent,agentBusy:state.agentBusy,keyPresent:Boolean(getKey()),approval:state.approval,market:state.market,chaos:state.chaos,diplomacy:state.diplomacy,budget:state.budget,heat:state.heat,lastTweet:state.lastTweet,newsFeed:state.newsFeed.slice(0,5),orders:state.orders.slice(0,5),ending:state.ending,advisorRoster:advisorRoster.map(a=>a.id),speechRecognition:Boolean(speechRecognition),loopTimer:Boolean(loopTimer)});
+    `,
+  },
+  {
     id: 'io-arena-template',
     file: 'io-arena-template.html',
     title: '空投乱斗.io 模板',
@@ -1365,6 +1839,81 @@ function commonCss(accent) {
     .hex-line.broken { grid-template-columns: 1fr 1fr; }
     .hex-line i { display: block; border-radius: 999px; background: linear-gradient(90deg, #ffe7a3, var(--game-accent)); }
     .cast-log { display: grid; gap: 8px; }
+    .sim-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .sim-header b { font-size: 18px; }
+    .sim-header span { color: var(--cyan); font-size: 12px; font-weight: 1000; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stat-grid span { min-height: 58px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.08); }
+    .stat-grid b { font-size: 20px; line-height: 1; }
+    .stat-grid i { color: rgba(255,255,255,.58); font-size: 11px; font-style: normal; font-weight: 900; }
+    .action-grid { display: grid; gap: 8px; }
+    .action-grid .choice { display: grid; gap: 4px; }
+    .action-grid .choice span { color: rgba(255,255,255,.62); font-size: 12px; font-weight: 800; overflow-wrap: anywhere; }
+    .student-list, .timeline { display: grid; gap: 8px; }
+    .student-list span, .timeline span { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.84); font-size: 12px; line-height: 1.35; }
+    .student-list b { display: block; color: #fff; font-size: 13px; margin-bottom: 3px; }
+    .student-list i { color: rgba(255,255,255,.62); font-style: normal; font-weight: 800; }
+    .alloc-grid { display: grid; gap: 8px; margin: 10px 0; }
+    .alloc-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 8px; background: rgba(255,255,255,.08); }
+    .alloc-row span { font-weight: 900; }
+    .alloc-row b { text-align: center; font-size: 18px; }
+    .alloc-row button { min-height: 40px; border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-weight: 1000; }
+    body[data-game-page="twitter-governance"] { background: #000; }
+    body[data-game-page="twitter-governance"] .phone-shell { background: #000; color: #e7e9ea; border-color: rgba(255,255,255,.14); }
+    body[data-game-page="twitter-governance"] .app-top,
+    body[data-game-page="twitter-governance"] .play-hero { display: none; }
+    body[data-game-page="twitter-governance"] .play-screen { padding: 0; min-height: 100svh; background: #000; }
+    body[data-game-page="twitter-governance"] .game-stage { display: block; gap: 0; padding-bottom: 78px; }
+    .x-app { position: relative; min-height: 100svh; background: #000; color: #e7e9ea; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    .x-header { position: sticky; top: 0; z-index: 8; height: 50px; display: grid; grid-template-columns: 50px 1fr 50px; align-items: center; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-header b { text-align: center; color: #fff; font-size: 24px; line-height: 1; font-weight: 900; }
+    .x-header button { width: 36px; height: 36px; margin: auto; border: 0; border-radius: 50%; background: transparent; color: #e7e9ea; font-size: 14px; font-weight: 900; }
+    .x-header button:first-child { background: #1d9bf0; color: #001018; }
+    .x-header #agentBtn { border: 1px solid #2f3336; font-size: 11px; color: #1d9bf0; }
+    .x-top-tabs { position: sticky; top: 50px; z-index: 8; display: grid; grid-template-columns: 1fr 1fr; height: 48px; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-top-tabs button { position: relative; border: 0; background: transparent; color: #71767b; font-size: 15px; font-weight: 800; }
+    .x-top-tabs .active { color: #e7e9ea; }
+    .x-top-tabs .active::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 54px; height: 4px; transform: translateX(-50%); border-radius: 999px; background: #1d9bf0; }
+    .x-status-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #2f3336; background: #000; }
+    .x-status-strip span { min-width: 0; min-height: 54px; display: grid; place-items: center; gap: 2px; border-right: 1px solid #16181c; }
+    .x-status-strip span:last-child { border-right: 0; }
+    .x-status-strip b { color: #e7e9ea; font-size: 16px; line-height: 1; }
+    .x-status-strip i { color: #71767b; font-size: 10px; font-style: normal; font-weight: 800; }
+    .x-composer-inline { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid #2f3336; background: #000; }
+    .x-avatar { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #1d9bf0; color: #001018; font-size: 20px; font-weight: 1000; }
+    .x-compose-body { min-width: 0; display: grid; gap: 8px; }
+    .x-composer-inline textarea { width: 100%; min-height: 64px; border: 0; padding: 8px 0; resize: none; background: transparent; color: #e7e9ea; font: inherit; font-size: 19px; line-height: 1.28; outline: none; }
+    .x-composer-inline textarea::placeholder { color: #71767b; }
+    .x-compose-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid #2f3336; padding-top: 8px; }
+    .x-compose-tools button { min-height: 36px; border: 0; border-radius: 999px; padding: 0 13px; background: transparent; color: #1d9bf0; font-weight: 900; }
+    .x-compose-tools #sendTweet { min-width: 68px; background: #1d9bf0; color: #fff; }
+    .x-compose-tools #commandToggle { background: rgba(29,155,240,.14); }
+    .x-timeline { background: #000; }
+    .news-feed { display: grid; }
+    .news-feed article { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; border-bottom: 1px solid #2f3336; padding: 12px 14px 10px; background: #000; }
+    .news-feed article::before { content: attr(data-avatar); width: 40px; height: 40px; grid-row: 1 / span 3; display: grid; place-items: center; border-radius: 50%; background: var(--tweet-avatar, #273340); color: #fff; font-size: 16px; font-weight: 1000; }
+    .news-feed header { min-width: 0; display: flex; align-items: baseline; gap: 5px; color: #71767b; font-size: 13px; line-height: 1.2; }
+    .news-feed header b { min-width: 0; color: #e7e9ea; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .news-feed header span { flex: 0 0 auto; }
+    .news-feed p { grid-column: 2; margin: 3px 0 8px; color: #e7e9ea; font-size: 15px; line-height: 1.34; font-weight: 500; overflow-wrap: anywhere; }
+    .tweet-actions { grid-column: 2; display: grid; grid-template-columns: repeat(4, 1fr); color: #71767b; font-size: 12px; font-weight: 800; }
+    .tweet-actions span { display: inline-flex; align-items: center; gap: 5px; }
+    .x-drawer { display: none; margin: 0; border-bottom: 1px solid #2f3336; padding: 12px 14px; background: #000; }
+    .x-drawer.is-open { display: grid; gap: 12px; }
+    .x-drawer-head { display: flex; justify-content: space-between; gap: 10px; color: #e7e9ea; }
+    .x-drawer-head span { color: #71767b; font-size: 12px; font-weight: 900; }
+    .advisor-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .advisor-roster .choice { min-height: 68px; display: grid; align-content: center; gap: 4px; border: 1px solid #2f3336; border-radius: 16px; padding: 10px; background: #000; color: #e7e9ea; text-align: left; }
+    .advisor-roster .choice b { font-size: 14px; }
+    .advisor-roster .choice span { color: #71767b; font-size: 11px; line-height: 1.2; font-weight: 850; }
+    .command-log span { border-color: #2f3336; background: #000; color: #cfd9de; }
+    .key-drawer { border: 1px solid #2f3336; border-radius: 16px; padding: 10px 12px; background: #000; }
+    .key-drawer summary { color: #71767b; font-size: 12px; font-weight: 1000; cursor: pointer; }
+    .key-drawer input { width: 100%; min-height: 42px; margin-top: 8px; border: 1px solid #2f3336; border-radius: 12px; padding: 0 10px; background: #000; color: #e7e9ea; font: inherit; }
+    .key-drawer button { margin-top: 8px; width: 100%; background: #1d9bf0; }
+    .floating-compose { position: fixed; z-index: 12; right: max(18px, calc((100vw - 430px) / 2 + 18px)); bottom: calc(78px + env(safe-area-inset-bottom)); width: 58px; height: 58px; border: 0; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 30px; line-height: 1; font-weight: 900; box-shadow: 0 12px 34px rgba(29,155,240,.34); }
+    .bottom-nav { position: fixed; left: 50%; bottom: 0; z-index: 10; width: min(100vw, 430px); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr); height: calc(58px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #2f3336; background: rgba(0,0,0,.92); backdrop-filter: blur(18px); }
+    .bottom-nav button { border: 0; background: transparent; color: #e7e9ea; font-size: 23px; }
     @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
   `;
 }
@@ -1415,7 +1964,7 @@ function indexPage() {
     intent_plan: pipelinePlan,
     complexity: { total: 78, components: 24, interactions: 26, pages: games.length, data_flow: 20 },
   };
-  const coverGlyphs = ['SBTI','羊','脑','刺','撞','密','合','☑','跑','种','io','战','玄','塔','命','星','卦'];
+  const coverGlyphs = ['SBTI','羊','脑','刺','撞','密','合','☑','跑','种','io','青','重','推','战','玄','塔','命','星','卦'];
   const homeItems = games.map((game, i) => ({
     id: game.id,
     instanceId: `${game.id}-0`,

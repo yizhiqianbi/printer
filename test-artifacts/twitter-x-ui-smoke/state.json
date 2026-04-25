@@ -1,0 +1,74 @@
+{
+  "state": {
+    "coordinate_system": "DOM social timeline simulator",
+    "hour": 5,
+    "agent": true,
+    "agentBusy": false,
+    "keyPresent": false,
+    "approval": 52,
+    "market": 58,
+    "chaos": 51,
+    "diplomacy": 54,
+    "budget": 64,
+    "heat": 12,
+    "lastTweet": "MAKE MARKETS LOUD AGAIN!! 关税先暂停但要赢",
+    "newsFeed": [
+      {
+        "text": "电视台把一条短帖拆成六小时特别节目。 内阁等待下一条动态。",
+        "source": "agent",
+        "hour": 5
+      },
+      {
+        "text": "外媒统计：一个形容词让三国外交部加班。 内阁等待下一条动态。",
+        "source": "local",
+        "hour": 3
+      },
+      {
+        "text": "财政高管收到命令：稳住市场。",
+        "source": "order",
+        "hour": 2
+      },
+      {
+        "text": "特朗普模拟号发帖：MAKE MARKETS LOUD AGAIN!! 关税先暂停但要赢",
+        "source": "tweet",
+        "hour": 1
+      },
+      {
+        "text": "模拟账号上线：所有动态均为恶搞，不代表真实发言。",
+        "source": "system",
+        "hour": 1
+      }
+    ],
+    "orders": [
+      "H3 · 新闻 Agent 已开启。",
+      "H2 · 财政高管执行：稳住市场，把曲线画成向上。",
+      "H1 · 发帖完成，热度 +16。"
+    ],
+    "ending": null,
+    "advisorRoster": [
+      "press",
+      "treasury",
+      "security",
+      "staff",
+      "campaign"
+    ],
+    "speechRecognition": true,
+    "loopTimer": true
+  },
+  "metrics": {
+    "width": 390,
+    "docScrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "shellWidth": 390,
+    "xHeader": true,
+    "xTopTabs": true,
+    "forYouText": "For you",
+    "tweetCards": 5,
+    "firstTweetActions": 20,
+    "bottomNav": true,
+    "floatingCompose": true,
+    "commandOpen": true,
+    "agentText": "LOCAL AGENT"
+  },
+  "errors": []
+}

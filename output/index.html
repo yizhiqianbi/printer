@@ -115,6 +115,81 @@
     .hex-line.broken { grid-template-columns: 1fr 1fr; }
     .hex-line i { display: block; border-radius: 999px; background: linear-gradient(90deg, #ffe7a3, var(--game-accent)); }
     .cast-log { display: grid; gap: 8px; }
+    .sim-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .sim-header b { font-size: 18px; }
+    .sim-header span { color: var(--cyan); font-size: 12px; font-weight: 1000; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stat-grid span { min-height: 58px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.08); }
+    .stat-grid b { font-size: 20px; line-height: 1; }
+    .stat-grid i { color: rgba(255,255,255,.58); font-size: 11px; font-style: normal; font-weight: 900; }
+    .action-grid { display: grid; gap: 8px; }
+    .action-grid .choice { display: grid; gap: 4px; }
+    .action-grid .choice span { color: rgba(255,255,255,.62); font-size: 12px; font-weight: 800; overflow-wrap: anywhere; }
+    .student-list, .timeline { display: grid; gap: 8px; }
+    .student-list span, .timeline span { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.84); font-size: 12px; line-height: 1.35; }
+    .student-list b { display: block; color: #fff; font-size: 13px; margin-bottom: 3px; }
+    .student-list i { color: rgba(255,255,255,.62); font-style: normal; font-weight: 800; }
+    .alloc-grid { display: grid; gap: 8px; margin: 10px 0; }
+    .alloc-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 8px; background: rgba(255,255,255,.08); }
+    .alloc-row span { font-weight: 900; }
+    .alloc-row b { text-align: center; font-size: 18px; }
+    .alloc-row button { min-height: 40px; border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-weight: 1000; }
+    body[data-game-page="twitter-governance"] { background: #000; }
+    body[data-game-page="twitter-governance"] .phone-shell { background: #000; color: #e7e9ea; border-color: rgba(255,255,255,.14); }
+    body[data-game-page="twitter-governance"] .app-top,
+    body[data-game-page="twitter-governance"] .play-hero { display: none; }
+    body[data-game-page="twitter-governance"] .play-screen { padding: 0; min-height: 100svh; background: #000; }
+    body[data-game-page="twitter-governance"] .game-stage { display: block; gap: 0; padding-bottom: 78px; }
+    .x-app { position: relative; min-height: 100svh; background: #000; color: #e7e9ea; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    .x-header { position: sticky; top: 0; z-index: 8; height: 50px; display: grid; grid-template-columns: 50px 1fr 50px; align-items: center; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-header b { text-align: center; color: #fff; font-size: 24px; line-height: 1; font-weight: 900; }
+    .x-header button { width: 36px; height: 36px; margin: auto; border: 0; border-radius: 50%; background: transparent; color: #e7e9ea; font-size: 14px; font-weight: 900; }
+    .x-header button:first-child { background: #1d9bf0; color: #001018; }
+    .x-header #agentBtn { border: 1px solid #2f3336; font-size: 11px; color: #1d9bf0; }
+    .x-top-tabs { position: sticky; top: 50px; z-index: 8; display: grid; grid-template-columns: 1fr 1fr; height: 48px; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-top-tabs button { position: relative; border: 0; background: transparent; color: #71767b; font-size: 15px; font-weight: 800; }
+    .x-top-tabs .active { color: #e7e9ea; }
+    .x-top-tabs .active::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 54px; height: 4px; transform: translateX(-50%); border-radius: 999px; background: #1d9bf0; }
+    .x-status-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #2f3336; background: #000; }
+    .x-status-strip span { min-width: 0; min-height: 54px; display: grid; place-items: center; gap: 2px; border-right: 1px solid #16181c; }
+    .x-status-strip span:last-child { border-right: 0; }
+    .x-status-strip b { color: #e7e9ea; font-size: 16px; line-height: 1; }
+    .x-status-strip i { color: #71767b; font-size: 10px; font-style: normal; font-weight: 800; }
+    .x-composer-inline { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid #2f3336; background: #000; }
+    .x-avatar { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #1d9bf0; color: #001018; font-size: 20px; font-weight: 1000; }
+    .x-compose-body { min-width: 0; display: grid; gap: 8px; }
+    .x-composer-inline textarea { width: 100%; min-height: 64px; border: 0; padding: 8px 0; resize: none; background: transparent; color: #e7e9ea; font: inherit; font-size: 19px; line-height: 1.28; outline: none; }
+    .x-composer-inline textarea::placeholder { color: #71767b; }
+    .x-compose-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid #2f3336; padding-top: 8px; }
+    .x-compose-tools button { min-height: 36px; border: 0; border-radius: 999px; padding: 0 13px; background: transparent; color: #1d9bf0; font-weight: 900; }
+    .x-compose-tools #sendTweet { min-width: 68px; background: #1d9bf0; color: #fff; }
+    .x-compose-tools #commandToggle { background: rgba(29,155,240,.14); }
+    .x-timeline { background: #000; }
+    .news-feed { display: grid; }
+    .news-feed article { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; border-bottom: 1px solid #2f3336; padding: 12px 14px 10px; background: #000; }
+    .news-feed article::before { content: attr(data-avatar); width: 40px; height: 40px; grid-row: 1 / span 3; display: grid; place-items: center; border-radius: 50%; background: var(--tweet-avatar, #273340); color: #fff; font-size: 16px; font-weight: 1000; }
+    .news-feed header { min-width: 0; display: flex; align-items: baseline; gap: 5px; color: #71767b; font-size: 13px; line-height: 1.2; }
+    .news-feed header b { min-width: 0; color: #e7e9ea; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .news-feed header span { flex: 0 0 auto; }
+    .news-feed p { grid-column: 2; margin: 3px 0 8px; color: #e7e9ea; font-size: 15px; line-height: 1.34; font-weight: 500; overflow-wrap: anywhere; }
+    .tweet-actions { grid-column: 2; display: grid; grid-template-columns: repeat(4, 1fr); color: #71767b; font-size: 12px; font-weight: 800; }
+    .tweet-actions span { display: inline-flex; align-items: center; gap: 5px; }
+    .x-drawer { display: none; margin: 0; border-bottom: 1px solid #2f3336; padding: 12px 14px; background: #000; }
+    .x-drawer.is-open { display: grid; gap: 12px; }
+    .x-drawer-head { display: flex; justify-content: space-between; gap: 10px; color: #e7e9ea; }
+    .x-drawer-head span { color: #71767b; font-size: 12px; font-weight: 900; }
+    .advisor-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .advisor-roster .choice { min-height: 68px; display: grid; align-content: center; gap: 4px; border: 1px solid #2f3336; border-radius: 16px; padding: 10px; background: #000; color: #e7e9ea; text-align: left; }
+    .advisor-roster .choice b { font-size: 14px; }
+    .advisor-roster .choice span { color: #71767b; font-size: 11px; line-height: 1.2; font-weight: 850; }
+    .command-log span { border-color: #2f3336; background: #000; color: #cfd9de; }
+    .key-drawer { border: 1px solid #2f3336; border-radius: 16px; padding: 10px 12px; background: #000; }
+    .key-drawer summary { color: #71767b; font-size: 12px; font-weight: 1000; cursor: pointer; }
+    .key-drawer input { width: 100%; min-height: 42px; margin-top: 8px; border: 1px solid #2f3336; border-radius: 12px; padding: 0 10px; background: #000; color: #e7e9ea; font: inherit; }
+    .key-drawer button { margin-top: 8px; width: 100%; background: #1d9bf0; }
+    .floating-compose { position: fixed; z-index: 12; right: max(18px, calc((100vw - 430px) / 2 + 18px)); bottom: calc(78px + env(safe-area-inset-bottom)); width: 58px; height: 58px; border: 0; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 30px; line-height: 1; font-weight: 900; box-shadow: 0 12px 34px rgba(29,155,240,.34); }
+    .bottom-nav { position: fixed; left: 50%; bottom: 0; z-index: 10; width: min(100vw, 430px); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr); height: calc(58px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #2f3336; background: rgba(0,0,0,.92); backdrop-filter: blur(18px); }
+    .bottom-nav button { border: 0; background: transparent; color: #e7e9ea; font-size: 23px; }
     @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
   
     html, body { background: #040404; }
@@ -273,41 +348,59 @@
         <span class="water-summary">拖动移动，吃小点长大，别被大圆点吃掉。</span>
         <span class="water-meta"><span>@赝品库</span><span>♡ 2.6k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="11" data-instance-id="io-arena-template-0" style="--game-accent:#22f4ee; --cover-h:162px;">
+      <button class="water-card" type="button" data-open-feed="11" data-instance-id="qingjiao-sim-0" style="--game-accent:#21c26b; --cover-h:162px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/qingjiao-sim.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>青</b><i>经营</i></span>
+        <span class="water-title">青椒模拟器</span>
+        <span class="water-summary">申请教职、招学生、投基金、发论文，在非升即走里保住心态。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.7k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="12" data-instance-id="life-restart-fake-0" style="--game-accent:#ffcf33; --cover-h:168px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/life-restart-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>重</b><i>重开</i></span>
+        <span class="water-title">人生重开模拟器</span>
+        <span class="water-summary">抽天赋、分配属性、逐岁推进，看这一局人生如何离谱收束。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.8k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="13" data-instance-id="twitter-governance-0" style="--game-accent:#2aa3ff; --cover-h:198px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/twitter-governance.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>推</b><i>模拟</i></span>
+        <span class="water-title">推特治国</span>
+        <span class="water-summary">刷新闻、语音/文本发帖、给幕僚下命令，用一条条动态维持混乱热度。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.0k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="14" data-instance-id="io-arena-template-0" style="--game-accent:#22f4ee; --cover-h:204px;">
         <span class="water-cover"><img class="water-cover-image" src="covers/io-arena-template.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>战</b><i>模板</i></span>
         <span class="water-title">空投乱斗.io 模板</span>
         <span class="water-summary">双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.7k</span></span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.1k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="12" data-instance-id="mystic-score-0" style="--game-accent:#9b59b6; --cover-h:168px;">
+      <button class="water-card" type="button" data-open-feed="15" data-instance-id="mystic-score-0" style="--game-accent:#9b59b6; --cover-h:144px;">
         <span class="water-cover"><img class="water-cover-image" src="covers/mystic-score.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>玄</b><i>玄学</i></span>
         <span class="water-title">赛博玄学评分器</span>
         <span class="water-summary">输入名字，生成今日抽象运势卡。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.8k</span></span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.3k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="13" data-instance-id="tarot-daily-0" style="--game-accent:#c45cff; --cover-h:198px;">
+      <button class="water-card" type="button" data-open-feed="16" data-instance-id="tarot-daily-0" style="--game-accent:#c45cff; --cover-h:150px;">
         <span class="water-cover"><img class="water-cover-image" src="covers/tarot-daily.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>塔</b><i>塔罗</i></span>
         <span class="water-title">打工塔罗三连</span>
         <span class="water-summary">输入代号抽三张赛博塔罗，给出今日抽象建议。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.0k</span></span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.4k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="14" data-instance-id="bazi-lite-0" style="--game-accent:#e4a63b; --cover-h:204px;">
+      <button class="water-card" type="button" data-open-feed="17" data-instance-id="bazi-lite-0" style="--game-accent:#e4a63b; --cover-h:180px;">
         <span class="water-cover"><img class="water-cover-image" src="covers/bazi-lite.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>命</b><i>算命</i></span>
         <span class="water-title">八字偏科生成器</span>
         <span class="water-summary">生日时辰生成假认真四柱，重点看五行哪里离谱。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.1k</span></span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.5k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="15" data-instance-id="astro-wheel-0" style="--game-accent:#5bbcff; --cover-h:144px;">
+      <button class="water-card" type="button" data-open-feed="18" data-instance-id="astro-wheel-0" style="--game-accent:#5bbcff; --cover-h:186px;">
         <span class="water-cover"><img class="water-cover-image" src="covers/astro-wheel.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>星</b><i>看盘</i></span>
         <span class="water-title">星盘甩锅轮</span>
         <span class="water-summary">一键画出可分享星盘，把今天的问题甩给相位。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.3k</span></span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.7k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="16" data-instance-id="yijing-coins-0" style="--game-accent:#d6b45f; --cover-h:150px;">
+      <button class="water-card" type="button" data-open-feed="19" data-instance-id="yijing-coins-0" style="--game-accent:#d6b45f; --cover-h:216px;">
         <span class="water-cover"><img class="water-cover-image" src="covers/yijing-coins.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>卦</b><i>易经</i></span>
         <span class="water-title">六爻离谱铜钱</span>
         <span class="water-summary">点六次摇铜钱，得到一卦适合转发的离谱签文。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.4k</span></span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.8k</span></span>
       </button>
       </section>
     </main>
@@ -490,7 +583,55 @@
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#22f4ee; --n:11;" data-instance-id="io-arena-template-0" data-src="io-arena-template.html">
+        <article class="feed-item" style="--game-accent:#21c26b; --n:11;" data-instance-id="qingjiao-sim-0" data-src="qingjiao-sim.html">
+          <section class="live-card is-playing" aria-label="青椒模拟器 HTML 预览">
+            <iframe class="html-frame" title="青椒模拟器" src="about:blank" data-src="qingjiao-sim.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>青椒模拟器</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 青椒模拟器"><b>♡</b><span data-count="like">2.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 青椒模拟器"><b>☆</b><span data-count="save">581</span></button>
+            <a class="action-button" href="qingjiao-sim.html" aria-label="打开 青椒模拟器"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 青椒模拟器"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#ffcf33; --n:12;" data-instance-id="life-restart-fake-0" data-src="life-restart-fake.html">
+          <section class="live-card is-playing" aria-label="人生重开模拟器 HTML 预览">
+            <iframe class="html-frame" title="人生重开模拟器" src="about:blank" data-src="life-restart-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>人生重开模拟器</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 人生重开模拟器"><b>♡</b><span data-count="like">2.8k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 人生重开模拟器"><b>☆</b><span data-count="save">612</span></button>
+            <a class="action-button" href="life-restart-fake.html" aria-label="打开 人生重开模拟器"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 人生重开模拟器"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#2aa3ff; --n:13;" data-instance-id="twitter-governance-0" data-src="twitter-governance.html">
+          <section class="live-card is-playing" aria-label="推特治国 HTML 预览">
+            <iframe class="html-frame" title="推特治国" src="about:blank" data-src="twitter-governance.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>推特治国</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 推特治国"><b>♡</b><span data-count="like">3.0k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 推特治国"><b>☆</b><span data-count="save">643</span></button>
+            <a class="action-button" href="twitter-governance.html" aria-label="打开 推特治国"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 推特治国"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#22f4ee; --n:14;" data-instance-id="io-arena-template-0" data-src="io-arena-template.html">
           <section class="live-card is-playing" aria-label="空投乱斗.io 模板 HTML 预览">
             <iframe class="html-frame" title="空投乱斗.io 模板" src="about:blank" data-src="io-arena-template.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -499,14 +640,14 @@
             <h2>空投乱斗.io 模板</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 空投乱斗.io 模板"><b>♡</b><span data-count="like">2.7k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 空投乱斗.io 模板"><b>☆</b><span data-count="save">581</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 空投乱斗.io 模板"><b>♡</b><span data-count="like">3.1k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 空投乱斗.io 模板"><b>☆</b><span data-count="save">674</span></button>
             <a class="action-button" href="io-arena-template.html" aria-label="打开 空投乱斗.io 模板"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 空投乱斗.io 模板"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#9b59b6; --n:12;" data-instance-id="mystic-score-0" data-src="mystic-score.html">
+        <article class="feed-item" style="--game-accent:#9b59b6; --n:15;" data-instance-id="mystic-score-0" data-src="mystic-score.html">
           <section class="live-card is-playing" aria-label="赛博玄学评分器 HTML 预览">
             <iframe class="html-frame" title="赛博玄学评分器" src="about:blank" data-src="mystic-score.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -515,14 +656,14 @@
             <h2>赛博玄学评分器</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 赛博玄学评分器"><b>♡</b><span data-count="like">2.8k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 赛博玄学评分器"><b>☆</b><span data-count="save">612</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 赛博玄学评分器"><b>♡</b><span data-count="like">3.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 赛博玄学评分器"><b>☆</b><span data-count="save">705</span></button>
             <a class="action-button" href="mystic-score.html" aria-label="打开 赛博玄学评分器"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 赛博玄学评分器"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#c45cff; --n:13;" data-instance-id="tarot-daily-0" data-src="tarot-daily.html">
+        <article class="feed-item" style="--game-accent:#c45cff; --n:16;" data-instance-id="tarot-daily-0" data-src="tarot-daily.html">
           <section class="live-card is-playing" aria-label="打工塔罗三连 HTML 预览">
             <iframe class="html-frame" title="打工塔罗三连" src="about:blank" data-src="tarot-daily.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -531,14 +672,14 @@
             <h2>打工塔罗三连</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 打工塔罗三连"><b>♡</b><span data-count="like">3.0k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 打工塔罗三连"><b>☆</b><span data-count="save">643</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 打工塔罗三连"><b>♡</b><span data-count="like">3.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 打工塔罗三连"><b>☆</b><span data-count="save">736</span></button>
             <a class="action-button" href="tarot-daily.html" aria-label="打开 打工塔罗三连"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 打工塔罗三连"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#e4a63b; --n:14;" data-instance-id="bazi-lite-0" data-src="bazi-lite.html">
+        <article class="feed-item" style="--game-accent:#e4a63b; --n:17;" data-instance-id="bazi-lite-0" data-src="bazi-lite.html">
           <section class="live-card is-playing" aria-label="八字偏科生成器 HTML 预览">
             <iframe class="html-frame" title="八字偏科生成器" src="about:blank" data-src="bazi-lite.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -547,14 +688,14 @@
             <h2>八字偏科生成器</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 八字偏科生成器"><b>♡</b><span data-count="like">3.1k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 八字偏科生成器"><b>☆</b><span data-count="save">674</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 八字偏科生成器"><b>♡</b><span data-count="like">3.5k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 八字偏科生成器"><b>☆</b><span data-count="save">767</span></button>
             <a class="action-button" href="bazi-lite.html" aria-label="打开 八字偏科生成器"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 八字偏科生成器"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#5bbcff; --n:15;" data-instance-id="astro-wheel-0" data-src="astro-wheel.html">
+        <article class="feed-item" style="--game-accent:#5bbcff; --n:18;" data-instance-id="astro-wheel-0" data-src="astro-wheel.html">
           <section class="live-card is-playing" aria-label="星盘甩锅轮 HTML 预览">
             <iframe class="html-frame" title="星盘甩锅轮" src="about:blank" data-src="astro-wheel.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -563,14 +704,14 @@
             <h2>星盘甩锅轮</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 星盘甩锅轮"><b>♡</b><span data-count="like">3.3k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 星盘甩锅轮"><b>☆</b><span data-count="save">705</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 星盘甩锅轮"><b>♡</b><span data-count="like">3.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 星盘甩锅轮"><b>☆</b><span data-count="save">798</span></button>
             <a class="action-button" href="astro-wheel.html" aria-label="打开 星盘甩锅轮"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 星盘甩锅轮"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#d6b45f; --n:16;" data-instance-id="yijing-coins-0" data-src="yijing-coins.html">
+        <article class="feed-item" style="--game-accent:#d6b45f; --n:19;" data-instance-id="yijing-coins-0" data-src="yijing-coins.html">
           <section class="live-card is-playing" aria-label="六爻离谱铜钱 HTML 预览">
             <iframe class="html-frame" title="六爻离谱铜钱" src="about:blank" data-src="yijing-coins.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -579,8 +720,8 @@
             <h2>六爻离谱铜钱</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 六爻离谱铜钱"><b>♡</b><span data-count="like">3.4k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 六爻离谱铜钱"><b>☆</b><span data-count="save">736</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 六爻离谱铜钱"><b>♡</b><span data-count="like">3.8k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 六爻离谱铜钱"><b>☆</b><span data-count="save">829</span></button>
             <a class="action-button" href="yijing-coins.html" aria-label="打开 六爻离谱铜钱"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 六爻离谱铜钱"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
@@ -614,14 +755,14 @@
   </section>
   <script src="remix_manifest.js"></script>
   <script>
-    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T08:22:27.084Z","intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":78,"components":24,"interactions":26,"pages":17,"data_flow":20}};
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T12:29:44.239Z","intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":78,"components":24,"interactions":26,"pages":20,"data_flow":20}};
     (() => {
       const feed = document.getElementById('feed');
       const homeScreen = document.getElementById('homeScreen');
       const waterfall = document.getElementById('waterfall');
       const feedScreen = document.getElementById('feedScreen');
       const feedBack = document.getElementById('feedBack');
-      const baseItems = [{"id":"sbti-fake","instanceId":"sbti-fake-0","file":"sbti-fake.html","title":"伪 SBTI 崩溃人格测评","sourceTitle":"伪 SBTI 崩溃人格测评","kind":"测评","sourceGame":"SBTI / MBTI 式社交测评","summary":"八题生成荒诞人格结果卡，适合截图分享。","accent":"#ff4f87","glyph":"SBTI","cover":"covers/sbti-fake.png","author":"@赝品库","likes":1200,"saves":240,"baseIndex":0,"loop":0,"remixed":false},{"id":"sheep-stack","instanceId":"sheep-stack-0","file":"sheep-stack.html","title":"羊块堆堆消","sourceTitle":"羊块堆堆消","kind":"消除","sourceGame":"羊了个羊式堆叠三消","summary":"只点亮牌，三张同图标入槽即消，槽满失败。","accent":"#30b36b","glyph":"羊","cover":"covers/sheep-stack.png","author":"@赝品库","likes":1337,"saves":271,"baseIndex":1,"loop":0,"remixed":false},{"id":"brainrot-clicker","instanceId":"brainrot-clicker-0","file":"brainrot-clicker.html","title":"脑腐咔嗒工厂","sourceTitle":"脑腐咔嗒工厂","kind":"点击","sourceGame":"Italian Brainrot / 增量点击器","summary":"点出伪意大利动物，升级后 canvas 弹幕越来越吵。","accent":"#f1b900","glyph":"脑","cover":"covers/brainrot-clicker.png","author":"@赝品库","likes":1474,"saves":302,"baseIndex":2,"loop":0,"remixed":false},{"id":"stimulation-fake","instanceId":"stimulation-fake-0","file":"stimulation-fake.html","title":"刺激值按钮","sourceTitle":"刺激值按钮","kind":"点击","sourceGame":"Stimulation Clicker 式过载点击器","summary":"每个升级都让手机屏幕更像失控的信息流。","accent":"#7c5cff","glyph":"刺","cover":"covers/stimulation-fake.png","author":"@赝品库","likes":1611,"saves":333,"baseIndex":3,"loop":0,"remixed":false},{"id":"cattle-bump","instanceId":"cattle-bump-0","file":"cattle-bump.html","title":"疯羊碰碰场","sourceTitle":"疯羊碰碰场","kind":"动作","sourceGame":"Crazy Cattle 3D 的 2D 撞飞版","summary":"触摸方向推动主羊，撞飞编号羊，留在圆圈里。","accent":"#ff7a2f","glyph":"撞","cover":"covers/cattle-bump.png","author":"@赝品库","likes":1748,"saves":364,"baseIndex":4,"loop":0,"remixed":false},{"id":"password-hell","instanceId":"password-hell-0","file":"password-hell.html","title":"密码地狱试炼","sourceTitle":"密码地狱试炼","kind":"解谜","sourceGame":"The Password Game 式规则升级","summary":"移动端输入框挑战，规则一条比一条难受。","accent":"#00a6d6","glyph":"密","cover":"covers/password-hell.png","author":"@赝品库","likes":1885,"saves":395,"baseIndex":5,"loop":0,"remixed":false},{"id":"infinite-craft-fake","instanceId":"infinite-craft-fake-0","file":"infinite-craft-fake.html","title":"无限乱炖实验室","sourceTitle":"无限乱炖实验室","kind":"合成","sourceGame":"Infinite Craft 式元素合成","summary":"两个词一碰，互联网又多一个概念。","accent":"#34a853","glyph":"合","cover":"covers/infinite-craft-fake.png","author":"@赝品库","likes":2022,"saves":426,"baseIndex":6,"loop":0,"remixed":false},{"id":"million-checkboxes-fake","instanceId":"million-checkboxes-fake-0","file":"million-checkboxes-fake.html","title":"四百个勾选框","sourceTitle":"四百个勾选框","kind":"协作幻觉","sourceGame":"One Million Checkboxes 式集体勾选","summary":"假装全网在线，其实是本地小宇宙。","accent":"#111111","glyph":"☑","cover":"covers/million-checkboxes-fake.png","author":"@赝品库","likes":2159,"saves":457,"baseIndex":7,"loop":0,"remixed":false},{"id":"dino-fake","instanceId":"dino-fake-0","file":"dino-fake.html","title":"断网小蜥蜴","sourceTitle":"断网小蜥蜴","kind":"跑酷","sourceGame":"Google Dino 式离线跑酷","summary":"点击跳跃，越过会议、需求和锅。","accent":"#5f6368","glyph":"跑","cover":"covers/dino-fake.png","author":"@赝品库","likes":2296,"saves":488,"baseIndex":8,"loop":0,"remixed":false},{"id":"garden-idle","instanceId":"garden-idle-0","file":"garden-idle.html","title":"摸鱼花园","sourceTitle":"摸鱼花园","kind":"放置","sourceGame":"Grow a Garden 式轻放置","summary":"种、等、收，库存刷新让你再来一次。","accent":"#6aa84f","glyph":"种","cover":"covers/garden-idle.png","author":"@赝品库","likes":2433,"saves":519,"baseIndex":9,"loop":0,"remixed":false},{"id":"agar-fake","instanceId":"agar-fake-0","file":"agar-fake.html","title":"圆点吞吞.io","sourceTitle":"圆点吞吞.io","kind":".io","sourceGame":"Agar.io 式吞噬成长","summary":"拖动移动，吃小点长大，别被大圆点吃掉。","accent":"#4285f4","glyph":"io","cover":"covers/agar-fake.png","author":"@赝品库","likes":2570,"saves":550,"baseIndex":10,"loop":0,"remixed":false},{"id":"io-arena-template","instanceId":"io-arena-template-0","file":"io-arena-template.html","title":"空投乱斗.io 模板","sourceTitle":"空投乱斗.io 模板","kind":"模板","sourceGame":"Wings.io / Starblast.io / 俯视 .io 射击母版","summary":"双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。","accent":"#22f4ee","glyph":"战","cover":"covers/io-arena-template.png","author":"@赝品库","likes":2707,"saves":581,"baseIndex":11,"loop":0,"remixed":false},{"id":"mystic-score","instanceId":"mystic-score-0","file":"mystic-score.html","title":"赛博玄学评分器","sourceTitle":"赛博玄学评分器","kind":"玄学","sourceGame":"玄学运势 / 分享卡测评","summary":"输入名字，生成今日抽象运势卡。","accent":"#9b59b6","glyph":"玄","cover":"covers/mystic-score.png","author":"@赝品库","likes":2844,"saves":612,"baseIndex":12,"loop":0,"remixed":false},{"id":"tarot-daily","instanceId":"tarot-daily-0","file":"tarot-daily.html","title":"打工塔罗三连","sourceTitle":"打工塔罗三连","kind":"塔罗","sourceGame":"Tarot.js / TarotSchema 式三牌阵","summary":"输入代号抽三张赛博塔罗，给出今日抽象建议。","accent":"#c45cff","glyph":"塔","cover":"covers/tarot-daily.png","author":"@赝品库","likes":2981,"saves":643,"baseIndex":13,"loop":0,"remixed":false},{"id":"bazi-lite","instanceId":"bazi-lite-0","file":"bazi-lite.html","title":"八字偏科生成器","sourceTitle":"八字偏科生成器","kind":"算命","sourceGame":"Gmuli-Bazi-Calc 式四柱输入","summary":"生日时辰生成假认真四柱，重点看五行哪里离谱。","accent":"#e4a63b","glyph":"命","cover":"covers/bazi-lite.png","author":"@赝品库","likes":3118,"saves":674,"baseIndex":14,"loop":0,"remixed":false},{"id":"astro-wheel","instanceId":"astro-wheel-0","file":"astro-wheel.html","title":"星盘甩锅轮","sourceTitle":"星盘甩锅轮","kind":"看盘","sourceGame":"CircularNatalHoroscopeJS / AstroChart 式圆盘","summary":"一键画出可分享星盘，把今天的问题甩给相位。","accent":"#5bbcff","glyph":"星","cover":"covers/astro-wheel.png","author":"@赝品库","likes":3255,"saves":705,"baseIndex":15,"loop":0,"remixed":false},{"id":"yijing-coins","instanceId":"yijing-coins-0","file":"yijing-coins.html","title":"六爻离谱铜钱","sourceTitle":"六爻离谱铜钱","kind":"易经","sourceGame":"I Ching coin divination flow","summary":"点六次摇铜钱，得到一卦适合转发的离谱签文。","accent":"#d6b45f","glyph":"卦","cover":"covers/yijing-coins.png","author":"@赝品库","likes":3392,"saves":736,"baseIndex":16,"loop":0,"remixed":false}];
+      const baseItems = [{"id":"sbti-fake","instanceId":"sbti-fake-0","file":"sbti-fake.html","title":"伪 SBTI 崩溃人格测评","sourceTitle":"伪 SBTI 崩溃人格测评","kind":"测评","sourceGame":"SBTI / MBTI 式社交测评","summary":"八题生成荒诞人格结果卡，适合截图分享。","accent":"#ff4f87","glyph":"SBTI","cover":"covers/sbti-fake.png","author":"@赝品库","likes":1200,"saves":240,"baseIndex":0,"loop":0,"remixed":false},{"id":"sheep-stack","instanceId":"sheep-stack-0","file":"sheep-stack.html","title":"羊块堆堆消","sourceTitle":"羊块堆堆消","kind":"消除","sourceGame":"羊了个羊式堆叠三消","summary":"只点亮牌，三张同图标入槽即消，槽满失败。","accent":"#30b36b","glyph":"羊","cover":"covers/sheep-stack.png","author":"@赝品库","likes":1337,"saves":271,"baseIndex":1,"loop":0,"remixed":false},{"id":"brainrot-clicker","instanceId":"brainrot-clicker-0","file":"brainrot-clicker.html","title":"脑腐咔嗒工厂","sourceTitle":"脑腐咔嗒工厂","kind":"点击","sourceGame":"Italian Brainrot / 增量点击器","summary":"点出伪意大利动物，升级后 canvas 弹幕越来越吵。","accent":"#f1b900","glyph":"脑","cover":"covers/brainrot-clicker.png","author":"@赝品库","likes":1474,"saves":302,"baseIndex":2,"loop":0,"remixed":false},{"id":"stimulation-fake","instanceId":"stimulation-fake-0","file":"stimulation-fake.html","title":"刺激值按钮","sourceTitle":"刺激值按钮","kind":"点击","sourceGame":"Stimulation Clicker 式过载点击器","summary":"每个升级都让手机屏幕更像失控的信息流。","accent":"#7c5cff","glyph":"刺","cover":"covers/stimulation-fake.png","author":"@赝品库","likes":1611,"saves":333,"baseIndex":3,"loop":0,"remixed":false},{"id":"cattle-bump","instanceId":"cattle-bump-0","file":"cattle-bump.html","title":"疯羊碰碰场","sourceTitle":"疯羊碰碰场","kind":"动作","sourceGame":"Crazy Cattle 3D 的 2D 撞飞版","summary":"触摸方向推动主羊，撞飞编号羊，留在圆圈里。","accent":"#ff7a2f","glyph":"撞","cover":"covers/cattle-bump.png","author":"@赝品库","likes":1748,"saves":364,"baseIndex":4,"loop":0,"remixed":false},{"id":"password-hell","instanceId":"password-hell-0","file":"password-hell.html","title":"密码地狱试炼","sourceTitle":"密码地狱试炼","kind":"解谜","sourceGame":"The Password Game 式规则升级","summary":"移动端输入框挑战，规则一条比一条难受。","accent":"#00a6d6","glyph":"密","cover":"covers/password-hell.png","author":"@赝品库","likes":1885,"saves":395,"baseIndex":5,"loop":0,"remixed":false},{"id":"infinite-craft-fake","instanceId":"infinite-craft-fake-0","file":"infinite-craft-fake.html","title":"无限乱炖实验室","sourceTitle":"无限乱炖实验室","kind":"合成","sourceGame":"Infinite Craft 式元素合成","summary":"两个词一碰，互联网又多一个概念。","accent":"#34a853","glyph":"合","cover":"covers/infinite-craft-fake.png","author":"@赝品库","likes":2022,"saves":426,"baseIndex":6,"loop":0,"remixed":false},{"id":"million-checkboxes-fake","instanceId":"million-checkboxes-fake-0","file":"million-checkboxes-fake.html","title":"四百个勾选框","sourceTitle":"四百个勾选框","kind":"协作幻觉","sourceGame":"One Million Checkboxes 式集体勾选","summary":"假装全网在线，其实是本地小宇宙。","accent":"#111111","glyph":"☑","cover":"covers/million-checkboxes-fake.png","author":"@赝品库","likes":2159,"saves":457,"baseIndex":7,"loop":0,"remixed":false},{"id":"dino-fake","instanceId":"dino-fake-0","file":"dino-fake.html","title":"断网小蜥蜴","sourceTitle":"断网小蜥蜴","kind":"跑酷","sourceGame":"Google Dino 式离线跑酷","summary":"点击跳跃，越过会议、需求和锅。","accent":"#5f6368","glyph":"跑","cover":"covers/dino-fake.png","author":"@赝品库","likes":2296,"saves":488,"baseIndex":8,"loop":0,"remixed":false},{"id":"garden-idle","instanceId":"garden-idle-0","file":"garden-idle.html","title":"摸鱼花园","sourceTitle":"摸鱼花园","kind":"放置","sourceGame":"Grow a Garden 式轻放置","summary":"种、等、收，库存刷新让你再来一次。","accent":"#6aa84f","glyph":"种","cover":"covers/garden-idle.png","author":"@赝品库","likes":2433,"saves":519,"baseIndex":9,"loop":0,"remixed":false},{"id":"agar-fake","instanceId":"agar-fake-0","file":"agar-fake.html","title":"圆点吞吞.io","sourceTitle":"圆点吞吞.io","kind":".io","sourceGame":"Agar.io 式吞噬成长","summary":"拖动移动，吃小点长大，别被大圆点吃掉。","accent":"#4285f4","glyph":"io","cover":"covers/agar-fake.png","author":"@赝品库","likes":2570,"saves":550,"baseIndex":10,"loop":0,"remixed":false},{"id":"qingjiao-sim","instanceId":"qingjiao-sim-0","file":"qingjiao-sim.html","title":"青椒模拟器","sourceTitle":"青椒模拟器","kind":"经营","sourceGame":"青椒模拟器式高校青年教师生存经营","summary":"申请教职、招学生、投基金、发论文，在非升即走里保住心态。","accent":"#21c26b","glyph":"青","cover":"covers/qingjiao-sim.png","author":"@赝品库","likes":2707,"saves":581,"baseIndex":11,"loop":0,"remixed":false},{"id":"life-restart-fake","instanceId":"life-restart-fake-0","file":"life-restart-fake.html","title":"人生重开模拟器","sourceTitle":"人生重开模拟器","kind":"重开","sourceGame":"LifeRestart 式天赋属性人生事件流","summary":"抽天赋、分配属性、逐岁推进，看这一局人生如何离谱收束。","accent":"#ffcf33","glyph":"重","cover":"covers/life-restart-fake.png","author":"@赝品库","likes":2844,"saves":612,"baseIndex":12,"loop":0,"remixed":false},{"id":"twitter-governance","instanceId":"twitter-governance-0","file":"twitter-governance.html","title":"推特治国","sourceTitle":"推特治国","kind":"模拟","sourceGame":"特朗普式社交媒体治国恶搞模拟","summary":"刷新闻、语音/文本发帖、给幕僚下命令，用一条条动态维持混乱热度。","accent":"#2aa3ff","glyph":"推","cover":"covers/twitter-governance.png","author":"@赝品库","likes":2981,"saves":643,"baseIndex":13,"loop":0,"remixed":false},{"id":"io-arena-template","instanceId":"io-arena-template-0","file":"io-arena-template.html","title":"空投乱斗.io 模板","sourceTitle":"空投乱斗.io 模板","kind":"模板","sourceGame":"Wings.io / Starblast.io / 俯视 .io 射击母版","summary":"双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。","accent":"#22f4ee","glyph":"战","cover":"covers/io-arena-template.png","author":"@赝品库","likes":3118,"saves":674,"baseIndex":14,"loop":0,"remixed":false},{"id":"mystic-score","instanceId":"mystic-score-0","file":"mystic-score.html","title":"赛博玄学评分器","sourceTitle":"赛博玄学评分器","kind":"玄学","sourceGame":"玄学运势 / 分享卡测评","summary":"输入名字，生成今日抽象运势卡。","accent":"#9b59b6","glyph":"玄","cover":"covers/mystic-score.png","author":"@赝品库","likes":3255,"saves":705,"baseIndex":15,"loop":0,"remixed":false},{"id":"tarot-daily","instanceId":"tarot-daily-0","file":"tarot-daily.html","title":"打工塔罗三连","sourceTitle":"打工塔罗三连","kind":"塔罗","sourceGame":"Tarot.js / TarotSchema 式三牌阵","summary":"输入代号抽三张赛博塔罗，给出今日抽象建议。","accent":"#c45cff","glyph":"塔","cover":"covers/tarot-daily.png","author":"@赝品库","likes":3392,"saves":736,"baseIndex":16,"loop":0,"remixed":false},{"id":"bazi-lite","instanceId":"bazi-lite-0","file":"bazi-lite.html","title":"八字偏科生成器","sourceTitle":"八字偏科生成器","kind":"算命","sourceGame":"Gmuli-Bazi-Calc 式四柱输入","summary":"生日时辰生成假认真四柱，重点看五行哪里离谱。","accent":"#e4a63b","glyph":"命","cover":"covers/bazi-lite.png","author":"@赝品库","likes":3529,"saves":767,"baseIndex":17,"loop":0,"remixed":false},{"id":"astro-wheel","instanceId":"astro-wheel-0","file":"astro-wheel.html","title":"星盘甩锅轮","sourceTitle":"星盘甩锅轮","kind":"看盘","sourceGame":"CircularNatalHoroscopeJS / AstroChart 式圆盘","summary":"一键画出可分享星盘，把今天的问题甩给相位。","accent":"#5bbcff","glyph":"星","cover":"covers/astro-wheel.png","author":"@赝品库","likes":3666,"saves":798,"baseIndex":18,"loop":0,"remixed":false},{"id":"yijing-coins","instanceId":"yijing-coins-0","file":"yijing-coins.html","title":"六爻离谱铜钱","sourceTitle":"六爻离谱铜钱","kind":"易经","sourceGame":"I Ching coin divination flow","summary":"点六次摇铜钱，得到一卦适合转发的离谱签文。","accent":"#d6b45f","glyph":"卦","cover":"covers/yijing-coins.png","author":"@赝品库","likes":3803,"saves":829,"baseIndex":19,"loop":0,"remixed":false}];
       const remixTwists = [{"label":"夜市版","glyph":"夜","accent":"#00c2ff","summary":"把节奏压进霓虹夜场，反馈更密、奖励更亮。","prompt":"霓虹夜市、快反馈、强分享截图"},{"label":"地铁版","glyph":"站","accent":"#ffcf33","summary":"改成单手通勤节奏，十秒内给出一次明确变化。","prompt":"地铁通勤、单手操作、十秒循环"},{"label":"反转版","glyph":"反","accent":"#ff5a3d","summary":"保留核心玩法，但把目标和失败条件倒过来。","prompt":"目标反转、失败变奖励、规则逐步变形"},{"label":"抽卡版","glyph":"抽","accent":"#9b7cff","summary":"每次操作都掉落一个新词条，适合继续二创。","prompt":"词条掉落、稀有度、可截图收集"},{"label":"双人版","glyph":"双","accent":"#31d07f","summary":"把单人循环变成互相干扰的同屏挑战。","prompt":"双人同屏、轻对抗、短局结算"}];
       const publishedRemixes = (window.__PRINTER_REMIX_MANIFEST__ && Array.isArray(window.__PRINTER_REMIX_MANIFEST__.remixes)) ? window.__PRINTER_REMIX_MANIFEST__.remixes : [];
       function itemFromManifest(entry, offset = 0) {

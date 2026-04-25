@@ -115,6 +115,81 @@
     .hex-line.broken { grid-template-columns: 1fr 1fr; }
     .hex-line i { display: block; border-radius: 999px; background: linear-gradient(90deg, #ffe7a3, var(--game-accent)); }
     .cast-log { display: grid; gap: 8px; }
+    .sim-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .sim-header b { font-size: 18px; }
+    .sim-header span { color: var(--cyan); font-size: 12px; font-weight: 1000; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stat-grid span { min-height: 58px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.08); }
+    .stat-grid b { font-size: 20px; line-height: 1; }
+    .stat-grid i { color: rgba(255,255,255,.58); font-size: 11px; font-style: normal; font-weight: 900; }
+    .action-grid { display: grid; gap: 8px; }
+    .action-grid .choice { display: grid; gap: 4px; }
+    .action-grid .choice span { color: rgba(255,255,255,.62); font-size: 12px; font-weight: 800; overflow-wrap: anywhere; }
+    .student-list, .timeline { display: grid; gap: 8px; }
+    .student-list span, .timeline span { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.84); font-size: 12px; line-height: 1.35; }
+    .student-list b { display: block; color: #fff; font-size: 13px; margin-bottom: 3px; }
+    .student-list i { color: rgba(255,255,255,.62); font-style: normal; font-weight: 800; }
+    .alloc-grid { display: grid; gap: 8px; margin: 10px 0; }
+    .alloc-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 8px; background: rgba(255,255,255,.08); }
+    .alloc-row span { font-weight: 900; }
+    .alloc-row b { text-align: center; font-size: 18px; }
+    .alloc-row button { min-height: 40px; border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-weight: 1000; }
+    body[data-game-page="twitter-governance"] { background: #000; }
+    body[data-game-page="twitter-governance"] .phone-shell { background: #000; color: #e7e9ea; border-color: rgba(255,255,255,.14); }
+    body[data-game-page="twitter-governance"] .app-top,
+    body[data-game-page="twitter-governance"] .play-hero { display: none; }
+    body[data-game-page="twitter-governance"] .play-screen { padding: 0; min-height: 100svh; background: #000; }
+    body[data-game-page="twitter-governance"] .game-stage { display: block; gap: 0; padding-bottom: 78px; }
+    .x-app { position: relative; min-height: 100svh; background: #000; color: #e7e9ea; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    .x-header { position: sticky; top: 0; z-index: 8; height: 50px; display: grid; grid-template-columns: 50px 1fr 50px; align-items: center; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-header b { text-align: center; color: #fff; font-size: 24px; line-height: 1; font-weight: 900; }
+    .x-header button { width: 36px; height: 36px; margin: auto; border: 0; border-radius: 50%; background: transparent; color: #e7e9ea; font-size: 14px; font-weight: 900; }
+    .x-header button:first-child { background: #1d9bf0; color: #001018; }
+    .x-header #agentBtn { border: 1px solid #2f3336; font-size: 11px; color: #1d9bf0; }
+    .x-top-tabs { position: sticky; top: 50px; z-index: 8; display: grid; grid-template-columns: 1fr 1fr; height: 48px; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-top-tabs button { position: relative; border: 0; background: transparent; color: #71767b; font-size: 15px; font-weight: 800; }
+    .x-top-tabs .active { color: #e7e9ea; }
+    .x-top-tabs .active::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 54px; height: 4px; transform: translateX(-50%); border-radius: 999px; background: #1d9bf0; }
+    .x-status-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #2f3336; background: #000; }
+    .x-status-strip span { min-width: 0; min-height: 54px; display: grid; place-items: center; gap: 2px; border-right: 1px solid #16181c; }
+    .x-status-strip span:last-child { border-right: 0; }
+    .x-status-strip b { color: #e7e9ea; font-size: 16px; line-height: 1; }
+    .x-status-strip i { color: #71767b; font-size: 10px; font-style: normal; font-weight: 800; }
+    .x-composer-inline { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid #2f3336; background: #000; }
+    .x-avatar { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #1d9bf0; color: #001018; font-size: 20px; font-weight: 1000; }
+    .x-compose-body { min-width: 0; display: grid; gap: 8px; }
+    .x-composer-inline textarea { width: 100%; min-height: 64px; border: 0; padding: 8px 0; resize: none; background: transparent; color: #e7e9ea; font: inherit; font-size: 19px; line-height: 1.28; outline: none; }
+    .x-composer-inline textarea::placeholder { color: #71767b; }
+    .x-compose-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid #2f3336; padding-top: 8px; }
+    .x-compose-tools button { min-height: 36px; border: 0; border-radius: 999px; padding: 0 13px; background: transparent; color: #1d9bf0; font-weight: 900; }
+    .x-compose-tools #sendTweet { min-width: 68px; background: #1d9bf0; color: #fff; }
+    .x-compose-tools #commandToggle { background: rgba(29,155,240,.14); }
+    .x-timeline { background: #000; }
+    .news-feed { display: grid; }
+    .news-feed article { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; border-bottom: 1px solid #2f3336; padding: 12px 14px 10px; background: #000; }
+    .news-feed article::before { content: attr(data-avatar); width: 40px; height: 40px; grid-row: 1 / span 3; display: grid; place-items: center; border-radius: 50%; background: var(--tweet-avatar, #273340); color: #fff; font-size: 16px; font-weight: 1000; }
+    .news-feed header { min-width: 0; display: flex; align-items: baseline; gap: 5px; color: #71767b; font-size: 13px; line-height: 1.2; }
+    .news-feed header b { min-width: 0; color: #e7e9ea; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .news-feed header span { flex: 0 0 auto; }
+    .news-feed p { grid-column: 2; margin: 3px 0 8px; color: #e7e9ea; font-size: 15px; line-height: 1.34; font-weight: 500; overflow-wrap: anywhere; }
+    .tweet-actions { grid-column: 2; display: grid; grid-template-columns: repeat(4, 1fr); color: #71767b; font-size: 12px; font-weight: 800; }
+    .tweet-actions span { display: inline-flex; align-items: center; gap: 5px; }
+    .x-drawer { display: none; margin: 0; border-bottom: 1px solid #2f3336; padding: 12px 14px; background: #000; }
+    .x-drawer.is-open { display: grid; gap: 12px; }
+    .x-drawer-head { display: flex; justify-content: space-between; gap: 10px; color: #e7e9ea; }
+    .x-drawer-head span { color: #71767b; font-size: 12px; font-weight: 900; }
+    .advisor-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .advisor-roster .choice { min-height: 68px; display: grid; align-content: center; gap: 4px; border: 1px solid #2f3336; border-radius: 16px; padding: 10px; background: #000; color: #e7e9ea; text-align: left; }
+    .advisor-roster .choice b { font-size: 14px; }
+    .advisor-roster .choice span { color: #71767b; font-size: 11px; line-height: 1.2; font-weight: 850; }
+    .command-log span { border-color: #2f3336; background: #000; color: #cfd9de; }
+    .key-drawer { border: 1px solid #2f3336; border-radius: 16px; padding: 10px 12px; background: #000; }
+    .key-drawer summary { color: #71767b; font-size: 12px; font-weight: 1000; cursor: pointer; }
+    .key-drawer input { width: 100%; min-height: 42px; margin-top: 8px; border: 1px solid #2f3336; border-radius: 12px; padding: 0 10px; background: #000; color: #e7e9ea; font: inherit; }
+    .key-drawer button { margin-top: 8px; width: 100%; background: #1d9bf0; }
+    .floating-compose { position: fixed; z-index: 12; right: max(18px, calc((100vw - 430px) / 2 + 18px)); bottom: calc(78px + env(safe-area-inset-bottom)); width: 58px; height: 58px; border: 0; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 30px; line-height: 1; font-weight: 900; box-shadow: 0 12px 34px rgba(29,155,240,.34); }
+    .bottom-nav { position: fixed; left: 50%; bottom: 0; z-index: 10; width: min(100vw, 430px); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr); height: calc(58px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #2f3336; background: rgba(0,0,0,.92); backdrop-filter: blur(18px); }
+    .bottom-nav button { border: 0; background: transparent; color: #e7e9ea; font-size: 23px; }
     @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
   </style>
 </head>
@@ -136,7 +211,7 @@
     </main>
   </div>
   <script>
-    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T08:22:27.084Z","game":{"id":"garden-idle","file":"garden-idle.html","cover":"covers/garden-idle.png","title":"摸鱼花园","kind":"放置","source_game":"Grow a Garden 式轻放置","mobile_portrait":true,"canvas_playfield":false},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":44,"components":14,"interactions":12,"pages":3,"data_flow":9}};
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T12:29:44.239Z","game":{"id":"garden-idle","file":"garden-idle.html","cover":"covers/garden-idle.png","title":"摸鱼花园","kind":"放置","source_game":"Grow a Garden 式轻放置","mobile_portrait":true,"canvas_playfield":false},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":44,"components":14,"interactions":12,"pages":3,"data_flow":9}};
     (() => {
       
       window.__GARDEN_DEBUG_CONFIG__ = { reference: 'Grow a Garden idle loop', plots: 12, mobilePrimaryAction: 'tap plot' };

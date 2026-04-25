@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <link rel="icon" href="data:,">
-  <title>无限乱炖实验室 - 赝品库</title>
+  <title>人生重开模拟器 - 赝品库</title>
   <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
   <style>
-    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #34a853; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
+    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #ffcf33; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
     body { display: grid; place-items: start center; overscroll-behavior: none; }
@@ -193,156 +193,130 @@
     @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
   </style>
 </head>
-<body data-printer-artifact="fake-game-library" data-game-page="infinite-craft-fake" data-output-format="multi_html">
+<body data-printer-artifact="fake-game-library" data-game-page="life-restart-fake" data-output-format="multi_html">
   <div class="phone-shell">
-    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="infinite-craft-fake.html">重载</a></header>
+    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="life-restart-fake.html">重载</a></header>
     <main class="screen play-screen">
       <section class="hero play-hero">
-        <p class="kicker">合成</p>
-        <h1>无限乱炖实验室</h1>
+        <p class="kicker">重开</p>
+        <h1>人生重开模拟器</h1>
       </section>
       <section class="game-stage">
         
-      <section class="panel craft-machine">
-        <div class="slots"><span id="slotA">?</span><b>+</b><span id="slotB">?</span></div>
-        <div class="craft-toolbar">
-          <button class="primary" id="combineBtn">合成</button>
-          <button class="primary" id="stewBtn">乱炖 x5</button>
-        </div>
-        <p id="craftLog">从四元素开始。</p>
-        <div class="craft-stats"><span id="craftStats">4 DISCOVERED</span><span id="craftSpace">6 PAIRS</span></div>
-        <div class="craft-history" id="historyRail"></div>
-        <label class="field-label">搜索概念<input id="searchInput" class="input" placeholder="水 / 热搜 / SBTI"></label>
+      <section class="panel" id="lifeSetup">
+        <p class="kicker">天赋池</p>
+        <div class="chip-pool" id="talentPool"></div>
+        <p class="kicker">属性点</p>
+        <div class="alloc-grid" id="allocatePoints"></div>
+        <button class="primary" id="startLife">开始重开</button>
       </section>
-      <section class="chip-pool" id="pool"></section>
+      <section class="panel compact">
+        <div class="sim-header"><b id="lifeAge">等待出生</b><span id="lifeRank">未评价</span></div>
+        <div class="stat-grid" id="lifeStats"></div>
+      </section>
+      <section class="panel compact"><button class="primary" id="nextYear">下一岁</button><button class="primary" id="autoLife">自动到结局</button><button class="primary" id="restartLife">重新抽卡</button></section>
+      <section class="result-card"><p class="kicker">人生事件</p><div class="timeline" id="eventTimeline"></div></section>
     
       </section>
     </main>
   </div>
   <script>
-    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T12:29:44.239Z","game":{"id":"infinite-craft-fake","file":"infinite-craft-fake.html","cover":"covers/infinite-craft-fake.png","title":"无限乱炖实验室","kind":"合成","source_game":"Infinite Craft 式元素合成","mobile_portrait":true,"canvas_playfield":false},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":44,"components":14,"interactions":12,"pages":3,"data_flow":9}};
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T12:29:44.239Z","game":{"id":"life-restart-fake","file":"life-restart-fake.html","cover":"covers/life-restart-fake.png","title":"人生重开模拟器","kind":"重开","source_game":"LifeRestart 式天赋属性人生事件流","mobile_portrait":true,"canvas_playfield":false},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":44,"components":14,"interactions":12,"pages":3,"data_flow":9}};
     (() => {
       
-      const key=(a,b)=>[a,b].sort().join('+');
-      const saveKey='printer_fake_infinite_craft_v3';
-      const recipeList=[
-        ['火','水','蒸汽','matter'],['土','水','泥','matter'],['火','风','烟','air'],['火','土','陶','matter'],['水','风','浪','water'],['土','风','尘','air'],
-        ['火','泥','砖','city'],['蒸汽','风','云','air'],['云','火','热搜','internet'],['泥','热搜','抽象','meme'],['抽象','水','冷笑话','meme'],
-        ['砖','风','房贷','city'],['房贷','热搜','打工人','life'],['冷笑话','火','群聊','internet'],['抽象','群聊','SBTI','meme'],
-        ['尘','水','咖啡','life'],['咖啡','打工人','续命','life'],['云','咖啡','电子雨','internet'],['电子雨','群聊','First Discovery','meme'],
-        ['SBTI','热搜','人格塌房','meme'],['羊','抽象','羊块宇宙','game'],['土','打工人','工位盆栽','life'],['风','咖啡','凌晨灵感','life'],
-        ['水','SBTI','流体人格','meme'],['火','群聊','红温现场','internet']
+      const talentPool=[
+        {id:'rich',name:'家境殷实',desc:'家境+3，快乐+1',delta:{money:3,happy:1}},
+        {id:'genius',name:'天赋异禀',desc:'智力+3',delta:{intelligence:3}},
+        {id:'fit',name:'身体倍棒',desc:'体质+3',delta:{health:3}},
+        {id:'pretty',name:'人见人爱',desc:'魅力+3',delta:{charm:3}},
+        {id:'late',name:'大器晚成',desc:'40 岁后全属性补偿',delta:{}},
+        {id:'otaku',name:'互联网原住民',desc:'快乐+2，体质-1',delta:{happy:2,health:-1}},
+        {id:'lucky',name:'祖传锦鲤',desc:'随机事件更容易变好',delta:{luck:3}},
+        {id:'fragile',name:'玻璃心',desc:'快乐-2，魅力+1',delta:{happy:-2,charm:1}}
       ];
-      const combos=Object.fromEntries(recipeList.map((row)=>[key(row[0],row[1]),row[2]]));
-      window.__CRAFT_RECIPES__ = combos;
-      window.__CRAFT_ENGINE__ = { procedural: true, randomStew: true, localStorageKey: saveKey, recipeList: recipeList.length };
-      const recipeCache = {};
-      let craftHistory = [];
-      const itemMeta = {
-        水:{family:'water',depth:0},火:{family:'fire',depth:0},风:{family:'air',depth:0},土:{family:'earth',depth:0},
-        羊:{family:'game',depth:1},脑腐:{family:'meme',depth:1},群聊:{family:'internet',depth:1}
-      };
-      const baseItems=['水','火','风','土','羊','脑腐','群聊'];
-      const state={items:[...baseItems],selected:[],last:'',query:'',totalCombines:0,autoStewCount:0};
-      const families=['meme','life','internet','game','city','food','weather','machine','animal','dream'];
-      const prefixes=['赛博','量子','凌晨三点的','反向','会眨眼的','可食用','玄学','自带BGM的','打工版','低电量','全自动','已读不回的'];
-      const middles=['奶茶','羊群','工位','热搜','房贷','云朵','表情包','按钮','会议','锦鲤','验证码','小恐龙','圆点','花园'];
-      const suffixes=['管理局','模拟器','发生器','宇宙','浓汤','人格','补丁','副本','盲盒','瀑布','电台','协议','考古现场','连锁反应'];
-      function hash(text){let h=2166136261;for(const ch of text){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
-      function depthOf(item){return itemMeta[item]?itemMeta[item].depth:1;}
-      function familyOf(item){return itemMeta[item]?itemMeta[item].family:families[hash(item)%families.length];}
-      function rememberMeta(item,a,b,family){itemMeta[item]={family,depth:Math.max(depthOf(a),depthOf(b))+1,bornFrom:[a,b]};}
-      recipeList.forEach((row)=>{ rememberMeta(row[2],row[0],row[1],row[3]); });
-      function restore(){
-        try{
-          const raw=localStorage.getItem(saveKey);
-          if(!raw)return;
-          const saved=JSON.parse(raw);
-          if(Array.isArray(saved.items)&&saved.items.length>=4)state.items=[...new Set([...baseItems,...saved.items])].slice(0,600);
-          if(Array.isArray(saved.history))craftHistory=saved.history.slice(-40);
-          if(saved.meta&&typeof saved.meta==='object')Object.assign(itemMeta,saved.meta);
-          state.totalCombines=Number(saved.totalCombines)||0;
-        }catch{}
-      }
-      function save(){
-        try{localStorage.setItem(saveKey,JSON.stringify({items:state.items.slice(-600),history:craftHistory.slice(-40),meta:itemMeta,totalCombines:state.totalCombines}));}catch{}
-      }
-      function makeProceduralResult(a,b){
-        const k=key(a,b);
-        if(recipeCache[k])return recipeCache[k];
-        const h=hash(k);
-        const family=families[(h+familyOf(a).length+familyOf(b).length)%families.length];
-        const p=prefixes[h%prefixes.length];
-        const m=middles[(h>>>4)%middles.length];
-        const s=suffixes[(h>>>9)%suffixes.length];
-        const pattern=h%7;
-        let result;
-        if(pattern===0)result=p+a;
-        else if(pattern===1)result=b+s;
-        else if(pattern===2)result=p+m+s;
-        else if(pattern===3)result=a+'味'+b;
-        else if(pattern===4)result=b+'和'+a+'的孩子';
-        else if(pattern===5)result=p+b+'协议';
-        else result=a+b+'浓汤';
-        if(result.length>12)result=result.slice(0,10)+'*';
-        recipeCache[k]=result;
-        rememberMeta(result,a,b,family);
-        return result;
-      }
-      function resultFor(a,b){
-        const k=key(a,b);
-        const explicit=combos[k];
-        if(explicit){ if(!itemMeta[explicit])rememberMeta(explicit,a,b,'classic'); return explicit; }
-        return makeProceduralResult(a,b);
-      }
-      function addHistory(a,b,result,isNew,mode){
-        craftHistory.push({a,b,result,isNew,mode,depth:depthOf(result)});
-        craftHistory=craftHistory.slice(-40);
-      }
-      function pairSpace(){return Math.max(0,state.items.length*(state.items.length-1)/2);}
-      function combinePair(a,b,mode='manual'){
-        const result=resultFor(a,b);
-        const isNew=!state.items.includes(result);
-        if(isNew)state.items.push(result);
-        state.totalCombines++;
-        state.last=(isNew?'First Discovery：':'再次发现：')+result;
-        addHistory(a,b,result,isNew,mode);
-        save();
-        return result;
-      }
-      function randomStew(rounds=5){
-        state.query='';
-        for(let r=0;r<rounds;r++){
-          const n=state.items.length;
-          const i=(state.totalCombines*17+r*7+state.autoStewCount*13)%n;
-          let j=(state.totalCombines*31+r*11+state.autoStewCount*5+3)%n;
-          if(i===j)j=(j+1)%n;
-          const result=combinePair(state.items[i],state.items[j],'randomStew');
-          state.selected=[result];
-          state.autoStewCount++;
+      const allocatePoints=['颜值','智力','体质','家境'];
+      const statMap={颜值:'charm',智力:'intelligence',体质:'health',家境:'money'};
+      const eventTimeline=[
+        {age:0,text:'你出生了，全家正在研究你像谁。',effect:{happy:1}},
+        {age:3,text:'你学会抢遥控器，人生第一次掌握控制权。',effect:{charm:1}},
+        {age:6,text:'你进入小学，作业开始刷新。',effect:{intelligence:1,happy:-1}},
+        {age:12,text:'你发现排名是一种大型多人游戏。',effect:{intelligence:1,happy:-2}},
+        {age:18,text:'高考结束，你对概率有了全新理解。',effect:{intelligence:2,happy:1}},
+        {age:22,text:'毕业时你同时拥有理想和账单。',effect:{money:-1,intelligence:1}},
+        {age:28,text:'你开始在工作群里熟练使用收到。',effect:{money:2,happy:-2}},
+        {age:35,text:'你意识到体检报告比朋友圈更诚实。',effect:{health:-2,money:1}},
+        {age:45,text:'你学会把焦虑包装成稳定。',effect:{happy:-1,money:2}},
+        {age:60,text:'你终于拥有了慢下来的资格。',effect:{happy:2,health:-1}},
+        {age:75,text:'你开始给年轻人讲你当年也很抽象。',effect:{happy:1,health:-2}},
+        {age:90,text:'你把这一生压缩成几句没人能反驳的话。',effect:{happy:2,health:-3}}
+      ];
+      window.__LIFE_RESTART_SIM__={reference:'life restart simulator clone',talentPool:talentPool.map(t=>t.id),allocatePoints,eventTimeline:eventTimeline.map(e=>e.age),stats:['charm','intelligence','health','money','happy','luck']};
+      const state={mode:'setup',age:0,lifespan:80,pointsLeft:20,alloc:{颜值:5,智力:5,体质:5,家境:5},talents:[],stats:{charm:5,intelligence:5,health:5,money:5,happy:5,luck:0},events:[],summaryRank:'未评价'};
+      function hash(text){let h=61;for(const ch of text)h=(h*31+ch.charCodeAt(0))%104729;return h;}
+      function drawTalents(){
+        const seed=hash(new Date().toDateString());
+        state.talents=[];
+        const used=new Set();
+        let cursor=0;
+        while(state.talents.length<5&&cursor<talentPool.length*2){
+          const talent=talentPool[(seed+cursor*3+cursor*cursor)%talentPool.length];
+          if(!used.has(talent.id)){used.add(talent.id);state.talents.push(talent);}
+          cursor++;
         }
-        document.getElementById('searchInput').value='';
+        talentPool.forEach(talent=>{if(state.talents.length<5&&!used.has(talent.id)){used.add(talent.id);state.talents.push(talent);}});
+      }
+      function totalAlloc(){return Object.values(state.alloc).reduce((a,b)=>a+b,0);}
+      function setAlloc(name,delta){const next=state.alloc[name]+delta;if(next<0||next>10)return;const total=totalAlloc()+delta;if(total>20)return;state.alloc[name]=next;render();}
+      function applyEffect(effect){Object.entries(effect||{}).forEach(([key,value])=>{state.stats[key]=(state.stats[key]||0)+value;});Object.keys(state.stats).forEach(key=>state.stats[key]=Math.max(0,Math.min(18,state.stats[key])));}
+      function restartLife(){state.mode='setup';state.age=0;state.lifespan=80;state.pointsLeft=20;state.alloc={颜值:5,智力:5,体质:5,家境:5};state.stats={charm:5,intelligence:5,health:5,money:5,happy:5,luck:0};state.events=[];state.summaryRank='未评价';drawTalents();render();}
+      function start(){
+        state.mode='life';state.age=0;state.events=[];state.stats={charm:state.alloc.颜值,intelligence:state.alloc.智力,health:state.alloc.体质,money:state.alloc.家境,happy:5,luck:0};
+        state.talents.forEach(t=>applyEffect(t.delta));
+        state.lifespan=62+state.stats.health*3+state.stats.money+state.stats.luck;
+        pushEvent('0岁：带着 '+state.talents.map(t=>t.name).join('、')+' 开局。');
         render();
       }
-      function render(){
-        document.getElementById('slotA').textContent=state.selected[0]||'?';
-        document.getElementById('slotB').textContent=state.selected[1]||'?';
-        document.getElementById('craftLog').textContent=state.last||'随便点两个词，或者直接乱炖。';
-        document.getElementById('craftStats').textContent=state.items.length+' DISCOVERED · '+state.totalCombines+' MIXES';
-        document.getElementById('craftSpace').textContent=Math.floor(pairSpace())+' PAIRS';
-        document.getElementById('historyRail').innerHTML=craftHistory.slice(-8).reverse().map((item)=>'<span>'+item.a+' + '+item.b+' = '+item.result+'</span>').join('');
-        const shown=state.items.filter((item)=>!state.query||item.includes(state.query)).slice().reverse().slice(0,96);
-        document.getElementById('pool').innerHTML=shown.map(item=>'<button class="chip '+(state.selected.includes(item)?'picked':'')+'" data-item="'+item+'">'+item+'<small>Lv.'+depthOf(item)+'</small></button>').join('');
-        document.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=>{const item=btn.dataset.item;if(state.selected.includes(item))state.selected=state.selected.filter(x=>x!==item);else{if(state.selected.length>=2)state.selected.shift();state.selected.push(item);}render();}));
+      function pushEvent(text){state.events.unshift(text);state.events=state.events.slice(0,12);}
+      function yearlyEvent(){
+        const base=eventTimeline.filter(e=>e.age<=state.age).slice(-1)[0]||eventTimeline[0];
+        applyEffect(base.effect);
+        let text=state.age+'岁：'+base.text;
+        if(state.talents.some(t=>t.id==='late')&&state.age===40){applyEffect({charm:2,intelligence:2,health:2,money:2,happy:2});text+=' 大器晚成触发，人生突然开始回本。';}
+        if((state.age+state.stats.luck)%9===0){applyEffect({happy:2,money:1});text+=' 锦鲤事件发生，今天没有被生活暴击。';}
+        if(state.stats.health<=0){state.lifespan=state.age;text+=' 体质归零，人生提前结算。';}
+        pushEvent(text);
       }
-      document.getElementById('searchInput').addEventListener('input',(event)=>{state.query=event.target.value.trim();render();});
-      document.getElementById('combineBtn').addEventListener('click',()=>{if(state.selected.length<2){state.last='需要两个元素，或点乱炖。';render();return;}const result=combinePair(state.selected[0],state.selected[1]);state.selected=[result];render();});
-      document.getElementById('stewBtn').addEventListener('click',()=>randomStew(5));
-      restore();
-      render();
-      window.randomStew=randomStew;
-      window.advanceTime=(ms)=>{ if(ms>=500) randomStew(Math.min(8,Math.max(1,Math.floor(ms/500)))); };
-      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM infinite craft grid',discovered:state.items.length,pairSpace:Math.floor(pairSpace()),selected:state.selected,last:state.last,recipeCache:Object.keys(recipeCache).length,craftHistory:craftHistory.slice(-5),searchInput:state.query,depth:Math.max(...state.items.map(depthOf)),totalCombines:state.totalCombines,randomStew:state.autoStewCount});
+      function nextYear(){
+        if(state.mode==='setup')start();
+        if(state.mode!=='life')return;
+        state.age+=1;
+        yearlyEvent();
+        if(state.age>=state.lifespan||state.stats.health<=0)finish();
+        render();
+      }
+      function finish(){state.mode='ended';const score=state.stats.charm+state.stats.intelligence+state.stats.health+state.stats.money+state.stats.happy+state.stats.luck+Math.floor(state.age/5);state.summaryRank=score>70?'SSR 传奇重开':score>54?'SR 体面人生':score>38?'R 普通但能截图':'N 建议再开';pushEvent('结局：活到 '+state.age+' 岁，评级 '+state.summaryRank+'。');}
+      function autoRun(){if(state.mode==='setup')start();let guard=0;while(state.mode==='life'&&guard<110){nextYear();guard++;}render();}
+      function render(){
+        document.getElementById('lifeSetup').classList.toggle('hidden',state.mode!=='setup');
+        document.getElementById('talentPool').innerHTML=state.talents.map(t=>'<button class="chip picked" type="button"><b>'+t.name+'</b><small>'+t.desc+'</small></button>').join('');
+        document.getElementById('allocatePoints').innerHTML=allocatePoints.map(name=>'<div class="alloc-row"><span>'+name+'</span><button data-alloc="'+name+'" data-delta="-1">-</button><b>'+state.alloc[name]+'</b><button data-alloc="'+name+'" data-delta="1">+</button></div>').join('');
+        document.querySelectorAll('[data-alloc]').forEach(btn=>btn.addEventListener('click',()=>setAlloc(btn.dataset.alloc,Number(btn.dataset.delta))));
+        document.getElementById('lifeAge').textContent=state.mode==='setup'?'等待出生':state.age+' 岁';
+        document.getElementById('lifeRank').textContent=state.summaryRank;
+        document.getElementById('lifeStats').innerHTML=[
+          ['颜值',state.stats.charm],['智力',state.stats.intelligence],['体质',state.stats.health],['家境',state.stats.money],['快乐',state.stats.happy],['幸运',state.stats.luck]
+        ].map(([k,v])=>'<span><b>'+v+'</b><i>'+k+'</i></span>').join('');
+        document.getElementById('nextYear').disabled=state.mode==='ended';
+        document.getElementById('eventTimeline').innerHTML=(state.events.length?state.events:['分配属性后开始重开。']).map(item=>'<span>'+item+'</span>').join('');
+      }
+      document.getElementById('startLife').addEventListener('click',start);
+      document.getElementById('nextYear').addEventListener('click',nextYear);
+      document.getElementById('autoLife').addEventListener('click',autoRun);
+      document.getElementById('restartLife').addEventListener('click',restartLife);
+      window.restartLife=restartLife;
+      drawTalents();render();
+      window.advanceTime=(ms)=>{const steps=Math.max(1,Math.floor(ms/350));for(let i=0;i<steps;i++)nextYear();};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM life timeline simulator',mode:state.mode,age:state.age,lifespan:state.lifespan,summaryRank:state.summaryRank,talents:state.talents.map(t=>t.name),allocatePoints:state.alloc,stats:state.stats,eventTimeline:state.events});
     
     })();
   </script>

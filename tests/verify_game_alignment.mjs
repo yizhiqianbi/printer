@@ -94,6 +94,45 @@ requireIncludes('io-arena-template.html', [
   'leaderboard',
 ]);
 
+requireIncludes('qingjiao-sim.html', [
+  'window.__QINGJIAO_SIM__',
+  'disciplineSelect',
+  'quarterActions',
+  'students',
+  'funding',
+  'papers',
+  'mindset',
+  'promotionTrack',
+]);
+
+requireIncludes('life-restart-fake.html', [
+  'window.__LIFE_RESTART_SIM__',
+  'talentPool',
+  'allocatePoints',
+  'eventTimeline',
+  'lifespan',
+  'summaryRank',
+  'restartLife',
+]);
+
+requireIncludes('twitter-governance.html', [
+  'window.__TWITTER_GOVERNANCE_SIM__',
+  'OpenRouter',
+  'speechRecognition',
+  'newsAgentLoop',
+  'tweetComposer',
+  'commandPanel',
+  'advisorRoster',
+  'sendTweet',
+  'issueOrder',
+  'newsFeed',
+  'xTopTabs',
+  'forYouTab',
+  'xTimeline',
+  'bottomNav',
+  'floatingCompose',
+]);
+
 if (failures.length) {
   console.error('Game alignment verification failed:');
   for (const failure of failures) console.error(`- ${failure}`);

@@ -4,7 +4,7 @@
     "total": 84,
     "components": 26,
     "interactions": 28,
-    "pages": 17,
+    "pages": 20,
     "data_flow": 18
   },
   "intent_plan": {
@@ -44,6 +44,9 @@
     "dino-fake.html",
     "garden-idle.html",
     "agar-fake.html",
+    "qingjiao-sim.html",
+    "life-restart-fake.html",
+    "twitter-governance.html",
     "io-arena-template.html",
     "mystic-score.html",
     "tarot-daily.html",
@@ -53,7 +56,7 @@
     "remix_manifest.json",
     "remix_manifest.js"
   ],
-  "generated_at": "2026-04-25T08:22:27.084Z",
+  "generated_at": "2026-04-25T12:29:44.239Z",
   "source": {
     "entrypoint": "printer/web_printer_selenium.py",
     "followed_logic": [

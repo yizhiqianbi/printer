@@ -158,3 +158,86 @@ Original prompt: 调研最近中英文互联网很火的 抽象的 好玩的 评
   - `node printer/tests/verify_sheep_stack.mjs` passed.
   - Mobile browser metrics after 16 stews: viewport 390, document/body scrollWidth 390, shell clientWidth 388, shell scrollWidth 388, shell scrollLeft 0.
   - Screenshot and metrics are under `printer/test-artifacts/infinite-craft-layout/`.
+
+## 2026-04-25 qingjiao and life restart simulators
+
+- Added `qingjiao-sim.html` and `life-restart-fake.html` to the deterministic fake-game generator.
+- References:
+  - `https://zhuanlan.zhihu.com/p/1993271878505210444` was user-provided but not directly fetchable in this environment.
+  - `https://remake.ovz.cc/` was used as the Life Restart public reference.
+  - Public search/reference notes were used for the mechanics, not copied copy/assets.
+- `青椒模拟器` scope:
+  - choose discipline and college context
+  - apply for faculty job
+  - quarterly actions: funding, papers, student recruiting, walking, massage, industry project
+  - tracks funding, papers, mindset, reputation, students, and promotion title
+  - ends through mindset collapse, funding failure, tenure-track failure, or legendary promotion
+- `人生重开模拟器` scope:
+  - non-duplicated talent draw
+  - point allocation across appearance, intelligence, health, and family background
+  - yearly event timeline
+  - lifespan and final rank
+  - restart hook exposed on `window.restartLife`
+
+## 2026-04-25 twitter governance simulator
+
+- Added `twitter-governance.html` to the deterministic fake-game generator.
+- Scope:
+  - parody Trump-style social timeline governance simulator
+  - text composer for posting simulated social updates
+  - browser speechRecognition hook for voice-to-text when supported
+  - command panel for press, treasury, security, staff, and campaign advisors
+  - rolling news feed with local fallback and optional OpenRouter agent calls
+- OpenRouter handling:
+  - no key is embedded into the artifact
+  - the page accepts a local browser key under the OpenRouter drawer or `window.OPENROUTER_API_KEY`
+  - if no key is present, Agent mode uses the local fictional-news generator
+- Exposed hooks:
+  - `window.__TWITTER_GOVERNANCE_SIM__`
+  - `window.sendTweet()`
+  - `window.issueOrder(id)`
+  - `window.newsAgentLoop()`
+  - `window.advanceTime(ms)`
+  - `window.render_game_to_text()`
+- Validation:
+  - `node --check printer/tools/generate_fake_library.mjs` passed.
+  - `node printer/tools/generate_fake_library.mjs` passed.
+  - `node printer/tools/render_fake_covers.mjs` rendered the new cover.
+  - `node printer/tests/verify_fake_library.mjs` passed.
+  - `node printer/tests/verify_game_alignment.mjs` passed.
+  - Mobile Playwright smoke covered text posting, advisor order, Agent fallback, deterministic time advance, no console errors, and no horizontal overflow.
+  - Browser artifacts are under `printer/test-artifacts/twitter-governance-smoke/`.
+
+## 2026-04-25 twitter governance X-style UI pass
+
+- User clarified that the game should imitate Twitter/X pages, not just use generic game panels.
+- Reworked `twitter-governance.html` generation into a mobile X-style home timeline:
+  - sticky top header with profile button, X text mark, and AI toggle
+  - `For you` / `Following` top tabs
+  - compact stat strip below tabs
+  - inline post composer with voice, command, and Post controls
+  - tweet-shaped timeline cards with avatar, display name, handle, time, body, reply/repost/like/view row
+  - expandable executive group-chat drawer for commands and OpenRouter setup
+  - bottom navigation and floating compose button
+- Added alignment assertions for `xTopTabs`, `forYouTab`, `xTimeline`, `bottomNav`, and `floatingCompose`.
+- Validation:
+  - `node --check printer/tools/generate_fake_library.mjs` passed.
+  - `node printer/tools/generate_fake_library.mjs` passed.
+  - `node printer/tools/render_fake_covers.mjs` rendered covers.
+  - `node printer/tests/verify_fake_library.mjs` passed.
+  - `node printer/tests/verify_game_alignment.mjs` passed.
+  - Mobile Playwright smoke covered posting, drawer command, Agent fallback, X-style UI markers, no console errors, and no horizontal overflow.
+  - Browser artifacts are under `printer/test-artifacts/twitter-x-ui-smoke/`.
+- Added static alignment checks:
+  - `window.__QINGJIAO_SIM__`
+  - `window.__LIFE_RESTART_SIM__`
+  - core mechanic tokens for action sets, students, funding, papers, mindset, talents, point allocation, timeline, lifespan, and rank
+- Regenerated `printer/output`, rendered new cover screenshots, and updated homepage feed/waterfall entries.
+- Validation:
+  - `node printer/tools/generate_fake_library.mjs` passed.
+  - `node printer/tools/render_fake_covers.mjs` rendered covers.
+  - `node printer/tests/verify_fake_library.mjs` passed.
+  - `node printer/tests/verify_game_alignment.mjs` passed.
+  - `node printer/tests/verify_sheep_stack.mjs` passed.
+  - Mobile Playwright smoke checks for both new pages had zero console/page errors.
+  - Screenshots/states are under `printer/test-artifacts/simulators-smoke/`.

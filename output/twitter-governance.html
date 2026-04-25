@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <link rel="icon" href="data:,">
-  <title>无限乱炖实验室 - 赝品库</title>
+  <title>推特治国 - 赝品库</title>
   <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
   <style>
-    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #34a853; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
+    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #2aa3ff; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
     body { display: grid; place-items: start center; overscroll-behavior: none; }
@@ -193,156 +193,246 @@
     @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
   </style>
 </head>
-<body data-printer-artifact="fake-game-library" data-game-page="infinite-craft-fake" data-output-format="multi_html">
+<body data-printer-artifact="fake-game-library" data-game-page="twitter-governance" data-output-format="multi_html">
   <div class="phone-shell">
-    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="infinite-craft-fake.html">重载</a></header>
+    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="twitter-governance.html">重载</a></header>
     <main class="screen play-screen">
       <section class="hero play-hero">
-        <p class="kicker">合成</p>
-        <h1>无限乱炖实验室</h1>
+        <p class="kicker">模拟</p>
+        <h1>推特治国</h1>
       </section>
       <section class="game-stage">
         
-      <section class="panel craft-machine">
-        <div class="slots"><span id="slotA">?</span><b>+</b><span id="slotB">?</span></div>
-        <div class="craft-toolbar">
-          <button class="primary" id="combineBtn">合成</button>
-          <button class="primary" id="stewBtn">乱炖 x5</button>
-        </div>
-        <p id="craftLog">从四元素开始。</p>
-        <div class="craft-stats"><span id="craftStats">4 DISCOVERED</span><span id="craftSpace">6 PAIRS</span></div>
-        <div class="craft-history" id="historyRail"></div>
-        <label class="field-label">搜索概念<input id="searchInput" class="input" placeholder="水 / 热搜 / SBTI"></label>
+      <section class="x-app" aria-label="X parody governance simulator">
+        <header class="x-header">
+          <button type="button" aria-label="profile">T</button>
+          <b>X</b>
+          <button type="button" id="agentBtn">AI</button>
+        </header>
+        <nav class="x-top-tabs" id="xTopTabs" aria-label="Timeline tabs">
+          <button class="active" id="forYouTab" type="button">For you</button>
+          <button type="button">Following</button>
+        </nav>
+        <div class="x-status-strip" id="governStats"></div>
+        <section class="x-composer-inline" id="tweetComposer">
+          <span class="x-avatar">T</span>
+          <div class="x-compose-body">
+            <textarea id="tweetInput" maxlength="220" placeholder="What is happening?!"></textarea>
+            <div class="x-compose-tools">
+              <button type="button" id="voiceBtn">🎙</button>
+              <button type="button" id="commandToggle">命令</button>
+              <button type="button" id="sendTweet">Post</button>
+            </div>
+          </div>
+        </section>
+        <section class="x-timeline" id="xTimeline">
+          <div class="news-feed" id="newsFeed"></div>
+        </section>
+        <section class="x-drawer" id="commandPanel">
+          <div class="x-drawer-head"><b>Executive group chat</b><span id="turnText">第 1 小时</span></div>
+          <div class="advisor-roster" id="advisorRoster"></div>
+          <div class="timeline command-log" id="orderLog"></div>
+          <details class="key-drawer">
+            <summary>OpenRouter agent · <span id="agentState">LOCAL</span></summary>
+            <input id="openRouterKey" type="password" autocomplete="off" placeholder="sk-or-...">
+            <input id="openRouterModel" autocomplete="off" value="openai/gpt-4o-mini">
+            <button class="primary" id="saveKeyBtn">保存</button>
+          </details>
+        </section>
+        <button class="floating-compose" id="floatingCompose" type="button" aria-label="compose">＋</button>
+        <nav class="bottom-nav" id="bottomNav" aria-label="X style bottom navigation">
+          <button type="button">⌂</button>
+          <button type="button">⌕</button>
+          <button type="button">◯</button>
+          <button type="button">✉</button>
+        </nav>
       </section>
-      <section class="chip-pool" id="pool"></section>
     
       </section>
     </main>
   </div>
   <script>
-    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T12:29:44.239Z","game":{"id":"infinite-craft-fake","file":"infinite-craft-fake.html","cover":"covers/infinite-craft-fake.png","title":"无限乱炖实验室","kind":"合成","source_game":"Infinite Craft 式元素合成","mobile_portrait":true,"canvas_playfield":false},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":44,"components":14,"interactions":12,"pages":3,"data_flow":9}};
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T12:29:44.239Z","game":{"id":"twitter-governance","file":"twitter-governance.html","cover":"covers/twitter-governance.png","title":"推特治国","kind":"模拟","source_game":"特朗普式社交媒体治国恶搞模拟","mobile_portrait":true,"canvas_playfield":false},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":44,"components":14,"interactions":12,"pages":3,"data_flow":9}};
     (() => {
       
-      const key=(a,b)=>[a,b].sort().join('+');
-      const saveKey='printer_fake_infinite_craft_v3';
-      const recipeList=[
-        ['火','水','蒸汽','matter'],['土','水','泥','matter'],['火','风','烟','air'],['火','土','陶','matter'],['水','风','浪','water'],['土','风','尘','air'],
-        ['火','泥','砖','city'],['蒸汽','风','云','air'],['云','火','热搜','internet'],['泥','热搜','抽象','meme'],['抽象','水','冷笑话','meme'],
-        ['砖','风','房贷','city'],['房贷','热搜','打工人','life'],['冷笑话','火','群聊','internet'],['抽象','群聊','SBTI','meme'],
-        ['尘','水','咖啡','life'],['咖啡','打工人','续命','life'],['云','咖啡','电子雨','internet'],['电子雨','群聊','First Discovery','meme'],
-        ['SBTI','热搜','人格塌房','meme'],['羊','抽象','羊块宇宙','game'],['土','打工人','工位盆栽','life'],['风','咖啡','凌晨灵感','life'],
-        ['水','SBTI','流体人格','meme'],['火','群聊','红温现场','internet']
+      const OpenRouter={storageKey:'printer_openrouter_key',modelKey:'printer_openrouter_model',endpoint:'https:'+'//openrouter.ai/api/v1/chat/completions'};
+      const advisorRoster=[
+        {id:'press',name:'新闻秘书',order:'开记者会',gain:{approval:3,chaos:4},tone:'把问题改成口号'},
+        {id:'treasury',name:'财政高管',order:'稳住市场',gain:{market:7,budget:-4,chaos:-2},tone:'把曲线画成向上'},
+        {id:'security',name:'安全顾问',order:'边境加压',gain:{diplomacy:-5,approval:4,chaos:6},tone:'把地图涂红'},
+        {id:'staff',name:'幕僚长',order:'收手机',gain:{chaos:-8,approval:-2,market:2},tone:'降低发帖频率'},
+        {id:'campaign',name:'竞选经理',order:'造势巡演',gain:{approval:6,budget:-6,chaos:5},tone:'把每个场馆喊满'}
       ];
-      const combos=Object.fromEntries(recipeList.map((row)=>[key(row[0],row[1]),row[2]]));
-      window.__CRAFT_RECIPES__ = combos;
-      window.__CRAFT_ENGINE__ = { procedural: true, randomStew: true, localStorageKey: saveKey, recipeList: recipeList.length };
-      const recipeCache = {};
-      let craftHistory = [];
-      const itemMeta = {
-        水:{family:'water',depth:0},火:{family:'fire',depth:0},风:{family:'air',depth:0},土:{family:'earth',depth:0},
-        羊:{family:'game',depth:1},脑腐:{family:'meme',depth:1},群聊:{family:'internet',depth:1}
-      };
-      const baseItems=['水','火','风','土','羊','脑腐','群聊'];
-      const state={items:[...baseItems],selected:[],last:'',query:'',totalCombines:0,autoStewCount:0};
-      const families=['meme','life','internet','game','city','food','weather','machine','animal','dream'];
-      const prefixes=['赛博','量子','凌晨三点的','反向','会眨眼的','可食用','玄学','自带BGM的','打工版','低电量','全自动','已读不回的'];
-      const middles=['奶茶','羊群','工位','热搜','房贷','云朵','表情包','按钮','会议','锦鲤','验证码','小恐龙','圆点','花园'];
-      const suffixes=['管理局','模拟器','发生器','宇宙','浓汤','人格','补丁','副本','盲盒','瀑布','电台','协议','考古现场','连锁反应'];
-      function hash(text){let h=2166136261;for(const ch of text){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
-      function depthOf(item){return itemMeta[item]?itemMeta[item].depth:1;}
-      function familyOf(item){return itemMeta[item]?itemMeta[item].family:families[hash(item)%families.length];}
-      function rememberMeta(item,a,b,family){itemMeta[item]={family,depth:Math.max(depthOf(a),depthOf(b))+1,bornFrom:[a,b]};}
-      recipeList.forEach((row)=>{ rememberMeta(row[2],row[0],row[1],row[3]); });
-      function restore(){
+      const localNews=[
+        '市场等待凌晨动态，期货像心电图。',
+        '外媒统计：一个形容词让三国外交部加班。',
+        '硅谷高管排队解释自己不是那个意思。',
+        '幕僚称总统只是用大写字母表达热情。',
+        '电视台把一条短帖拆成六小时特别节目。',
+        '民调显示支持者更兴奋，反对者更清醒。',
+        '白宫打印机因命令过多进入冷却模式。'
+      ];
+      window.__TWITTER_GOVERNANCE_SIM__={reference:'Trump social-media governance parody',OpenRouter:{supported:true,endpointParts:['https:','//openrouter.ai/api/v1/chat/completions'],modelDefault:'openai/gpt-4o-mini'},speechRecognition:true,newsAgentLoop:true,tweetComposer:true,commandPanel:true,advisorRoster:advisorRoster.map(a=>a.id),stats:['approval','market','chaos','diplomacy','budget']};
+      const state={hour:1,approval:48,market:55,chaos:31,diplomacy:50,budget:72,heat:12,agent:false,agentBusy:false,lastTweet:'',newsFeed:[],orders:[],tweets:[],ending:null};
+      const $=(id)=>document.getElementById(id);
+      function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
+      function esc(value){return String(value).replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+      function pushNews(text,source='local'){state.newsFeed.unshift({text:String(text).slice(0,160),source,hour:state.hour});state.newsFeed=state.newsFeed.slice(0,9);}
+      function pushOrder(text){state.orders.unshift('H'+state.hour+' · '+text);state.orders=state.orders.slice(0,8);}
+      function applyDelta(delta){Object.entries(delta||{}).forEach(([key,value])=>{state[key]=clamp((state[key]||0)+value,0,100);});}
+      function tweetImpact(text){
+        const upper=(text.match(/[A-Z]/g)||[]).length;
+        const bangs=(text.match(/[!！]/g)||[]).length;
+        const hasMarket=/tax|tariff|关税|股|币|oil|market/i.test(text);
+        const hasWar=/wall|border|war|边境|战争|制裁/i.test(text);
+        const hasFake=/fake|假|媒体|witch/i.test(text);
+        return {approval:2+Math.min(5,bangs),market:hasMarket?-8:1,chaos:6+Math.min(12,upper)+bangs*2,diplomacy:hasWar?-7:(hasFake?-2:0),heat:10+bangs*3};
+      }
+      function tickConsequences(){
+        state.hour+=1;
+        state.chaos=clamp(state.chaos-1+Math.round(state.heat/22),0,100);
+        state.market=clamp(state.market+(state.chaos>58?-3:1),0,100);
+        state.approval=clamp(state.approval+(state.heat>40?1:0)+(state.market<35?-2:0),0,100);
+        state.diplomacy=clamp(state.diplomacy+(state.chaos>66?-3:1),0,100);
+        state.budget=clamp(state.budget-1,0,100);
+        state.heat=clamp(state.heat-5,0,100);
+        if(state.chaos>=95)state.ending='信息风暴失控，所有幕僚同时开飞行模式。';
+        if(state.approval>=82&&state.market>=55)state.ending='你把混乱包装成增长，粉丝宣布这就是治理。';
+        if(state.market<=8)state.ending='市场闪崩，电视台把走势图做成恐怖片。';
+        if(state.diplomacy<=5)state.ending='外交群聊全员已读不回。';
+      }
+      function sendTweet(){
+        const input=$('tweetInput');
+        const text=input.value.trim();
+        if(!text)return;
+        state.lastTweet=text;
+        state.tweets.unshift(text);
+        state.tweets=state.tweets.slice(0,7);
+        applyDelta(tweetImpact(text));
+        pushNews('特朗普模拟号发帖：'+text,'tweet');
+        pushOrder('发帖完成，热度 +'+Math.min(26,10+(text.match(/[!！]/g)||[]).length*3)+'。');
+        input.value='';
+        tickConsequences();
+        if(state.agent)requestAgentNews('tweet');
+        render();
+      }
+      function issueOrder(id){
+        const advisor=advisorRoster.find(a=>a.id===id);
+        if(!advisor)return;
+        applyDelta(advisor.gain);
+        state.heat=clamp(state.heat+4,0,100);
+        pushOrder(advisor.name+'执行：'+advisor.order+'，'+advisor.tone+'。');
+        pushNews(advisor.name+'收到命令：'+advisor.order+'。','order');
+        tickConsequences();
+        if(state.agent)requestAgentNews('order');
+        render();
+      }
+      function localAgentNews(reason='loop'){
+        const base=localNews[(state.hour+state.newsFeed.length+state.chaos)%localNews.length];
+        const metric=state.chaos>62?'混乱指数飙升':state.market<35?'市场承压':state.approval>60?'粉丝热情上升':'内阁等待下一条动态';
+        pushNews(base+' '+metric+'。',reason==='loop'?'agent':'local');
+      }
+      function getKey(){return (window.OPENROUTER_API_KEY||localStorage.getItem(OpenRouter.storageKey)||'').trim();}
+      function getModel(){return ($('openRouterModel').value||localStorage.getItem(OpenRouter.modelKey)||'openai/gpt-4o-mini').trim();}
+      async function askOpenRouter(reason){
+        const key=getKey();
+        if(!key||key.length<12)return null;
+        const model=getModel();
+        const payload={
+          model,
+          messages:[
+            {role:'system',content:'你是一个讽刺政治游戏的新闻 Agent。生成虚构、短促、像社交媒体热搜的中文新闻。不要声称是真实新闻，不要给现实投票建议。只输出一句，不超过45字。'},
+            {role:'user',content:'状态：支持率'+state.approval+' 市场'+state.market+' 混乱'+state.chaos+' 外交'+state.diplomacy+' 预算'+state.budget+'。最近发帖：'+(state.lastTweet||'无')+'。触发：'+reason}
+          ],
+          max_tokens:70,
+          temperature:.9
+        };
+        const response=await fetch(OpenRouter.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key,'HTTP-Referer':location.origin,'X-Title':'Printer Fake Game Library'},body:JSON.stringify(payload)});
+        if(!response.ok)throw new Error('OpenRouter '+response.status);
+        const data=await response.json();
+        return data&&data.choices&&data.choices[0]&&data.choices[0].message?data.choices[0].message.content:null;
+      }
+      async function requestAgentNews(reason='manual'){
+        if(state.agentBusy)return;
+        state.agentBusy=true;
+        render();
         try{
-          const raw=localStorage.getItem(saveKey);
-          if(!raw)return;
-          const saved=JSON.parse(raw);
-          if(Array.isArray(saved.items)&&saved.items.length>=4)state.items=[...new Set([...baseItems,...saved.items])].slice(0,600);
-          if(Array.isArray(saved.history))craftHistory=saved.history.slice(-40);
-          if(saved.meta&&typeof saved.meta==='object')Object.assign(itemMeta,saved.meta);
-          state.totalCombines=Number(saved.totalCombines)||0;
-        }catch{}
-      }
-      function save(){
-        try{localStorage.setItem(saveKey,JSON.stringify({items:state.items.slice(-600),history:craftHistory.slice(-40),meta:itemMeta,totalCombines:state.totalCombines}));}catch{}
-      }
-      function makeProceduralResult(a,b){
-        const k=key(a,b);
-        if(recipeCache[k])return recipeCache[k];
-        const h=hash(k);
-        const family=families[(h+familyOf(a).length+familyOf(b).length)%families.length];
-        const p=prefixes[h%prefixes.length];
-        const m=middles[(h>>>4)%middles.length];
-        const s=suffixes[(h>>>9)%suffixes.length];
-        const pattern=h%7;
-        let result;
-        if(pattern===0)result=p+a;
-        else if(pattern===1)result=b+s;
-        else if(pattern===2)result=p+m+s;
-        else if(pattern===3)result=a+'味'+b;
-        else if(pattern===4)result=b+'和'+a+'的孩子';
-        else if(pattern===5)result=p+b+'协议';
-        else result=a+b+'浓汤';
-        if(result.length>12)result=result.slice(0,10)+'*';
-        recipeCache[k]=result;
-        rememberMeta(result,a,b,family);
-        return result;
-      }
-      function resultFor(a,b){
-        const k=key(a,b);
-        const explicit=combos[k];
-        if(explicit){ if(!itemMeta[explicit])rememberMeta(explicit,a,b,'classic'); return explicit; }
-        return makeProceduralResult(a,b);
-      }
-      function addHistory(a,b,result,isNew,mode){
-        craftHistory.push({a,b,result,isNew,mode,depth:depthOf(result)});
-        craftHistory=craftHistory.slice(-40);
-      }
-      function pairSpace(){return Math.max(0,state.items.length*(state.items.length-1)/2);}
-      function combinePair(a,b,mode='manual'){
-        const result=resultFor(a,b);
-        const isNew=!state.items.includes(result);
-        if(isNew)state.items.push(result);
-        state.totalCombines++;
-        state.last=(isNew?'First Discovery：':'再次发现：')+result;
-        addHistory(a,b,result,isNew,mode);
-        save();
-        return result;
-      }
-      function randomStew(rounds=5){
-        state.query='';
-        for(let r=0;r<rounds;r++){
-          const n=state.items.length;
-          const i=(state.totalCombines*17+r*7+state.autoStewCount*13)%n;
-          let j=(state.totalCombines*31+r*11+state.autoStewCount*5+3)%n;
-          if(i===j)j=(j+1)%n;
-          const result=combinePair(state.items[i],state.items[j],'randomStew');
-          state.selected=[result];
-          state.autoStewCount++;
+          const text=await askOpenRouter(reason);
+          if(text)pushNews(text.replace(/^["“”]+|["“”]+$/g,''),'OpenRouter');
+          else localAgentNews(reason);
+        }catch(error){
+          pushNews('Agent 连接失败，切回本地热搜引擎。','fallback');
+          localAgentNews(reason);
+        }finally{
+          state.agentBusy=false;
+          render();
         }
-        document.getElementById('searchInput').value='';
+      }
+      function newsAgentLoop(){
+        if(state.ending)return;
+        if(state.agent)requestAgentNews('loop');
+        else localAgentNews('loop');
+        tickConsequences();
+        render();
+      }
+      let speechRecognition=null;
+      const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(SpeechRecognition){
+        speechRecognition=new SpeechRecognition();
+        speechRecognition.lang='zh-CN';
+        speechRecognition.interimResults=false;
+        speechRecognition.onresult=(event)=>{const text=event.results&&event.results[0]&&event.results[0][0]?event.results[0][0].transcript:'';$('tweetInput').value=($('tweetInput').value+' '+text).trim();pushOrder('语音输入完成。');render();};
+        speechRecognition.onerror=()=>{pushOrder('语音识别失败，改用手打。');render();};
+      }
+      function startVoice(){
+        if(!speechRecognition){pushOrder('当前浏览器不支持 speechRecognition。');render();return;}
+        try{speechRecognition.start();pushOrder('正在听写动态。');render();}catch(error){pushOrder('语音通道已占用。');render();}
+      }
+      function saveKey(){
+        const key=$('openRouterKey').value.trim();
+        const model=$('openRouterModel').value.trim()||'openai/gpt-4o-mini';
+        if(key)localStorage.setItem(OpenRouter.storageKey,key);
+        localStorage.setItem(OpenRouter.modelKey,model);
+        pushOrder(key?'OpenRouter key 已保存在本机浏览器。':'模型已保存，key 为空时使用本地新闻。');
         render();
       }
       function render(){
-        document.getElementById('slotA').textContent=state.selected[0]||'?';
-        document.getElementById('slotB').textContent=state.selected[1]||'?';
-        document.getElementById('craftLog').textContent=state.last||'随便点两个词，或者直接乱炖。';
-        document.getElementById('craftStats').textContent=state.items.length+' DISCOVERED · '+state.totalCombines+' MIXES';
-        document.getElementById('craftSpace').textContent=Math.floor(pairSpace())+' PAIRS';
-        document.getElementById('historyRail').innerHTML=craftHistory.slice(-8).reverse().map((item)=>'<span>'+item.a+' + '+item.b+' = '+item.result+'</span>').join('');
-        const shown=state.items.filter((item)=>!state.query||item.includes(state.query)).slice().reverse().slice(0,96);
-        document.getElementById('pool').innerHTML=shown.map(item=>'<button class="chip '+(state.selected.includes(item)?'picked':'')+'" data-item="'+item+'">'+item+'<small>Lv.'+depthOf(item)+'</small></button>').join('');
-        document.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=>{const item=btn.dataset.item;if(state.selected.includes(item))state.selected=state.selected.filter(x=>x!==item);else{if(state.selected.length>=2)state.selected.shift();state.selected.push(item);}render();}));
+        $('turnText').textContent=state.ending?'结局':'第 '+state.hour+' 小时';
+        $('agentState').textContent=state.agentBusy?'AGENT...':(state.agent?(getKey()?'OPENROUTER':'LOCAL AGENT'):'LOCAL');
+        $('governStats').innerHTML=[
+          ['支持',state.approval],['市场',state.market],['混乱',state.chaos],['外交',state.diplomacy],['预算',state.budget],['热度',state.heat]
+        ].map(([k,v])=>'<span><b>'+Math.round(v)+'</b><i>'+k+'</i></span>').join('');
+        const names={system:['模拟白宫','@parodydesk','T','#1d9bf0'],tweet:['Donald J. Parody','@realParodyDesk','T','#1d9bf0'],order:['Executive Office','@cabinet_room','E','#7856ff'],agent:['Breaking News','@trendwire','B','#00ba7c'],local:['Trend Desk','@local_agent','L','#f91880'],OpenRouter:['AI Wire','@openrouter_agent','AI','#1d9bf0'],fallback:['Signal Lost','@fallback','F','#ffd400'],start:['X','@home','X','#273340']};
+        $('newsFeed').innerHTML=(state.newsFeed.length?state.newsFeed:[{text:'凌晨时间线空白，等待第一条动态。',source:'start',hour:1}]).map((item,index)=>{
+          const meta=names[item.source]||names.local;
+          const replies=Math.max(1,Math.round((state.chaos+index*3)/6));
+          const reposts=Math.max(1,Math.round((state.heat+index*5)/5));
+          const likes=Math.max(8,Math.round((state.approval+state.heat)*2.1)+index*11);
+          const views=Math.max(1,Math.round((likes+reposts)*.42));
+          return '<article data-avatar="'+esc(meta[2])+'" style="--tweet-avatar:'+esc(meta[3])+'"><header><b>'+esc(meta[0])+'</b><span>'+esc(meta[1])+'</span><span>·</span><span>'+esc(item.hour)+'h</span></header><p>'+esc(item.text)+'</p><div class="tweet-actions"><span>💬 '+replies+'</span><span>↻ '+reposts+'</span><span>♡ '+likes+'</span><span>▥ '+views+'K</span></div></article>';
+        }).join('');
+        $('advisorRoster').innerHTML=advisorRoster.map(a=>'<button class="choice" data-order="'+a.id+'"><b>'+a.name+'</b><span>'+a.order+'</span></button>').join('');
+        $('advisorRoster').querySelectorAll('[data-order]').forEach(btn=>btn.addEventListener('click',()=>issueOrder(btn.dataset.order)));
+        $('orderLog').innerHTML=(state.ending?[state.ending].concat(state.orders):state.orders.length?state.orders:['等待发帖或命令。']).map(item=>'<span>'+esc(item)+'</span>').join('');
+        $('agentBtn').textContent=state.agent?'ON':'AI';
+        $('sendTweet').disabled=Boolean(state.ending);
       }
-      document.getElementById('searchInput').addEventListener('input',(event)=>{state.query=event.target.value.trim();render();});
-      document.getElementById('combineBtn').addEventListener('click',()=>{if(state.selected.length<2){state.last='需要两个元素，或点乱炖。';render();return;}const result=combinePair(state.selected[0],state.selected[1]);state.selected=[result];render();});
-      document.getElementById('stewBtn').addEventListener('click',()=>randomStew(5));
-      restore();
+      $('sendTweet').addEventListener('click',sendTweet);
+      $('tweetInput').addEventListener('keydown',(event)=>{if((event.metaKey||event.ctrlKey)&&event.key==='Enter')sendTweet();});
+      $('voiceBtn').addEventListener('click',startVoice);
+      $('agentBtn').addEventListener('click',()=>{state.agent=!state.agent;pushOrder(state.agent?'新闻 Agent 已开启。':'新闻 Agent 已关闭。');if(state.agent)requestAgentNews('toggle');render();});
+      $('commandToggle').addEventListener('click',()=>$('commandPanel').classList.toggle('is-open'));
+      $('floatingCompose').addEventListener('click',()=>{$('tweetInput').focus();window.scrollTo({top:$('tweetComposer').offsetTop-90,behavior:'smooth'});});
+      $('saveKeyBtn').addEventListener('click',saveKey);
+      $('openRouterModel').value=localStorage.getItem(OpenRouter.modelKey)||'openai/gpt-4o-mini';
+      pushNews('模拟账号上线：所有动态均为恶搞，不代表真实发言。','system');
       render();
-      window.randomStew=randomStew;
-      window.advanceTime=(ms)=>{ if(ms>=500) randomStew(Math.min(8,Math.max(1,Math.floor(ms/500)))); };
-      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM infinite craft grid',discovered:state.items.length,pairSpace:Math.floor(pairSpace()),selected:state.selected,last:state.last,recipeCache:Object.keys(recipeCache).length,craftHistory:craftHistory.slice(-5),searchInput:state.query,depth:Math.max(...state.items.map(depthOf)),totalCombines:state.totalCombines,randomStew:state.autoStewCount});
+      const loopTimer=setInterval(newsAgentLoop,7600);
+      window.sendTweet=sendTweet;
+      window.issueOrder=issueOrder;
+      window.newsAgentLoop=newsAgentLoop;
+      window.advanceTime=(ms)=>{const steps=Math.max(1,Math.floor(ms/1800));for(let i=0;i<steps;i++)newsAgentLoop();};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM social timeline simulator',hour:state.hour,agent:state.agent,agentBusy:state.agentBusy,keyPresent:Boolean(getKey()),approval:state.approval,market:state.market,chaos:state.chaos,diplomacy:state.diplomacy,budget:state.budget,heat:state.heat,lastTweet:state.lastTweet,newsFeed:state.newsFeed.slice(0,5),orders:state.orders.slice(0,5),ending:state.ending,advisorRoster:advisorRoster.map(a=>a.id),speechRecognition:Boolean(speechRecognition),loopTimer:Boolean(loopTimer)});
     
     })();
   </script>

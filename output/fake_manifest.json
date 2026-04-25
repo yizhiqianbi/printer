@@ -1,6 +1,6 @@
 {
   "intent": "建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。",
-  "generated_at": "2026-04-25T08:22:27.084Z",
+  "generated_at": "2026-04-25T12:29:44.239Z",
   "games": [
     {
       "id": "sbti-fake",
@@ -111,6 +111,36 @@
       "source_game": "Agar.io 式吞噬成长",
       "mobile_portrait": true,
       "canvas_playfield": true
+    },
+    {
+      "id": "qingjiao-sim",
+      "file": "qingjiao-sim.html",
+      "cover": "covers/qingjiao-sim.png",
+      "title": "青椒模拟器",
+      "kind": "经营",
+      "source_game": "青椒模拟器式高校青年教师生存经营",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "life-restart-fake",
+      "file": "life-restart-fake.html",
+      "cover": "covers/life-restart-fake.png",
+      "title": "人生重开模拟器",
+      "kind": "重开",
+      "source_game": "LifeRestart 式天赋属性人生事件流",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "twitter-governance",
+      "file": "twitter-governance.html",
+      "cover": "covers/twitter-governance.png",
+      "title": "推特治国",
+      "kind": "模拟",
+      "source_game": "特朗普式社交媒体治国恶搞模拟",
+      "mobile_portrait": true,
+      "canvas_playfield": false
     },
     {
       "id": "io-arena-template",

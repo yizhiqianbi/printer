@@ -21,6 +21,9 @@ const expectedFiles = [
   'bazi-lite.html',
   'astro-wheel.html',
   'yijing-coins.html',
+  'qingjiao-sim.html',
+  'life-restart-fake.html',
+  'twitter-governance.html',
   'io-arena-template.html',
 ];
 
