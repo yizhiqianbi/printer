@@ -1,0 +1,169 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - heading "HTML刷刷" [level=1] [ref=e6]
+      - button "开始刷刷" [ref=e7]
+    - generic [ref=e8]:
+      - generic [ref=e9]: ⌕
+      - generic [ref=e10]: 搜索游戏、玩法、Remix
+    - navigation "分类" [ref=e11]:
+      - generic [ref=e12]: 推荐
+      - generic [ref=e13]: 小游戏
+      - generic [ref=e14]: 玄学
+      - generic [ref=e15]: .io
+      - generic [ref=e16]: 解谜
+      - generic [ref=e17]: 新 Remix
+  - region "游戏瀑布流" [ref=e18]:
+    - button "SBTI 测评 伪 SBTI 崩溃人格测评 八题生成荒诞人格结果卡，适合截图分享。 @赝品库 ♡ 1.2k" [ref=e19] [cursor=pointer]:
+      - generic [ref=e20]:
+        - generic [ref=e21]: SBTI
+        - generic [ref=e22]: 测评
+      - generic [ref=e23]: 伪 SBTI 崩溃人格测评
+      - generic [ref=e24]: 八题生成荒诞人格结果卡，适合截图分享。
+      - generic [ref=e25]:
+        - generic [ref=e26]: "@赝品库"
+        - generic [ref=e27]: ♡ 1.2k
+    - button "羊 消除 羊块堆堆消 只点亮牌，三张同图标入槽即消，槽满失败。 @赝品库 ♡ 1.3k" [ref=e28] [cursor=pointer]:
+      - generic [ref=e29]:
+        - generic [ref=e30]: 羊
+        - generic [ref=e31]: 消除
+      - generic [ref=e32]: 羊块堆堆消
+      - generic [ref=e33]: 只点亮牌，三张同图标入槽即消，槽满失败。
+      - generic [ref=e34]:
+        - generic [ref=e35]: "@赝品库"
+        - generic [ref=e36]: ♡ 1.3k
+    - button "脑 点击 脑腐咔嗒工厂 点出伪意大利动物，升级后 canvas 弹幕越来越吵。 @赝品库 ♡ 1.5k" [ref=e37] [cursor=pointer]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: 脑
+        - generic [ref=e40]: 点击
+      - generic [ref=e41]: 脑腐咔嗒工厂
+      - generic [ref=e42]: 点出伪意大利动物，升级后 canvas 弹幕越来越吵。
+      - generic [ref=e43]:
+        - generic [ref=e44]: "@赝品库"
+        - generic [ref=e45]: ♡ 1.5k
+    - button "刺 点击 刺激值按钮 每个升级都让手机屏幕更像失控的信息流。 @赝品库 ♡ 1.6k" [ref=e46] [cursor=pointer]:
+      - generic [ref=e47]:
+        - generic [ref=e48]: 刺
+        - generic [ref=e49]: 点击
+      - generic [ref=e50]: 刺激值按钮
+      - generic [ref=e51]: 每个升级都让手机屏幕更像失控的信息流。
+      - generic [ref=e52]:
+        - generic [ref=e53]: "@赝品库"
+        - generic [ref=e54]: ♡ 1.6k
+    - button "撞 动作 疯羊碰碰场 触摸方向推动主羊，撞飞编号羊，留在圆圈里。 @赝品库 ♡ 1.7k" [ref=e55] [cursor=pointer]:
+      - generic [ref=e56]:
+        - generic [ref=e57]: 撞
+        - generic [ref=e58]: 动作
+      - generic [ref=e59]: 疯羊碰碰场
+      - generic [ref=e60]: 触摸方向推动主羊，撞飞编号羊，留在圆圈里。
+      - generic [ref=e61]:
+        - generic [ref=e62]: "@赝品库"
+        - generic [ref=e63]: ♡ 1.7k
+    - button "密 解谜 密码地狱试炼 移动端输入框挑战，规则一条比一条难受。 @赝品库 ♡ 1.9k" [ref=e64] [cursor=pointer]:
+      - generic [ref=e65]:
+        - generic [ref=e66]: 密
+        - generic [ref=e67]: 解谜
+      - generic [ref=e68]: 密码地狱试炼
+      - generic [ref=e69]: 移动端输入框挑战，规则一条比一条难受。
+      - generic [ref=e70]:
+        - generic [ref=e71]: "@赝品库"
+        - generic [ref=e72]: ♡ 1.9k
+    - button "合 合成 无限乱炖实验室 两个词一碰，互联网又多一个概念。 @赝品库 ♡ 2.0k" [ref=e73] [cursor=pointer]:
+      - generic [ref=e74]:
+        - generic [ref=e75]: 合
+        - generic [ref=e76]: 合成
+      - generic [ref=e77]: 无限乱炖实验室
+      - generic [ref=e78]: 两个词一碰，互联网又多一个概念。
+      - generic [ref=e79]:
+        - generic [ref=e80]: "@赝品库"
+        - generic [ref=e81]: ♡ 2.0k
+    - button "☑ 协作幻觉 四百个勾选框 假装全网在线，其实是本地小宇宙。 @赝品库 ♡ 2.2k" [ref=e82] [cursor=pointer]:
+      - generic [ref=e83]:
+        - generic [ref=e84]: ☑
+        - generic [ref=e85]: 协作幻觉
+      - generic [ref=e86]: 四百个勾选框
+      - generic [ref=e87]: 假装全网在线，其实是本地小宇宙。
+      - generic [ref=e88]:
+        - generic [ref=e89]: "@赝品库"
+        - generic [ref=e90]: ♡ 2.2k
+    - button "跑 跑酷 断网小蜥蜴 点击跳跃，越过会议、需求和锅。 @赝品库 ♡ 2.3k" [ref=e91] [cursor=pointer]:
+      - generic [ref=e92]:
+        - generic [ref=e93]: 跑
+        - generic [ref=e94]: 跑酷
+      - generic [ref=e95]: 断网小蜥蜴
+      - generic [ref=e96]: 点击跳跃，越过会议、需求和锅。
+      - generic [ref=e97]:
+        - generic [ref=e98]: "@赝品库"
+        - generic [ref=e99]: ♡ 2.3k
+    - button "种 放置 摸鱼花园 种、等、收，库存刷新让你再来一次。 @赝品库 ♡ 2.4k" [ref=e100] [cursor=pointer]:
+      - generic [ref=e101]:
+        - generic [ref=e102]: 种
+        - generic [ref=e103]: 放置
+      - generic [ref=e104]: 摸鱼花园
+      - generic [ref=e105]: 种、等、收，库存刷新让你再来一次。
+      - generic [ref=e106]:
+        - generic [ref=e107]: "@赝品库"
+        - generic [ref=e108]: ♡ 2.4k
+    - button "io .io 圆点吞吞.io 拖动移动，吃小点长大，别被大圆点吃掉。 @赝品库 ♡ 2.6k" [ref=e109] [cursor=pointer]:
+      - generic [ref=e110]:
+        - generic [ref=e111]: io
+        - generic [ref=e112]: .io
+      - generic [ref=e113]: 圆点吞吞.io
+      - generic [ref=e114]: 拖动移动，吃小点长大，别被大圆点吃掉。
+      - generic [ref=e115]:
+        - generic [ref=e116]: "@赝品库"
+        - generic [ref=e117]: ♡ 2.6k
+    - button "战 模板 空投乱斗.io 模板 双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。 @赝品库 ♡ 2.7k" [ref=e118] [cursor=pointer]:
+      - generic [ref=e119]:
+        - generic [ref=e120]: 战
+        - generic [ref=e121]: 模板
+      - generic [ref=e122]: 空投乱斗.io 模板
+      - generic [ref=e123]: 双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。
+      - generic [ref=e124]:
+        - generic [ref=e125]: "@赝品库"
+        - generic [ref=e126]: ♡ 2.7k
+    - button "玄 玄学 赛博玄学评分器 输入名字，生成今日抽象运势卡。 @赝品库 ♡ 2.8k" [ref=e127] [cursor=pointer]:
+      - generic [ref=e128]:
+        - generic [ref=e129]: 玄
+        - generic [ref=e130]: 玄学
+      - generic [ref=e131]: 赛博玄学评分器
+      - generic [ref=e132]: 输入名字，生成今日抽象运势卡。
+      - generic [ref=e133]:
+        - generic [ref=e134]: "@赝品库"
+        - generic [ref=e135]: ♡ 2.8k
+    - button "塔 塔罗 打工塔罗三连 输入代号抽三张赛博塔罗，给出今日抽象建议。 @赝品库 ♡ 3.0k" [ref=e136] [cursor=pointer]:
+      - generic [ref=e137]:
+        - generic [ref=e138]: 塔
+        - generic [ref=e139]: 塔罗
+      - generic [ref=e140]: 打工塔罗三连
+      - generic [ref=e141]: 输入代号抽三张赛博塔罗，给出今日抽象建议。
+      - generic [ref=e142]:
+        - generic [ref=e143]: "@赝品库"
+        - generic [ref=e144]: ♡ 3.0k
+    - button "命 算命 八字偏科生成器 生日时辰生成假认真四柱，重点看五行哪里离谱。 @赝品库 ♡ 3.1k" [ref=e145] [cursor=pointer]:
+      - generic [ref=e146]:
+        - generic [ref=e147]: 命
+        - generic [ref=e148]: 算命
+      - generic [ref=e149]: 八字偏科生成器
+      - generic [ref=e150]: 生日时辰生成假认真四柱，重点看五行哪里离谱。
+      - generic [ref=e151]:
+        - generic [ref=e152]: "@赝品库"
+        - generic [ref=e153]: ♡ 3.1k
+    - button "星 看盘 星盘甩锅轮 一键画出可分享星盘，把今天的问题甩给相位。 @赝品库 ♡ 3.3k" [ref=e154] [cursor=pointer]:
+      - generic [ref=e155]:
+        - generic [ref=e156]: 星
+        - generic [ref=e157]: 看盘
+      - generic [ref=e158]: 星盘甩锅轮
+      - generic [ref=e159]: 一键画出可分享星盘，把今天的问题甩给相位。
+      - generic [ref=e160]:
+        - generic [ref=e161]: "@赝品库"
+        - generic [ref=e162]: ♡ 3.3k
+    - button "卦 易经 六爻离谱铜钱 点六次摇铜钱，得到一卦适合转发的离谱签文。 @赝品库 ♡ 3.4k" [ref=e163] [cursor=pointer]:
+      - generic [ref=e164]:
+        - generic [ref=e165]: 卦
+        - generic [ref=e166]: 易经
+      - generic [ref=e167]: 六爻离谱铜钱
+      - generic [ref=e168]: 点六次摇铜钱，得到一卦适合转发的离谱签文。
+      - generic [ref=e169]:
+        - generic [ref=e170]: "@赝品库"
+        - generic [ref=e171]: ♡ 3.4k

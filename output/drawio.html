@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未命名绘图 - draw.io</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        
+        body {
+            background-color: rgb(241, 243, 244);
+            color: rgb(63, 63, 63);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .geHeader {
+            background-color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            height: 50px;
+        }
+        
+        .geMenuItems {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .geRightItems {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .geItem {
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: rgb(63, 63, 63);
+            text-decoration: none;
+        }
+        
+        .geItem:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+        
+        .geBtn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .gePrimaryBtn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+        }
+        
+        .gePrimaryBtn:hover {
+            background-color: #3367d6;
+        }
+        
+        .geFilename {
+            font-size: 14px;
+            color: #5f6368;
+            margin: 0 10px;
+        }
+        
+        .geDiagramContainer {
+            display: flex;
+            flex: 1;
+            background-color: rgb(236, 236, 236);
+            position: relative;
+            margin-left: -10px;
+        }
+        
+        .geToolbar {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            padding: 5px;
+        }
+        
+        .geToolbarItem {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .geToolbarItem:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+        
+        .geToolbarItem img {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .geBackgroundPage {
+            width: 800px;
+            height: 600px;
+            background-color: white;
+            box-shadow: 0 0 3px 0 rgba(160, 160, 160, 1);
+            margin: auto;
+            position: relative;
+            background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cGF0aCBkPSJNMCAwaDEwdjEwSDB6IiBzdHJva2U9IiNkZGQiIGZpbGw9Im5vbmUiIC8+PC9zdmc+");
+            background-size: 10px 10px;
+        }
+        
+        .geSidebar {
+            width: 200px;
+            background-color: white;
+            height: 100%;
+            overflow-y: auto;
+            border-right: 1px solid #ddd;
+        }
+        
+        .geSidebarSection {
+            padding: 10px;
+        }
+        
+        .geSidebarTitle {
+            font-weight: bold;
+            padding: 5px 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .geSidebarItems {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 5px;
+        }
+        
+        .geSidebarItem {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 10px;
+            text-align: center;
+            word-break: break-word;
+            padding: 5px;
+        }
+        
+        .geSidebarItem:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .geCanvasContainer {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+        }
+        
+        .geShape {
+            position: absolute;
+            border: 1px solid #333;
+            background-color: white;
+            padding: 10px;
+            cursor: move;
+        }
+        
+        .geModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .geModalContent {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+        }
+        
+        .geModalHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .geModalTitle {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .geCloseModal {
+            cursor: pointer;
+            font-size: 24px;
+        }
+        
+        .geFormGroup {
+            margin-bottom: 15px;
+        }
+        
+        .geFormLabel {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .geFormInput {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .geModalFooter {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="geHeader">
+        <div class="geMenuItems">
+            <a class="geItem">文件</a>
+            <a class="geItem">编辑</a>
+            <a class="geItem">查看</a>
+            <a class="geItem">排列</a>
+            <a class="geItem">其它</a>
+            <a class="geItem">帮助</a>
+        </div>
+        <div class="geRightItems">
+            <a class="geBtn gePrimaryBtn">共享</a>
+            <span class="geFilename">未命名绘图</span>
+            <a class="geBtn gePrimaryBtn">更多结果</a>
+        </div>
+    </div>
+    
+    <div class="geDiagramContainer">
+        <div class="geToolbar">
+            <div class="geToolbarItem" title="选择" data-action="select">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMDAwMDAwIj48cGF0aCBkPSJNNDc4LTI0MHEyMSAwIDM1LjUtMTQuNVQ1MjgtMjkwcTAtMjEtMTQuNS0zNS41VDQ3OC0zNDBxLTIxIDAtMzUuNSAxNC41VDQyOC0yOTBxMCAyMSAxNC41IDM1LjVUNDc4LTI0MFptLTM2LTE1NGg3NHEwLTMzIDcuNS01MnQ0Mi41LTUycTI2LTI2IDQxLTQ5LjV0MTUtNTYuNXEwLTU2LTQxLTg2dC05Ny0zMHEtNTcgMC05Mi41IDMwVDM0Mi02MThsNjYgMjZxNS0xOCAyMi41LTM5dDUzLjUtMjFxMzIgMCA0OCAxNy41dDE2IDM4LjVxMCAyMC0xMiAzNy41VDUwNi01MjZxLTQ0IDM5LTU0IDU5dC0xMCA3M1ptMzggMzE0cS04MyAwLTE1Ni0zMS41VDE5Ny0xOTdxLTU0LTU0LTg1LjUtMTI3VDgwLTQ4MHEwLTgzIDMxLjUtMTU2VDE5Ny03NjNxNTQtNTQgMTI3LTg1LjVUNDgwLTg4MHE4MyAwIDE1NiAzMS41VDc2My03NjNxNTQgNTQgODUuNSAxMjdUODgwLTQ4MHEwIDgzLTMxLjUgMTU2VDc2My0xOTdxLTU0IDU0LTEyNyA4NS41VDQ4MC04MFptMC04MHExMzQgMCAyMjctOTN0OTMtMjI3cTAtMTM0LTkzLTIyN3QtMjI3LTkzcS0xMzQgMC0yMjcgOTN0LTkzIDIyN3EwIDEzNCA5MyAyMjd0MjI3IDkzWm0wLTMyMFoiLz48L3N2Zz4=">
+            </div>
+            <div class="geToolbarItem" title="文字" data-action="text">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjMDAwMDAwIj48cGF0aCBkPSJNNDgwLTgwcS04MyAwLTE1Ni0zMS41VDE5Ny0xOTdxLTU0LTU0LTg1LjUtMTI3VDgwLTQ4MHEwLTgzIDMxLjUtMTU2VDE5Ny03NjNxNTQtNTQgMTI3LTg1LjVUNDgwLTg4MHE4MyAwIDE1NiAzMS41VDc2My03NjNxNTQgNTQgODUuNSAxMjdUODgwLTQ4MHEwIDgzLTMxLjUgMTU2VDc2My0xOTdxLTU0IDU0LTEyNyA4NS41VDQ4MC04MFptNDAtODNxMTE5LTE1IDE5OS41LTEwNC41VDgwMC00ODBxMC0xMjMtODAuNS0yMTIuNVQ1MjAtNzk3djYzNFoiLz48L3N2Zz4=">
+            </div>
+            <div class="geToolbarItem" title="连接" data-action="connector">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iNDgiIHdpZHRoPSI0OCI+PHBhdGggZD0iTTYgNDJ2LTguNGwxOC44NS0xOC44NS0zLjYtMy42TDIzLjMgOS4xbDQuNiA0LjZMMzUgNi42cS41NS0uNTUgMS4xNzUtLjU1dDEuMTc1LjU1bDQuMDUgNC4wNXEuNTUuNTUuNTUgMS4xNzVUNDEuNCAxM2wtNy4xIDcuMSA0LjYgNC42LTIuMDUgMi4wNS0zLjYtMy42TDE0LjQgNDJabTMtM2g0LjM1TDMxLjEgMjEuMjVsLTQuMzUtNC4zNUw5IDM0LjY1Wm0yMy4xNS0yMSA2LjItNi4yLTIuMTUtMi4xNS02LjIgNi4yWm0wIDBMMzAgMTUuODUgMzIuMTUgMThaIi8+PC9zdmc+">
+            </div>
+            <div class="geToolbarItem" title="形状" data-action="shape">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCOTYwIiB3aWR0aD0iMjRweCIgZmlsbD0iIzAwMDAwMCI+PHBhdGggZD0iTTQ3OC0yNDBxMjEgMCAzNS41LTE0LjVUNTI4LTI5MHEwLTIxLTE0LjUtMzUuNVQ0NzgtMzQwcS0yMSAwLTM1LjUgMTQuNVQ0MjgtMjkwcTAgMjEgMTQuNSAzNS41VDQ3OC0yNDBabS0zNi0xNTRoNzRxMC0zMyA3LjUtNTJ0NDIuNS01MnEyNi0yNiA0MS00OS41dDE1LTU2LjVxMC01Ni00MS04NnQtOTctMzBxLTU3IDAtOTIuNSAzMFQzNDItNjE4bDY2IDI2cTUtMTggMjIuNS0zOXQ1My41LTIxcTMyIDAgNDggMTcuNXQxNiAzOC41cTAgMjAtMTIgMzcuNVQ1MDYtNTI2cS00NCAzOS01NCA1OXQtMTAgNzNabTM4IDMxNHEtODMgMC0xNTYtMzEuNVQxOTctMTk3cS01NC01NC04NS41LTEyN1Q4MC00ODBxMC04MyAzMS41LTE1NlQxOTctNzYzcTU0LTU0IDEyNy04NS41VDQ4MC04ODBxODMgMCAxNTYgMzEuNVQ3NjMtNzYzcTU0IDU0IDg1LjUgMTI3VDg4MC00ODBxMCA4My0zMS41IDE1NlQ3NjMtMTk3cS01NCA1NC0xMjcgODUuNVQ0ODAtODBabTAtODBxMTM0IDAgMjI3LTkzdDkzLTIyN3EwLTEzNC05My0yMjd0LTIyNy05M3EtMTM0IDAtMjI3IDkzdC05MyAyMjdxMCAxMzQgOTMgMjI3dDIyNyA5M1ptMC0zMjBaIi8+PC9zdmc+">
+            </div>
+            <div class="geToolbarItem" title="添加" data-action="add">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTkgMTNoLTZ2NmgtMnYtNkg1di0yaDZWNWgydjZoNnYyeiIvPjwvc3ZnPg==">
+            </div>
+        </div>
+        
+        <div class="geSidebar">
+            <div class="geSidebarSection">
+                <div class="geSidebarTitle">便笺本</div>
+                <div class="geSidebarItems">
+                    <div class="geSidebarItem">把元素拖至此处</div>
+                </div>
+            </div>
+            <div class="geSidebarSection">
+                <div class="geSidebarTitle">通用</div>
+                <div class="geSidebarItems">
+                    <div class="geSidebarItem">Text</div>
+                    <div class="geSidebarItem">Heading</div>
+                    <div class="geSidebarItem">Vertical Container</div>
+                    <div class="geSidebarItem">Horizontal Container</div>
+                    <div class="geSidebarItem">
+                        List Item 1<br>
+                        Item 2<br>
+                        Item 3
+                    </div>
+                    <div class="geSidebarItem">List Item</div>
+                    <div class="geSidebarItem">Label</div>
+                    <div class="geSidebarItem">Label Source</div>
+                    <div class="geSidebarItem">Label Source Target</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="geCanvasContainer">
+            <div class="geBackgroundPage">
+                <!-- Canvas content will be added here -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="geModal" id="shareModal">
+        <div class="geModalContent">
+            <div class="geModalHeader">
+                <div class="geModalTitle">共享绘图</div>
+                <div class="geCloseModal">&times;</div>
+            </div>
+            <div class="geFormGroup">
+                <label class="geFormLabel">共享链接</label>
+                <input type="text" class="geFormInput" id="shareLink" readonly>
+            </div>
+            <div class="geFormGroup">
+                <label class="geFormLabel">权限</label>
+                <select class="geFormInput" id="sharePermission">
+                    <option value="view">可以查看</option>
+                    <option value="edit">可以编辑</option>
+                </select>
+            </div>
+            <div class="geModalFooter">
+                <button class="geBtn">取消</button>
+                <button class="geBtn gePrimaryBtn" id="copyShareLink">复制链接</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu items click handlers
+            const menuItems = document.querySelectorAll('.geItem');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    alert(`点击了菜单: ${this.textContent}`);
+                });
+            });
+            
+            // Buttons click handlers
+            document.querySelector('.gePrimaryBtn').addEventListener('click', function() {
+                if(this.textContent === '共享') {
+                    document.getElementById('shareModal').style.display = 'flex';
+                    document.getElementById('shareLink').value = 
+                        window.location.href.split('?')[0] + '?share=' + generateRandomId();
+                } else {
+                    alert('点击了: ' + this.textContent);
+                }
+            });
+            
+            // Close modal
+            document.querySelector('.geCloseModal').addEventListener('click', function() {
+                document.getElementById('shareModal').style.display = 'none';
+            });
+            
+            // Copy share link
+            document.getElementById('copyShareLink').addEventListener('click', function() {
+                const shareLink = document.getElementById('shareLink');
+                shareLink.select();
+                document.execCommand('copy');
+                alert('链接已复制到剪贴板');
+                document.getElementById('shareModal').style.display = 'none';
+            });
+            
+            // Canvas interaction
+            const canvas = document.querySelector('.geBackgroundPage');
+            let selectedTool = null;
+            let currentShape = null;
+            
+            document.querySelectorAll('.geToolbarItem').forEach(tool => {
+                tool.addEventListener('click', function() {
+                    document.querySelectorAll('.geToolbarItem').forEach(t => t.style.backgroundColor = '');
+                    this.style.backgroundColor = 'rgba(0,0,0,0.1)';
+                    selectedTool = this.getAttribute('data-action');
+                });
+            });
+            
+            canvas.addEventListener('click', function(e) {
+                if(selectedTool === 'text') {
+                    const text = prompt('请输入文字:');
+                    if(text) {
+                        const shape = document.createElement('div');
+                        shape.className = 'geShape';
+                        shape.style.left = (e.offsetX - 10) + 'px';
+                        shape.style.top = (e.offsetY - 10) + 'px';
+                        shape.textContent = text;
+                        canvas.appendChild(shape);
+                        makeDraggable(shape);
+                    }
+                } else if(selectedTool === 'shape') {
+                    const shape = document.createElement('div');
+                    shape.className = 'geShape';
+                    shape.style.left = (e.offsetX - 50) + 'px';
+                    shape.style.top = (e.offsetY - 30) + 'px';
+                    shape.style.width = '100px';
+                    shape.style.height = '60px';
+                    shape.textContent = '形状';
+                    canvas.appendChild(shape);
+                    makeDraggable(shape);
+                } else if(selectedTool === 'add') {
+                    const shape = document.createElement('div');
+                    shape.className = 'geShape';
+                    shape.style.left = (e.offsetX - 50) + 'px';
+                    shape.style.top = (e.offsetY - 50) + 'px';
+                    shape.style.width = '100px';
+                    shape.style.height = '100px';
+                    shape.textContent = '+';
+                    shape.style.fontSize = '50px';
+                    shape.style.textAlign = 'center';
+                    shape.style.lineHeight = '100px';
+                    canvas.appendChild(shape);
+                    makeDraggable(shape);
+                }
+            });
+            
+            function makeDraggable(element) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                element.onmousedown = dragMouseDown;
+                
+                function dragMouseDown(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    // get the mouse cursor position at startup:
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    // call a function whenever the cursor moves:
+                    document.onmousemove = elementDrag;
+                }
+                
+                function elementDrag(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    // calculate the new cursor position:
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    // set the element's new position:
+                    element.style.top = (element.offsetTop - pos2) + "px";
+                    element.style.left = (element.offsetLeft - pos1) + "px";
+                }
+                
+                function closeDragElement() {
+                    // stop moving when mouse button is released:
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                }
+            }
+            
+            // Sidebar drag and drop
+            const sidebarItems = document.querySelectorAll('.geSidebarItem');
+            sidebarItems.forEach(item => {
+                item.setAttribute('draggable', 'true');
+                item.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', this.textContent);
+                });
+            });
+            
+            canvas.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            canvas.addEventListener('drop', function(e) {
+                e.preventDefault();
+                const data = e.dataTransfer.getData('text/plain');
+                const shape = document.createElement('div');
+                shape.className = 'geShape';
+                shape.style.left = (e.offsetX - 10) + 'px';
+                shape.style.top = (e.offsetY - 10) + 'px';
+                shape.textContent = data;
+                canvas.appendChild(shape);
+                makeDraggable(shape);
+            });
+            
+            function generateRandomId() {
+                return Math.random().toString(36).substring(2, 15);
+            }
+        });
+    </script>
+</body>
+</html>

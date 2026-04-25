@@ -1,0 +1,65 @@
+{
+  "viewport": 390,
+  "docScroll": 390,
+  "bodyScroll": 390,
+  "shellClient": 388,
+  "shellScroll": 388,
+  "shellLeft": 0,
+  "stageScroll": 364,
+  "state": {
+    "coordinate_system": "DOM infinite craft grid",
+    "discovered": 73,
+    "pairSpace": 2628,
+    "selected": [
+      "玄学全自动云朵盲盒协*"
+    ],
+    "last": "First Discovery：玄学全自动云朵盲盒协*",
+    "recipeCache": 70,
+    "craftHistory": [
+      {
+        "a": "群聊",
+        "b": "低电量云朵人格",
+        "result": "打工版锦鲤补丁",
+        "isNew": true,
+        "mode": "randomStew",
+        "depth": 8
+      },
+      {
+        "a": "火羊浓汤",
+        "b": "全自动低电量火羊浓汤*",
+        "result": "全自动全自动低电量火*",
+        "isNew": true,
+        "mode": "randomStew",
+        "depth": 6
+      },
+      {
+        "a": "水脑腐羊浓汤浓汤",
+        "b": "打工版表情包盲盒",
+        "result": "水脑腐羊浓汤浓汤味打*",
+        "isNew": true,
+        "mode": "randomStew",
+        "depth": 7
+      },
+      {
+        "a": "量子脑腐泥和风的孩子浓汤",
+        "b": "羊",
+        "result": "量子羊协议",
+        "isNew": true,
+        "mode": "randomStew",
+        "depth": 5
+      },
+      {
+        "a": "玄学全自动云朵盲盒协议",
+        "b": "脑腐羊浓汤",
+        "result": "玄学全自动云朵盲盒协*",
+        "isNew": true,
+        "mode": "randomStew",
+        "depth": 9
+      }
+    ],
+    "searchInput": "",
+    "depth": 11,
+    "totalCombines": 80,
+    "randomStew": 80
+  }
+}

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ToDesk远程桌面软件 - 免费安全流畅的远程连接电脑手机</title>
+    <meta name="description" content="ToDesk远程控制软件是一款稳定流畅的远程控制电脑手机连接软件,可远程桌面办公,远程协助运维.采用端到端加密,让每一次远程访问都安全可靠。">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: #1f2126;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+
+        /* 容器 */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        /* 导航栏 */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.02);
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+
+        .logo {
+            height: 28px;
+            width: auto;
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            font-size: 16px;
+            color: #444546;
+            text-decoration: none;
+            font-weight: 400;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            color: #0070f9;
+        }
+
+        .nav-btn {
+            background-color: #216ed8;
+            color: white !important;
+            padding: 0 18px;
+            height: 34px;
+            line-height: 34px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .nav-btn:hover {
+            background-color: #0a5bbf;
+            color: white;
+        }
+
+        /* hero主视觉 */
+        .hero {
+            background: linear-gradient(90deg, #f7fbff 0%, #eaedf5 100%);
+            position: relative;
+            padding: 0 0 40px 0;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px 40px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hero-left {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .hero-title-img {
+            max-width: 100%;
+            margin-bottom: 24px;
+        }
+
+        .hero-badge {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0 24px;
+            color: #444;
+            font-size: 16px;
+        }
+
+        .badge-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            background: #0070f9;
+            border-radius: 50%;
+        }
+
+        .btn-black {
+            background: #141414;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 0 32px;
+            height: 60px;
+            font-size: 18px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .btn-black:hover {
+            background: #2c2c2c;
+            transform: translateY(-2px);
+        }
+
+        .hero-cards {
+            display: flex;
+            gap: 24px;
+            margin-top: 48px;
+            flex-wrap: wrap;
+        }
+
+        .toclaw-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            padding: 20px 24px;
+            gap: 20px;
+            min-width: 320px;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #1f2126;
+            border: 1px solid #eef2f6;
+        }
+
+        .toclaw-icon {
+            width: 70px;
+            height: 70px;
+        }
+
+        .toclaw-text h4 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .toclaw-text p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .version-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px 28px;
+            border: 1px solid #eef2f6;
+            min-width: 220px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* 统计数据栏 */
+        .stats {
+            background: #fff;
+            padding: 60px 0;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .stats-grid {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 32px;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 42px;
+            font-weight: 700;
+            color: #1f2126;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-item p {
+            font-size: 16px;
+            color: #5e636e;
+            margin-top: 8px;
+        }
+
+        /* 技术架构 */
+        .tech-arch {
+            padding: 80px 0;
+            background: #ffffff;
+        }
+
+        .section-title {
+            font-size: 38px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 48px;
+            letter-spacing: -0.02em;
+        }
+
+        .metrics {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 48px;
+            margin-bottom: 60px;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric .number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #0070f9;
+        }
+
+        .tech-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+            justify-content: space-between;
+            background: #f8fafd;
+            border-radius: 32px;
+            padding: 48px 40px;
+        }
+
+        .feature-item {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .feature-item h4 {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        /* 全兼容高精度 */
+        .compatibility {
+            background: linear-gradient(270deg, #e5e6eb 61.56%, #283540 134.82%);
+            padding: 56px 0;
+            text-align: center;
+        }
+
+        .compatibility h3 {
+            font-size: 50px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 32px;
+        }
+
+        .device-icons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #1f2126;
+        }
+
+        /* 安全的企业版模块 */
+        .enterprise {
+            padding: 80px 0;
+            background: #fff;
+        }
+
+        .enterprise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            margin-top: 40px;
+        }
+
+        .ep-card {
+            background: #f9fafc;
+            border-radius: 28px;
+            padding: 32px 24px;
+            transition: 0.2s;
+            border: 1px solid #edf0f5;
+        }
+
+        .ep-card h4 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .ep-card p {
+            color: #4a4e5a;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .link-arrow {
+            color: #0070f9;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        /* 场景解决方案 */
+        .solutions {
+            background: #fbfdff;
+            padding: 40px 0 80px;
+        }
+
+        .solutions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            margin-top: 48px;
+        }
+
+        .sol-card {
+            background: white;
+            border-radius: 28px;
+            padding: 32px 24px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.02);
+            border: 1px solid #eef2f8;
+            transition: all 0.25s;
+        }
+
+        .sol-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 王牌应用 */
+        .apps {
+            padding: 60px 0;
+            background: #fff;
+        }
+
+        .apps-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            justify-content: center;
+        }
+
+        .app-item {
+            background: #f8f9fe;
+            border-radius: 32px;
+            padding: 28px 20px;
+            width: 220px;
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .app-item h4 {
+            margin: 16px 0 8px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: 0.2s;
+        }
+
+        /* 信任与证书 */
+        .trust {
+            background: #f6f9fe;
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 40px auto 20px;
+            max-width: 900px;
+        }
+
+        .badge-list span {
+            background: white;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            color: #1f2126;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* footer */
+        .footer {
+            background: #111216;
+            color: #aaa;
+            padding: 60px 0 30px;
+            font-size: 14px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 40px;
+            margin-bottom: 48px;
+        }
+
+        .footer-col h4 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .footer-col a {
+            display: block;
+            color: #aaa;
+            text-decoration: none;
+            margin-bottom: 12px;
+        }
+
+        .footer-col a:hover {
+            color: #0070f9;
+        }
+
+        .copyright {
+            border-top: 1px solid #2a2c30;
+            padding-top: 30px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .nav-menu {
+                gap: 16px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .nav-container {
+                flex-direction: column;
+                height: auto;
+                padding: 12px 20px;
+                gap: 12px;
+            }
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .hero-cards {
+                justify-content: center;
+            }
+            .section-title {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 顶部导航栏 -->
+<div class="navbar">
+    <div class="nav-container">
+        <a href="#" class="logo-link">
+            <img class="logo" src="https://www.todesk.com/dist/img/f1488b0.svg" alt="ToDesk">
+        </a>
+        <div class="nav-menu">
+            <a href="#" class="nav-item">产品</a>
+            <a href="#" class="nav-item">特色功能</a>
+            <a href="#" class="nav-item">解决方案</a>
+            <a href="#" class="nav-item">下载</a>
+            <a href="#" class="nav-item">定价</a>
+            <a href="#" class="nav-item">帮助中心</a>
+            <a href="#" class="nav-item">代理商招募</a>
+            <a href="#" class="nav-item">了解ToDesk</a>
+            <a href="#" class="nav-item" style="color:#0070f9; font-weight:500;">ToClaw AI</a>
+            <a href="#" class="nav-item">登录</a>
+            <a href="#" class="nav-item nav-btn">免费试用企业版</a>
+        </div>
+    </div>
+</div>
+
+<!-- Hero主视觉 -->
+<div class="hero">
+    <div class="hero-content">
+        <div class="hero-left">
+            <img class="hero-title-img" src="https://todeskcdnspeed.todesk.com/2026040915515864f024a7d970e8.png" alt="ToDesk 史上最安全" style="max-width:560px; width:100%;">
+            <div class="hero-badge">
+                <span class="badge-item"><span class="badge-dot"></span> 免部署 · 安装即用</span>
+                <span class="badge-item"><span class="badge-dot"></span> 新用户 · 享5000积分畅快用</span>
+                <span class="badge-item"><span class="badge-dot"></span> 更便捷 · 微信接入</span>
+            </div>
+            <button class="btn-black" id="downloadBtn">点击下载 <span style="font-size:20px;">→</span></button>
+        </div>
+        <div class="hero-cards">
+            <a href="#" class="toclaw-card" id="toclawCard">
+                <img class="toclaw-icon" src="https://www.todesk.com/dist/img/76fc71c.png" alt="ToClaw">
+                <div class="toclaw-text">
+                    <h4>ToClaw 送5000积分</h4>
+                    <p>帮你自动完成工作的 AI 助手</p>
+                </div>
+            </a>
+            <div class="version-card">
+                <div>💻</div>
+                <div><strong>专业版</strong><br>远程控制 RTC+VIP专属节点</div>
+            </div>
+            <div class="version-card">
+                <div>🎮</div>
+                <div><strong>游戏版</strong><br>远程控制 游戏键盘全支持</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 数据统计 block -->
+<div class="stats">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item"><h3>每月50亿+</h3><p>安全连接时间 (min)</p></div>
+            <div class="stat-item"><h3>2.3亿+</h3><p>用户支持数</p></div>
+            <div class="stat-item"><h3>40万+</h3><p>企业用户合作数</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- 国际卓越技术架构 -->
+<div class="tech-arch">
+    <div class="container">
+        <div class="section-title">国际卓越的技术架构，引领下一代算力连接</div>
+        <div class="metrics">
+            <div class="metric"><div class="number">50%</div><div>带宽利用率</div></div>
+            <div class="metric"><div class="number">90%</div><div>网络拥堵率</div></div>
+            <div class="metric"><div class="number">10ms</div><div>缓存延时</div></div>
+            <div class="metric"><div class="number">0.03%</div><div>综合丢包率</div></div>
+        </div>
+        <div class="tech-features">
+            <div class="feature-item"><h4>ZeroSync®传输引擎</h4><p>毫秒级低延迟架构，端到端延迟<3ms</p></div>
+            <div class="feature-item"><h4>OTT SD-WAN</h4><p>智能带宽调控，拥塞率下降90%</p></div>
+            <div class="feature-item"><h4>ToDesk编解码器</h4><p>多层抗弱网技术，30%丢包无感知</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- 全兼容高精度稳连接 -->
+<div class="compatibility">
+    <div class="container">
+        <h3>全兼容 高精度 稳连接</h3>
+        <div class="device-icons">
+            <span>⌨️ 键鼠</span> <span>✍️ 数位板</span> <span>🖥️ 分屏显示器</span>
+            <span>🎙️ 麦克风摄像头</span> <span>🎮 游戏手柄</span>
+        </div>
+    </div>
+</div>
+
+<!-- 安全的企业都选择 ToDesk企业版 -->
+<div class="enterprise">
+    <div class="container">
+        <div class="section-title">安全的企业都选择 ToDesk企业版</div>
+        <div class="enterprise-grid">
+            <div class="ep-card"><h4>更流畅 更高性能</h4><p>专享企业版高速线路，持久稳定连接，字体清晰强化，满足三维设计操作。</p><a href="#" class="link-arrow">了解更多 →</a></div>
+            <div class="ep-card"><h4>SOS绿色被控端</h4><p>3秒下载，1键直连，无需安装，快速远程支持。</p><a href="#" class="link-arrow">了解更多 →</a></div>
+            <div class="ep-card"><h4>批量安装一键部署</h4><p>上万设备快速安装，命令行静默部署，对接AD域/飞书/企微账号。</p><a href="#" class="link-arrow">了解更多 →</a></div>
+            <div class="ep-card"><h4>23项措施全方位安全保障</h4><p>安全日志记录，云端加密录屏，可控文件传输。</p><a href="#" class="link-arrow">了解更多 →</a></div>
+        </div>
+    </div>
+</div>
+
+<!-- 深入不同场景解决方案 -->
+<div class="solutions">
+    <div class="container">
+        <div class="section-title">深入不同场景，为各行各业提供企业级解决方案</div>
+        <div class="solutions-grid">
+            <div class="sol-card"><h3>💼 高性能办公</h3><p>4K原画画质，<0.04秒延时，TB级文件同步，数字资产保护。</p><a href="#" class="link-arrow">立即试用 →</a></div>
+            <div class="sol-card"><h3>🛠️ 技术支持</h3><p>跨平台运维，SOS免安装被控端，3秒直连，统一管理客户。</p><a href="#" class="link-arrow">立即试用 →</a></div>
+            <div class="sol-card"><h3>⚙️ IT运维</h3><p>批量部署，精细化授权，实时屏幕墙监控，预警设备风险。</p><a href="#" class="link-arrow">立即试用 →</a></div>
+            <div class="sol-card"><h3>🤖 无人值守</h3><p>远程设备巡检排障，极简被控端，工业级稳定连接。</p><a href="#" class="link-arrow">立即试用 →</a></div>
+        </div>
+    </div>
+</div>
+
+<!-- ToDesk旗下王牌应用 -->
+<div class="apps">
+    <div class="container">
+        <div class="section-title">ToDesk旗下王牌应用，发现更多新功能</div>
+        <div class="apps-grid">
+            <div class="app-item"><span style="font-size:42px;">🖥️</span><h4>ToDesk远程控制</h4><p>专业稳定不限速</p><button class="btn-outline">立即下载</button></div>
+            <div class="app-item"><span style="font-size:42px;">⚡</span><h4>专业版</h4><p>专属高速通道 2K超清</p><button class="btn-outline">了解详情</button></div>
+            <div class="app-item"><span style="font-size:42px;">🎮</span><h4>游戏版</h4><p>4K超清 鼠标加速</p><button class="btn-outline">游戏远控</button></div>
+            <div class="app-item"><span style="font-size:42px;">🚀</span><h4>性能版</h4><p>高阶远控 高效多屏</p><button class="btn-outline">性能极致</button></div>
+            <div class="app-item"><span style="font-size:42px;">🏢</span><h4>ToDesk企业版</h4><p>全方位安全管理</p><button class="btn-outline">企业咨询</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- 超过40w+企业的共同信赖 & 资质证书 -->
+<div class="trust">
+    <div class="container">
+        <div class="section-title" style="font-size:32px;">超过40w+企业的共同信赖</div>
+        <div class="badge-list">
+            <span>高新技术企业</span><span>软件企业认证</span><span>信息系统安全等级保护三级</span><span>质量管理体系认证</span>
+            <span>专精特新中小企业</span><span>统信认证</span><span>麒麟软件认证</span><span>卓信大数据成员</span>
+        </div>
+        <p style="margin-top: 32px; color:#5e6a7a;">轻松打破物理限制，随时随地高效使用所有计算终端</p>
+        <button class="btn-black" style="background:#216ed8; margin-top: 28px; height:44px; padding:0 32px;">下载远程控制</button>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col"><h4>产品</h4><a href="#">远程控制</a><a href="#">企业版</a><a href="#">定价</a><a href="#">下载中心</a></div>
+            <div class="footer-col"><h4>解决方案</h4><a href="#">高性能办公</a><a href="#">技术支持</a><a href="#">IT运维</a><a href="#">无人值守</a></div>
+            <div class="footer-col"><h4>帮助支持</h4><a href="#">帮助中心</a><a href="#">反馈建议</a><a href="#">联系客服</a><a href="#">代理商招募</a></div>
+            <div class="footer-col"><h4>关于我们</h4><a href="#">了解ToDesk</a><a href="#">加入我们</a><a href="#">ToClaw AI</a><a href="#">最新资讯</a></div>
+        </div>
+        <div class="copyright">
+            Copyright © 海南有趣科技有限公司 版权所有 琼公网安备46010802000951号 琼ICP备20000605号-1<br>
+            ToDesk远程控制软件隐私政策 | 用户权限 | 用户协议
+        </div>
+    </div>
+</div>
+
+<script>
+    // 添加简单交互，演示功能点击提醒
+    const btns = document.querySelectorAll('.btn-black, .btn-outline, .nav-btn, .link-arrow');
+    btns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            if(btn.id !== 'mockDownload' && btn.innerText.includes('下载') && !btn.classList.contains('nav-btn')) {
+                e.preventDefault();
+                alert('演示版本：您触发了下载/试用流程。实际官网将引导至安装包。');
+            } else if (btn.classList.contains('nav-btn') || btn.innerText.includes('试用')) {
+                e.preventDefault();
+                alert('演示交互：企业版免费试用申请通道。');
+            } else if(btn.closest('.sol-card') || btn.closest('.ep-card')) {
+                e.preventDefault();
+                alert('演示交互：更多解决方案详情可查看官网实际内容。');
+            }
+        });
+    });
+    // ToClaw卡片特殊交互
+    const tocCard = document.getElementById('toclawCard');
+    if(tocCard) {
+        tocCard.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('✨ ToClaw AI 助手：送5000积分，帮你自动完成工作。即将开放公测！');
+        });
+    }
+    const downloadHeroBtn = document.getElementById('downloadBtn');
+    if(downloadHeroBtn) {
+        downloadHeroBtn.addEventListener('click', () => {
+            alert('下载ToDesk远程控制软件 (稳定流畅不限速)');
+        });
+    }
+    // 模拟hover增加光效
+    console.log('ToDesk风格页面已加载 — 功能和视觉高度一致');
+</script>
+
+<!-- 确保图片加载备用 -->
+</body>
+</html>

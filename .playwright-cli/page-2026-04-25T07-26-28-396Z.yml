@@ -1,0 +1,367 @@
+- generic [ref=e1]:
+  - main [ref=e172]:
+    - button "返回首页" [ref=e173]: ‹
+    - generic [ref=e174]:
+      - article [ref=e175]:
+        - region "伪 SBTI 崩溃人格测评 HTML 预览" [ref=e176]:
+          - iframe [ref=e177]:
+            - main [ref=f145e3]:
+              - generic [ref=f145e5]:
+                - paragraph [ref=f145e7]: QUESTION 1 / 8
+                - heading "群聊突然安静，你会？" [level=2] [ref=f145e8]
+                - generic [ref=f145e9]:
+                  - button "A. 发更尴尬的表情包" [ref=f145e10] [cursor=pointer]
+                  - button "B. 关掉通知" [ref=f145e11] [cursor=pointer]
+                  - button "C. 复盘谁说错话" [ref=f145e12] [cursor=pointer]
+                  - button "D. 问要不要点奶茶" [ref=f145e13] [cursor=pointer]
+        - generic:
+          - heading "伪 SBTI 崩溃人格测评" [level=2]
+        - complementary [ref=e178]:
+          - button "点赞 伪 SBTI 崩溃人格测评" [ref=e179] [cursor=pointer]:
+            - generic [ref=e180]: ♡
+            - generic [ref=e181]: 1.2k
+          - button "收藏 伪 SBTI 崩溃人格测评" [ref=e182] [cursor=pointer]:
+            - generic [ref=e183]: ☆
+            - generic [ref=e184]: "240"
+          - link "打开 伪 SBTI 崩溃人格测评" [ref=e185] [cursor=pointer]:
+            - /url: sbti-fake.html
+            - generic [ref=e186]: ▶
+          - button "Remix 伪 SBTI 崩溃人格测评" [active] [ref=e187] [cursor=pointer]:
+            - generic [ref=e188]: ↻
+          - button "下一个" [ref=e189] [cursor=pointer]:
+            - generic [ref=e190]: ↓
+      - article [ref=e191]:
+        - region "羊块堆堆消 HTML 预览" [ref=e192]:
+          - iframe [ref=e193]:
+            - main [ref=f146e3]:
+              - generic [ref=f146e6]:
+                - paragraph [ref=f146e15]: 剩余 54 · 可点 17 · 已消 0
+                - button "重开今日关" [ref=f146e16] [cursor=pointer]
+        - generic:
+          - heading "羊块堆堆消" [level=2]
+        - complementary [ref=e194]:
+          - button "点赞 羊块堆堆消" [ref=e195] [cursor=pointer]:
+            - generic [ref=e196]: ♡
+            - generic [ref=e197]: 1.3k
+          - button "收藏 羊块堆堆消" [ref=e198] [cursor=pointer]:
+            - generic [ref=e199]: ☆
+            - generic [ref=e200]: "271"
+          - link "打开 羊块堆堆消" [ref=e201] [cursor=pointer]:
+            - /url: sheep-stack.html
+            - generic [ref=e202]: ▶
+          - button "Remix 羊块堆堆消" [ref=e203] [cursor=pointer]:
+            - generic [ref=e204]: ↻
+          - button "下一个" [ref=e205] [cursor=pointer]:
+            - generic [ref=e206]: ↓
+      - article [ref=e207]:
+        - region "脑腐咔嗒工厂 HTML 预览" [ref=e208]:
+          - iframe [ref=e209]:
+            
+        - generic:
+          - heading "脑腐咔嗒工厂" [level=2]
+        - complementary [ref=e210]:
+          - button "点赞 脑腐咔嗒工厂" [ref=e211] [cursor=pointer]:
+            - generic [ref=e212]: ♡
+            - generic [ref=e213]: 1.5k
+          - button "收藏 脑腐咔嗒工厂" [ref=e214] [cursor=pointer]:
+            - generic [ref=e215]: ☆
+            - generic [ref=e216]: "302"
+          - link "打开 脑腐咔嗒工厂" [ref=e217] [cursor=pointer]:
+            - /url: brainrot-clicker.html
+            - generic [ref=e218]: ▶
+          - button "Remix 脑腐咔嗒工厂" [ref=e219] [cursor=pointer]:
+            - generic [ref=e220]: ↻
+          - button "下一个" [ref=e221] [cursor=pointer]:
+            - generic [ref=e222]: ↓
+      - article [ref=e223]:
+        - region "刺激值按钮 HTML 预览" [ref=e224]:
+          - iframe [ref=e225]:
+            
+        - generic:
+          - heading "刺激值按钮" [level=2]
+        - complementary [ref=e226]:
+          - button "点赞 刺激值按钮" [ref=e227] [cursor=pointer]:
+            - generic [ref=e228]: ♡
+            - generic [ref=e229]: 1.6k
+          - button "收藏 刺激值按钮" [ref=e230] [cursor=pointer]:
+            - generic [ref=e231]: ☆
+            - generic [ref=e232]: "333"
+          - link "打开 刺激值按钮" [ref=e233] [cursor=pointer]:
+            - /url: stimulation-fake.html
+            - generic [ref=e234]: ▶
+          - button "Remix 刺激值按钮" [ref=e235] [cursor=pointer]:
+            - generic [ref=e236]: ↻
+          - button "下一个" [ref=e237] [cursor=pointer]:
+            - generic [ref=e238]: ↓
+      - article [ref=e239]:
+        - region "疯羊碰碰场 HTML 预览" [ref=e240]:
+          - iframe [ref=e241]:
+            
+        - generic:
+          - heading "疯羊碰碰场" [level=2]
+        - complementary [ref=e242]:
+          - button "点赞 疯羊碰碰场" [ref=e243] [cursor=pointer]:
+            - generic [ref=e244]: ♡
+            - generic [ref=e245]: 1.7k
+          - button "收藏 疯羊碰碰场" [ref=e246] [cursor=pointer]:
+            - generic [ref=e247]: ☆
+            - generic [ref=e248]: "364"
+          - link "打开 疯羊碰碰场" [ref=e249] [cursor=pointer]:
+            - /url: cattle-bump.html
+            - generic [ref=e250]: ▶
+          - button "Remix 疯羊碰碰场" [ref=e251] [cursor=pointer]:
+            - generic [ref=e252]: ↻
+          - button "下一个" [ref=e253] [cursor=pointer]:
+            - generic [ref=e254]: ↓
+      - article [ref=e255]:
+        - region "密码地狱试炼 HTML 预览" [ref=e256]:
+          - iframe [ref=e257]:
+            
+        - generic:
+          - heading "密码地狱试炼" [level=2]
+        - complementary [ref=e258]:
+          - button "点赞 密码地狱试炼" [ref=e259] [cursor=pointer]:
+            - generic [ref=e260]: ♡
+            - generic [ref=e261]: 1.9k
+          - button "收藏 密码地狱试炼" [ref=e262] [cursor=pointer]:
+            - generic [ref=e263]: ☆
+            - generic [ref=e264]: "395"
+          - link "打开 密码地狱试炼" [ref=e265] [cursor=pointer]:
+            - /url: password-hell.html
+            - generic [ref=e266]: ▶
+          - button "Remix 密码地狱试炼" [ref=e267] [cursor=pointer]:
+            - generic [ref=e268]: ↻
+          - button "下一个" [ref=e269] [cursor=pointer]:
+            - generic [ref=e270]: ↓
+      - article [ref=e271]:
+        - region "无限乱炖实验室 HTML 预览" [ref=e272]:
+          - iframe [ref=e273]:
+            
+        - generic:
+          - heading "无限乱炖实验室" [level=2]
+        - complementary [ref=e274]:
+          - button "点赞 无限乱炖实验室" [ref=e275] [cursor=pointer]:
+            - generic [ref=e276]: ♡
+            - generic [ref=e277]: 2.0k
+          - button "收藏 无限乱炖实验室" [ref=e278] [cursor=pointer]:
+            - generic [ref=e279]: ☆
+            - generic [ref=e280]: "426"
+          - link "打开 无限乱炖实验室" [ref=e281] [cursor=pointer]:
+            - /url: infinite-craft-fake.html
+            - generic [ref=e282]: ▶
+          - button "Remix 无限乱炖实验室" [ref=e283] [cursor=pointer]:
+            - generic [ref=e284]: ↻
+          - button "下一个" [ref=e285] [cursor=pointer]:
+            - generic [ref=e286]: ↓
+      - article [ref=e287]:
+        - region "四百个勾选框 HTML 预览" [ref=e288]:
+          - iframe [ref=e289]:
+            
+        - generic:
+          - heading "四百个勾选框" [level=2]
+        - complementary [ref=e290]:
+          - button "点赞 四百个勾选框" [ref=e291] [cursor=pointer]:
+            - generic [ref=e292]: ♡
+            - generic [ref=e293]: 2.2k
+          - button "收藏 四百个勾选框" [ref=e294] [cursor=pointer]:
+            - generic [ref=e295]: ☆
+            - generic [ref=e296]: "457"
+          - link "打开 四百个勾选框" [ref=e297] [cursor=pointer]:
+            - /url: million-checkboxes-fake.html
+            - generic [ref=e298]: ▶
+          - button "Remix 四百个勾选框" [ref=e299] [cursor=pointer]:
+            - generic [ref=e300]: ↻
+          - button "下一个" [ref=e301] [cursor=pointer]:
+            - generic [ref=e302]: ↓
+      - article [ref=e303]:
+        - region "断网小蜥蜴 HTML 预览" [ref=e304]:
+          - iframe [ref=e305]:
+            
+        - generic:
+          - heading "断网小蜥蜴" [level=2]
+        - complementary [ref=e306]:
+          - button "点赞 断网小蜥蜴" [ref=e307] [cursor=pointer]:
+            - generic [ref=e308]: ♡
+            - generic [ref=e309]: 2.3k
+          - button "收藏 断网小蜥蜴" [ref=e310] [cursor=pointer]:
+            - generic [ref=e311]: ☆
+            - generic [ref=e312]: "488"
+          - link "打开 断网小蜥蜴" [ref=e313] [cursor=pointer]:
+            - /url: dino-fake.html
+            - generic [ref=e314]: ▶
+          - button "Remix 断网小蜥蜴" [ref=e315] [cursor=pointer]:
+            - generic [ref=e316]: ↻
+          - button "下一个" [ref=e317] [cursor=pointer]:
+            - generic [ref=e318]: ↓
+      - article [ref=e319]:
+        - region "摸鱼花园 HTML 预览" [ref=e320]:
+          - iframe [ref=e321]:
+            
+        - generic:
+          - heading "摸鱼花园" [level=2]
+        - complementary [ref=e322]:
+          - button "点赞 摸鱼花园" [ref=e323] [cursor=pointer]:
+            - generic [ref=e324]: ♡
+            - generic [ref=e325]: 2.4k
+          - button "收藏 摸鱼花园" [ref=e326] [cursor=pointer]:
+            - generic [ref=e327]: ☆
+            - generic [ref=e328]: "519"
+          - link "打开 摸鱼花园" [ref=e329] [cursor=pointer]:
+            - /url: garden-idle.html
+            - generic [ref=e330]: ▶
+          - button "Remix 摸鱼花园" [ref=e331] [cursor=pointer]:
+            - generic [ref=e332]: ↻
+          - button "下一个" [ref=e333] [cursor=pointer]:
+            - generic [ref=e334]: ↓
+      - article [ref=e335]:
+        - region "圆点吞吞.io HTML 预览" [ref=e336]:
+          - iframe [ref=e337]:
+            
+        - generic:
+          - heading "圆点吞吞.io" [level=2]
+        - complementary [ref=e338]:
+          - button "点赞 圆点吞吞.io" [ref=e339] [cursor=pointer]:
+            - generic [ref=e340]: ♡
+            - generic [ref=e341]: 2.6k
+          - button "收藏 圆点吞吞.io" [ref=e342] [cursor=pointer]:
+            - generic [ref=e343]: ☆
+            - generic [ref=e344]: "550"
+          - link "打开 圆点吞吞.io" [ref=e345] [cursor=pointer]:
+            - /url: agar-fake.html
+            - generic [ref=e346]: ▶
+          - button "Remix 圆点吞吞.io" [ref=e347] [cursor=pointer]:
+            - generic [ref=e348]: ↻
+          - button "下一个" [ref=e349] [cursor=pointer]:
+            - generic [ref=e350]: ↓
+      - article [ref=e351]:
+        - region "空投乱斗.io 模板 HTML 预览" [ref=e352]:
+          - iframe [ref=e353]:
+            
+        - generic:
+          - heading "空投乱斗.io 模板" [level=2]
+        - complementary [ref=e354]:
+          - button "点赞 空投乱斗.io 模板" [ref=e355] [cursor=pointer]:
+            - generic [ref=e356]: ♡
+            - generic [ref=e357]: 2.7k
+          - button "收藏 空投乱斗.io 模板" [ref=e358] [cursor=pointer]:
+            - generic [ref=e359]: ☆
+            - generic [ref=e360]: "581"
+          - link "打开 空投乱斗.io 模板" [ref=e361] [cursor=pointer]:
+            - /url: io-arena-template.html
+            - generic [ref=e362]: ▶
+          - button "Remix 空投乱斗.io 模板" [ref=e363] [cursor=pointer]:
+            - generic [ref=e364]: ↻
+          - button "下一个" [ref=e365] [cursor=pointer]:
+            - generic [ref=e366]: ↓
+      - article [ref=e367]:
+        - region "赛博玄学评分器 HTML 预览" [ref=e368]:
+          - iframe [ref=e369]:
+            
+        - generic:
+          - heading "赛博玄学评分器" [level=2]
+        - complementary [ref=e370]:
+          - button "点赞 赛博玄学评分器" [ref=e371] [cursor=pointer]:
+            - generic [ref=e372]: ♡
+            - generic [ref=e373]: 2.8k
+          - button "收藏 赛博玄学评分器" [ref=e374] [cursor=pointer]:
+            - generic [ref=e375]: ☆
+            - generic [ref=e376]: "612"
+          - link "打开 赛博玄学评分器" [ref=e377] [cursor=pointer]:
+            - /url: mystic-score.html
+            - generic [ref=e378]: ▶
+          - button "Remix 赛博玄学评分器" [ref=e379] [cursor=pointer]:
+            - generic [ref=e380]: ↻
+          - button "下一个" [ref=e381] [cursor=pointer]:
+            - generic [ref=e382]: ↓
+      - article [ref=e383]:
+        - region "打工塔罗三连 HTML 预览" [ref=e384]:
+          - iframe [ref=e385]:
+            
+        - generic:
+          - heading "打工塔罗三连" [level=2]
+        - complementary [ref=e386]:
+          - button "点赞 打工塔罗三连" [ref=e387] [cursor=pointer]:
+            - generic [ref=e388]: ♡
+            - generic [ref=e389]: 3.0k
+          - button "收藏 打工塔罗三连" [ref=e390] [cursor=pointer]:
+            - generic [ref=e391]: ☆
+            - generic [ref=e392]: "643"
+          - link "打开 打工塔罗三连" [ref=e393] [cursor=pointer]:
+            - /url: tarot-daily.html
+            - generic [ref=e394]: ▶
+          - button "Remix 打工塔罗三连" [ref=e395] [cursor=pointer]:
+            - generic [ref=e396]: ↻
+          - button "下一个" [ref=e397] [cursor=pointer]:
+            - generic [ref=e398]: ↓
+      - article [ref=e399]:
+        - region "八字偏科生成器 HTML 预览" [ref=e400]:
+          - iframe [ref=e401]:
+            
+        - generic:
+          - heading "八字偏科生成器" [level=2]
+        - complementary [ref=e402]:
+          - button "点赞 八字偏科生成器" [ref=e403] [cursor=pointer]:
+            - generic [ref=e404]: ♡
+            - generic [ref=e405]: 3.1k
+          - button "收藏 八字偏科生成器" [ref=e406] [cursor=pointer]:
+            - generic [ref=e407]: ☆
+            - generic [ref=e408]: "674"
+          - link "打开 八字偏科生成器" [ref=e409] [cursor=pointer]:
+            - /url: bazi-lite.html
+            - generic [ref=e410]: ▶
+          - button "Remix 八字偏科生成器" [ref=e411] [cursor=pointer]:
+            - generic [ref=e412]: ↻
+          - button "下一个" [ref=e413] [cursor=pointer]:
+            - generic [ref=e414]: ↓
+      - article [ref=e415]:
+        - region "星盘甩锅轮 HTML 预览" [ref=e416]:
+          - iframe [ref=e417]:
+            
+        - generic:
+          - heading "星盘甩锅轮" [level=2]
+        - complementary [ref=e418]:
+          - button "点赞 星盘甩锅轮" [ref=e419] [cursor=pointer]:
+            - generic [ref=e420]: ♡
+            - generic [ref=e421]: 3.3k
+          - button "收藏 星盘甩锅轮" [ref=e422] [cursor=pointer]:
+            - generic [ref=e423]: ☆
+            - generic [ref=e424]: "705"
+          - link "打开 星盘甩锅轮" [ref=e425] [cursor=pointer]:
+            - /url: astro-wheel.html
+            - generic [ref=e426]: ▶
+          - button "Remix 星盘甩锅轮" [ref=e427] [cursor=pointer]:
+            - generic [ref=e428]: ↻
+          - button "下一个" [ref=e429] [cursor=pointer]:
+            - generic [ref=e430]: ↓
+      - article [ref=e431]:
+        - region "六爻离谱铜钱 HTML 预览" [ref=e432]:
+          - iframe [ref=e433]:
+            
+        - generic:
+          - heading "六爻离谱铜钱" [level=2]
+        - complementary [ref=e434]:
+          - button "点赞 六爻离谱铜钱" [ref=e435] [cursor=pointer]:
+            - generic [ref=e436]: ♡
+            - generic [ref=e437]: 3.4k
+          - button "收藏 六爻离谱铜钱" [ref=e438] [cursor=pointer]:
+            - generic [ref=e439]: ☆
+            - generic [ref=e440]: "736"
+          - link "打开 六爻离谱铜钱" [ref=e441] [cursor=pointer]:
+            - /url: yijing-coins.html
+            - generic [ref=e442]: ▶
+          - button "Remix 六爻离谱铜钱" [ref=e443] [cursor=pointer]:
+            - generic [ref=e444]: ↻
+          - button "下一个" [ref=e445] [cursor=pointer]:
+            - generic [ref=e446]: ↓
+  - dialog "Remix 伪 SBTI 崩溃人格测评" [ref=e448]:
+    - generic [ref=e449]:
+      - generic [ref=e450]:
+        - paragraph [ref=e451]: REMIX HARNESS
+        - heading "Remix 伪 SBTI 崩溃人格测评" [level=2] [ref=e452]
+      - button "关闭" [ref=e453]: ×
+    - generic [ref=e454]:
+      - text: 想怎么调整
+      - textbox "想怎么调整" [ref=e455]:
+        - /placeholder: 比如：改成霓虹夜市版，加入连击、倒计时和截图结果卡。
+    - button "生成调整" [ref=e456] [cursor=pointer]
+    - paragraph [ref=e457]: 输入一句调整，然后生成。

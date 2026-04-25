@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>从夯到拉排行榜</title><style>body{background-color:#1a1a1a;color:#fff;font-family:"Microsoft YaHei",Arial;margin:0;padding:0;min-height:100vh;overflow-x:hidden;}*{box-sizing:border-box;}container{display:flex;flex-direction:column;align-items:center;max-width:1200px;margin:0 auto;padding:20px;}.header{display:flex;justify-content:space-between;align-items:center;width:100%;}.help-btn{width:40px;height:40px;border-radius:50%;background:#65a6bc;color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);}.main{width:100%;}.title{font-size:24px;margin:20px 0;}.ranking-container{display:flex;flex-direction:column;gap:1px;width:100%;background:#2d2d2d;border-radius:4px;overflow:hidden;}.tier{display:flex;align-items:center;gap:5px;height:130px;}.tier .tier-label{width:150px;display:flex;align-items:center;justify-content:center;}.tier .tier-content{width:calc(100% - 150px);background:#2d2d2d;}.tier-1 .tier-label{background:#ff4d4d;color:#fff;}.tier-2 .tier-label{background:#ff9a4d;color:#fff;}.tier-3 .tier-label{background:#4d4dff;color:#fff;}.tier-4 .tier-label{background:#4dff4d;color:#fff;}.tier-5 .tier-label{background:#4d4d4d;color:#fff;}.controls{display:flex;align-items:center;gap:10px;margin-top:15px;}.control-btn{width:80px;height:80px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px dashed #a0a0a0;border-radius:4px;}.add-btn{background:#333;}.remove-btn{background:#555;}.add-tier-btn{background:#4d4d4d;color:#fff;border:1px solid #666;border-radius:4px;padding:5px 10px;}.reset-btn{background:#f44336;color:#fff;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;}.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:none;justify-content:center;align-items:center;z-index:1000;}.dialog{background:#1a1a1a;padding:20px;border-radius:8px;width:400px;max-width:90%;}.dialog h3{color:#f5f5f5;margin:0 0 15px 0;}.dialog p{margin:10px 0;}.dialog .buttons{display:flex;gap:10px;}.dialog-btn{flex:1;padding:8px;border-radius:4px;cursor:pointer;border:none;}.confirm-btn{background:#f44336;color:#fff;}.cancel-btn{background:#666;color:#fff;}.footer{display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:20px;border-top:1px solid #444;padding:10px 0;}.footer-links{display:flex;gap:20px;}.footer-links a{color:#aaa;text-decoration:none;}.footer-links a:hover{color:#fff;}.screenshot-img{display:none;}.screenshot-btn{border:none;width:100%;}.text-excerpt{font-size:14px;color:#aaa;margin:10px 0;}.text-excerpt span{color:#999;}</style></head><body><div class="container"><div class="header"><h2>📝 使用说明</h2><button class="help-btn">?</button></div><div class="main"><div class="text-excerpt"><span>×</span> 添加图片：点击"+"按钮或拖拽图片到该按钮区域<br>删除图片：将图片拖拽到"-"区域删除<br>放大图片：点击图片可放大，再次点击任意区域恢复<br>编辑评级：点击评级名称可编辑文字<br>编辑颜色：点击评级名称后右侧颜色按钮可编辑颜色<br>删除评级：点击评级名称后右侧删除按钮可删除评级<br>创建新评级：点击底部"+添加评级"按钮创建新的评级<br>显示图片名称<br>固定评级高度</div><div class="ranking-container"><div class="tier tier-1"><div class="tier-label">夯</div><div class="tier-content"></div></div><div class="tier tier-2"><div class="tier-label">顶级</div><div class="tier-content"></div></div><div class="tier tier-3"><div class="tier-label">人上人</div><div class="tier-content"></div></div><div class="tier tier-4"><div class="tier-label">NPC</div><div class="tier-content"></div></div><div class="tier tier-5"><div class="tier-label">拉完了</div><div class="tier-content"></div></div></div><div class="controls"><div class="control-btn add-btn"><span>+</span></div><div class="control-btn remove-btn"><span>-</span></div><button class="add-tier-btn">+ 添加评级</button><button class="reset-btn">↻ 重置排行榜</button><button class="screenshot-btn">💾 保存为图片</button></div></div><div class="overlay" id="resetOverlay"><div class="dialog"><h3>⚠️ 确认重置</h3><p>您确定要重置排行榜吗？<br>这将清除所有评级设置并移除所有图片，此操作无法撤销。</p><div class="buttons"><button class="dialog-btn confirm-btn" id="confirmReset">确认重置</button><button class="dialog-btn cancel-btn" id="cancelReset">取消</button></div></div></div><div class="footer"><div class="footer-links"><a href="manbo">🎵 前往曼波配音生成器</a><a href="/">🏠 回到主站</a><a href="https://contact.dayun.cool">问题反馈</a><a href="https://space.bilibili.com/192702710">bilibili</a></div><div>© 2025-2026 大沄</div></div></div><script>document.addEventListener('DOMContentLoaded', () => {
+  const resetOverlay = document.getElementById('resetOverlay');
+  const resetBtn = document.querySelector('.reset-btn');
+  const confirmReset = document.getElementById('confirmReset');
+  const cancelReset = document.getElementById('cancelReset');
+  const screenshotBtn = document.querySelector('.screenshot-btn');
+
+  // 重置弹窗交互
+  resetBtn.addEventListener('click', () => {
+    resetOverlay.style.display = 'flex';
+  });
+  cancelReset.addEventListener('click', () => {
+    resetOverlay.style.display = 'none';
+  });
+  confirmReset.addEventListener('click', () => {
+    // 模拟重置逻辑（实际可清空数据、重置UI等）
+    resetOverlay.style.display = 'none';
+  });
+
+  // 保存图片功能
+  screenshotBtn.addEventListener('click', () => {
+    // 生成仿真截图（实际应用中需使用canvas截图，此处为演示）
+    const canvas = document.createElement('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = '16px Microsoft YaHei';
+    ctx.fillStyle = '#eee';
+    ctx.fillText('从夯到拉排行榜 - 仿真截图', 50, 50);
+
+    // 保存为图片
+    const link = document.createElement('a');
+    link.download = 'ranking-screenshot.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  // 帮助按钮交互（模拟）
+  document.querySelector('.help-btn').addEventListener('click', () => {
+    alert('放大功能：点击图片可放大，再次点击恢复\n编辑功能：点击评级名称可编辑\n保存功能：点击保存图片按钮下载截图');
+  });
+});</script></body></html>
