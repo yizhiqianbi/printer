@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="icon" href="data:,">
+  <title>MCTI 我的世界生物人格测评 - 赝品库</title>
+  <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
+  <style>
+    :root { --accent: #5d8c3d; --cyan: #22a6f4; --violet: #8c7ca6; --game-accent: #55aa55; --ink: #e8e6e3; --paper: #12100e; --panel: rgba(255,255,255,.06); --line: rgba(255,255,255,.12); }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; background: #0a0908; color: var(--ink); font-family: "Courier New", Courier, "Segoe UI", "Microsoft YaHei", monospace; overflow-x: hidden; }
+    body { display: grid; place-items: start center; overscroll-behavior: none; }
+    button, input { font: inherit; min-width: 0; }
+    button, a, input { touch-action: manipulation; }
+    .phone-shell { width: min(100vw, 430px); min-height: 100svh; background:
+      radial-gradient(circle at 50% 4%, rgba(93,140,61,.35), transparent 38%),
+      radial-gradient(circle at 10% 24%, rgba(34,166,244,.14), transparent 28%),
+      linear-gradient(180deg, #1a2412 0, #141210 42%, #0d0c0a 100%); border-left: 1px solid var(--line); border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; transition: background 0.6s ease; }
+    .app-top { position: sticky; top: 0; z-index: 5; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(14px, env(safe-area-inset-left)); border-bottom: 1px solid rgba(255,255,255,.08); background: linear-gradient(to bottom, rgba(0,0,0,.82), rgba(0,0,0,.32)); color: #fff; backdrop-filter: blur(16px); }
+    .brand { color: inherit; text-decoration: none; font-weight: 900; letter-spacing: 0.05em; }
+    .app-top a:last-child { color: #fff; opacity: .72; text-decoration: none; font-weight: 900; font-size: 13px; }
+    .screen { padding: 12px 12px calc(18px + env(safe-area-inset-bottom)); flex: 1; min-width: 0; }
+    .play-screen { display: flex; flex-direction: column; min-height: calc(100svh - 50px); min-width: 0; }
+    .hero { min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; padding: 12px 2px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .play-hero { min-height: 88px; }
+    .kicker { margin: 0; color: var(--cyan); font-size: 11px; font-weight: 1000; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(30px, 10vw, 50px); line-height: .92; letter-spacing: 0; color: #fff; text-shadow: 0 6px 28px rgba(93,140,61,.25); }
+    h2 { margin: 0 0 12px; font-size: clamp(22px, 7.5vw, 34px); line-height: 1; letter-spacing: 0; }
+    .summary { margin: 0; color: rgba(255,255,255,.62); line-height: 1.42; font-size: 13px; }
+    .game-stage { display: grid; gap: 10px; padding-top: 10px; touch-action: none; flex: 1; align-content: start; min-width: 0; }
+    .game-stage > * { min-width: 0; max-width: 100%; }
+    .panel { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 14px; box-shadow: 0 18px 54px rgba(0,0,0,.3); backdrop-filter: blur(18px); color: #fff; min-width: 0; max-width: 100%; }
+    .compact { padding: 12px; }
+    .primary { min-height: 54px; border: 0; border-radius: 999px; padding: 0 18px; background: linear-gradient(135deg, #4a7c2a, #6aad4a); color: #fff; font-weight: 1000; cursor: pointer; box-shadow: 0 12px 30px rgba(93,140,61,.28); letter-spacing: 0.05em; }
+    .primary:disabled, button:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
+    .hidden { display: none !important; }
+    .stack { display: grid; gap: 10px; }
+    .choice { border: 2px solid rgba(255,255,255,.14); border-radius: 14px; background: rgba(255,255,255,.06); color: #fff; min-height: 58px; padding: 12px 14px; text-align: left; font-weight: 850; cursor: pointer; transition: transform .08s ease, border-color .2s ease, background .2s ease; font-family: inherit; position: relative; overflow: hidden; }
+    .choice:active { transform: scale(.98); }
+    .choice::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); transform: translateX(-100%); transition: transform .4s ease; }
+    .choice:hover::after { transform: translateX(100%); }
+    .meter { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+    .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffd700, var(--game-accent)); transition: width .3s ease; }
+    .result-card { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 14px; color: #fff; }
+    .bars { display: grid; gap: 8px; margin: 12px 0; }
+    .bars span { display: grid; grid-template-columns: 80px 1fr; align-items: center; gap: 8px; font-size: 12px; }
+    .bars i { display: block; height: 9px; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--game-accent)); }
+    .biome-indicator { font-size: 11px; font-weight: 1000; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); margin-bottom: 6px; display: flex; justify-content: space-between; }
+    .craft-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+    .craft-slot { aspect-ratio: 1; border: 2px dashed rgba(255,255,255,.25); border-radius: 12px; display: grid; place-items: center; background: rgba(0,0,0,.25); font-size: 26px; font-weight: 1000; color: #fff; transition: all .3s ease; }
+    .craft-slot.filled { border-style: solid; border-color: rgba(255,215,0,.5); background: rgba(255,215,0,.1); box-shadow: inset 0 0 20px rgba(255,215,0,.08); }
+    .xp-burst { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 10px 0; height: 40px; align-items: center; justify-items: center; }
+    .xp-burst span { width: 6px; height: 6px; border-radius: 50%; background: #5d8c3d; opacity: 0; }
+    .xp-burst.bursting span { animation: xpPop .6s ease forwards; }
+    .xp-burst.bursting span:nth-child(1) { animation-delay: 0ms; }
+    .xp-burst.bursting span:nth-child(2) { animation-delay: 60ms; }
+    .xp-burst.bursting span:nth-child(3) { animation-delay: 120ms; }
+    .xp-burst.bursting span:nth-child(4) { animation-delay: 80ms; }
+    .xp-burst.bursting span:nth-child(5) { animation-delay: 160ms; }
+    .xp-burst.bursting span:nth-child(6) { animation-delay: 40ms; }
+    @keyframes xpPop { 0% { transform: translateY(0) scale(0); opacity: 0; } 40% { opacity: 1; } 100% { transform: translateY(-24px) scale(1); opacity: 0; } }
+    .seed-box { font-family: "Courier New", monospace; font-size: 13px; color: #ffd700; letter-spacing: .08em; background: rgba(0,0,0,.35); padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,215,0,.25); margin: 10px 0; }
+    .command-block { font-family: "Courier New", monospace; font-size: 12px; line-height: 1.5; color: #5d8c3d; background: #0a0f0a; padding: 12px; border-radius: 10px; border: 1px solid rgba(93,140,61,.35); overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 10px 0; }
+    .biome-plains .choice { border-color: rgba(93,140,61,.4); background: rgba(93,140,61,.08); }
+    .biome-desert .choice { border-color: rgba(210,170,90,.4); background: rgba(210,170,90,.08); }
+    .biome-cave .choice { border-color: rgba(140,140,150,.4); background: rgba(140,140,150,.08); }
+    .biome-nether .choice { border-color: rgba(200,70,50,.4); background: rgba(200,70,50,.08); }
+    .biome-end .choice { border-color: rgba(160,110,200,.4); background: rgba(160,110,200,.08); }
+    @keyframes blockReveal { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .reveal { animation: blockReveal .35s ease both; }
+    html.embed-mode, html.embed-mode body { min-height: 100%; background: #000; }
+    html.embed-mode body { display: block; overflow: hidden; }
+    html.embed-mode .phone-shell { width: 100vw; min-height: 100svh; border: 0; background: #000; box-shadow: none; }
+    html.embed-mode .app-top, html.embed-mode .play-hero { display: none; }
+    html.embed-mode .screen { padding: 0 10px 10px; }
+    html.embed-mode .play-screen { min-height: 100svh; }
+    html.embed-mode .game-stage { padding-top: 10px; gap: 8px; }
+    html.embed-mode .panel { box-shadow: none; }
+    @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.25); } }
+  </style>
+</head>
+<body data-printer-artifact="fake-game-library" data-game-page="mcti-fake" data-output-format="multi_html">
+  <div class="phone-shell" id="phoneShell">
+    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="mcti-fake.html">重载</a></header>
+    <main class="screen play-screen">
+      <section class="hero play-hero">
+        <p class="kicker">MCTI 测评</p>
+        <h1>MCTI 我的世界生物人格</h1>
+      </section>
+      <section class="game-stage">
+        <section class="panel quiz-panel" id="quizPanel">
+          <div class="biome-indicator"><span id="biomeName">BIOME: PLAINS</span><span id="dayCounter">DAY 1</span></div>
+          <div class="meter"><i id="progressBar"></i></div>
+          <p class="kicker" id="quizStep">QUESTION 1</p>
+          <h2 id="questionText"></h2>
+          <div class="stack" id="options"></div>
+        </section>
+
+        <section class="panel hidden" id="craftingPanel">
+          <p class="kicker">CRAFTING TABLE</p>
+          <h2>人格精华汇聚中</h2>
+          <div class="craft-grid" id="craftGrid">
+            <div class="craft-slot" id="slot0">?</div>
+            <div class="craft-slot" id="slot1">?</div>
+            <div class="craft-slot" id="slot2">?</div>
+            <div class="craft-slot" id="slot3">?</div>
+          </div>
+          <div class="xp-burst" id="xpBurst"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="meter"><i id="craftBar"></i></div>
+          <button class="primary" id="craftBtn">合成结果</button>
+        </section>
+
+        <section class="result-card hidden" id="resultCard">
+          <p class="kicker">RESULT</p>
+          <h2 id="resultType"></h2>
+          <p id="resultCopy"></p>
+          <div class="bars" id="scoreBars"></div>
+          <div class="seed-box" id="seedBox"></div>
+          <pre class="command-block" id="commandBlock"></pre>
+          <div style="display:flex;gap:10px;">
+            <button class="primary" id="copyBtn" style="flex:1;font-size:13px;">复制召唤指令</button>
+            <button class="primary" id="restartBtn" style="flex:1;background:linear-gradient(135deg,#444,#222);box-shadow:0 8px 20px rgba(0,0,0,.3);">重新测</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script>
+    window.__PRINTER_ARTIFACT__ = {
+      parent_file: "sbti-fake.html",
+      remix_prompt: "改成MineCraft生物版本的 MCTI, 来做人格测试",
+      agent_description_file: "mcti-fake-agent-description",
+      generator: "printer/tools/generate_fake_library.mjs",
+      pipeline: "WebPrinterPipeline-compatible deterministic fake-game generator",
+      output_format: "multi_html",
+      intent: "建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。",
+      generated_at: new Date().toISOString(),
+      game: { id: "mcti-fake", file: "mcti-fake.html", title: "MCTI 我的世界生物人格测评", kind: "测评", source_game: "Minecraft / MBTI 式生物测评", mobile_portrait: true, canvas_playfield: false }
+    };
+    (() => {
+      const questions = [
+        { text: '你出生在新存档，第一眼看到？', biome: 'plains', label: 'PLAINS', opts: [
+          {text:'森林与牛羊，先砍树造工具', type:'golem'}, {text:'远处村庄，想先去交易', type:'villager'},
+          {text:'身后嘶嘶声，回头看', type:'creeper'}, {text:'紫色眼睛在雨里盯着你', type:'ender'}
+        ]},
+        { text: '第一晚来临，你会？', biome: 'cave', label: 'CAVE', opts: [
+          {text:'挖三填一，等待天亮', type:'ender'}, {text:'火柴盒封顶，绝对安全', type:'golem'},
+          {text:'拿木剑出去找怪打', type:'creeper'}, {text:'敲村民家门借床', type:'villager'}
+        ]},
+        { text: '发现钻石矿，但旁边有岩浆？', biome: 'nether', label: 'NETHER', opts: [
+          {text:'先封路、插火把、排水', type:'golem'}, {text:'用沙子/ gravel 精准填埋', type:'villager'},
+          {text:'直接跳下去挖，拼手速', type:'creeper'}, {text:'观察流动规律再下手', type:'ender'}
+        ]},
+        { text: '你最喜欢的红石/建造行为？', biome: 'desert', label: 'DESERT', opts: [
+          {text:'全自动农场与分类机', type:'villager'}, {text:'TNT 大炮与轰炸机', type:'creeper'},
+          {text:'末地传送门装饰走廊', type:'ender'}, {text:'给村庄修城墙与路灯', type:'golem'}
+        ]},
+        { text: '服务器被熊了，你的反应？', biome: 'end', label: 'THE END', opts: [
+          {text:'追踪坐标，带 TNT 复仇', type:'creeper'}, {text:'装监控、做陷阱与权限', type:'villager'},
+          {text:'搬家到末地，远离是非', type:'ender'}, {text:'默默重建，恢复原样', type:'golem'}
+        ]},
+        { text: '选一个附魔搭配你的剑？', biome: 'plains', label: 'PLAINS', opts: [
+          {text:'效率 V，万物皆工具', type:'golem'}, {text:'击退 II，炸飞对手', type:'creeper'},
+          {text:'经验修补，细水长流', type:'villager'}, {text:'激流 III，瞬间移动', type:'ender'}
+        ]},
+        { text: '背包快满了，你会先扔？', biome: 'cave', label: 'CAVE', opts: [
+          {text:'圆石/泥土，原料随时有', type:'golem'}, {text:'腐肉/线，低价值品', type:'villager'},
+          {text:'地图/书，混乱即艺术', type:'creeper'}, {text:'食物，反正瞬移逃跑', type:'ender'}
+        ]},
+        { text: '存档即将崩坏（删档），最后做的事？', biome: 'nether', label: 'NETHER', opts: [
+          {text:'截一张全家福截图', type:'golem'}, {text:'亲手炸掉自己的家', type:'creeper'},
+          {text:'把所有物品丢进岩浆', type:'ender'}, {text:'和村民做最后一笔绿宝石交易', type:'villager'}
+        ]}
+      ];
+      const types = {
+        golem: { name: '铁傀儡型', icon: '🛡️', desc: '你沉默、可靠，是所有人的后盾。建造与守护是你的本能，缺点是总把自己放在最后。' },
+        creeper: { name: '苦力怕型', icon: '💥', desc: '你表面平静，内心酝酿大招。不要憋太久，偶尔的小爆炸也是艺术。' },
+        ender: { name: '末影人型', icon: '👁️', desc: '你讨厌被直视，但观察力惊人。别瞬移太远，记得回家的路。' },
+        villager: { name: '村民/红石型', icon: '💎', desc: '你相信一切都能被计算和交易。偶尔放下算盘，看看虚拟夕阳。' }
+      };
+      const biomes = ['plains','desert','cave','nether','end'];
+      const state = { index: 0, scores: { golem:0, creeper:0, ender:0, villager:0 }, result: null, subResult: null, phase: 'quiz', timer: 0, maxTime: 0, seed: '', command: '' };
+
+      function setBiome(biome, label) {
+        const shell = document.getElementById('phoneShell');
+        shell.classList.remove('biome-plains','biome-desert','biome-cave','biome-nether','biome-end');
+        if (biomes.includes(biome)) shell.classList.add('biome-' + biome);
+        document.getElementById('biomeName').textContent = 'BIOME: ' + label;
+        document.getElementById('dayCounter').textContent = 'DAY ' + (state.index + 1);
+      }
+
+      function renderQuiz() {
+        state.phase = 'quiz';
+        const q = questions[state.index];
+        document.getElementById('craftingPanel').classList.add('hidden');
+        document.getElementById('resultCard').classList.add('hidden');
+        document.getElementById('quizPanel').classList.remove('hidden');
+        setBiome(q.biome, q.label);
+        document.getElementById('quizStep').textContent = 'QUESTION ' + (state.index + 1) + ' / ' + questions.length;
+        document.getElementById('questionText').textContent = q.text;
+        document.getElementById('progressBar').style.width = (state.index / questions.length * 100) + '%';
+        const opts = document.getElementById('options');
+        opts.innerHTML = '';
+        q.opts.forEach((opt, i) => {
+          const btn = document.createElement('button');
+          btn.className = 'choice reveal';
+          btn.style.animationDelay = (i * 60) + 'ms';
+          btn.textContent = String.fromCharCode(65 + i) + '. ' + opt.text;
+          btn.addEventListener('click', () => pickOption(opt.type));
+          opts.appendChild(btn);
+        });
+        state.maxTime = 18000;
+        state.timer = state.maxTime;
+      }
+
+      function pickOption(type) {
+        state.scores[type] += 1;
+        state.index += 1;
+        if (state.index >= questions.length) {
+          enterCrafting();
+        } else {
+          renderQuiz();
+        }
+      }
+
+      function enterCrafting() {
+        state.phase = 'crafting';
+        document.getElementById('quizPanel').classList.add('hidden');
+        document.getElementById('craftingPanel').classList.remove('hidden');
+        const slots = [0,1,2,3].map(i => document.getElementById('slot'+i));
+        slots.forEach(s => { s.textContent = '?'; s.classList.remove('filled'); });
+        document.getElementById('craftBar').style.width = '0%';
+        document.getElementById('craftBtn').disabled = true;
+        document.getElementById('xpBurst').classList.remove('bursting');
+
+        const ordered = Object.keys(state.scores).sort((a,b) => state.scores[b] - state.scores[a]);
+        const top2 = ordered.slice(0,2);
+        const icons = top2.map(t => types[t].icon);
+        let slotIdx = 0;
+        const fillInterval = setInterval(() => {
+          if (slotIdx >= slots.length) { clearInterval(fillInterval); setTimeout(() => { document.getElementById('craftBtn').disabled = false; }, 300); return; }
+          const t = slotIdx < 2 ? top2[slotIdx] : ordered[Math.floor(Math.random()*ordered.length)];
+          slots[slotIdx].textContent = types[t].icon;
+          slots[slotIdx].classList.add('filled');
+          slotIdx++;
+        }, 280);
+      }
+
+      function craftResult() {
+        const btn = document.getElementById('craftBtn');
+        btn.disabled = true;
+        document.getElementById('xpBurst').classList.add('bursting');
+        document.getElementById('craftBar').style.width = '100%';
+        setTimeout(() => {
+          showResult();
+        }, 900);
+      }
+
+      function generateSeed() {
+        const raw = Object.values(state.scores).join('') + state.index;
+        let hash = 0;
+        for (let i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
+        const hex = Math.abs(hash).toString(16).padStart(8, '0').toUpperCase();
+        return 'MCTI-' + hex.substring(0,4) + '-' + hex.substring(4,8);
+      }
+
+      function showResult() {
+        document.getElementById('craftingPanel').classList.add('hidden');
+        document.getElementById('resultCard').classList.remove('hidden');
+        const ordered = Object.keys(state.scores).sort((a,b) => state.scores[b] - state.scores[a]);
+        const primary = ordered[0];
+        const secondary = ordered[1];
+        state.result = primary;
+        state.subResult = secondary;
+        state.seed = generateSeed();
+        state.command = '/summon mcti:' + primary + '_' + secondary + ' ~ ~ ~ {CustomName:"' + state.seed + '"}';
+        const t1 = types[primary];
+        const t2 = types[secondary];
+        document.getElementById('resultType').textContent = t1.icon + ' ' + t1.name + ' · ' + t2.name + '亚型';
+        document.getElementById('resultCopy').textContent = t1.desc + '（副型特征：' + t2.desc.replace('你','').replace('。','') + '）';
+        document.getElementById('scoreBars').innerHTML = Object.keys(state.scores).map((k) => '<span><b>' + types[k].name + '</b><i style="width:' + Math.min(100, state.scores[k] * 14 + 10) + '%"></i></span>').join('');
+        document.getElementById('seedBox').textContent = 'WORLD SEED: ' + state.seed;
+        document.getElementById('commandBlock').textContent = state.command;
+      }
+
+      document.getElementById('craftBtn').addEventListener('click', craftResult);
+      document.getElementById('restartBtn').addEventListener('click', () => {
+        state.index = 0; state.result = null; state.subResult = null; state.seed = ''; state.command = '';
+        Object.keys(state.scores).forEach((k) => state.scores[k] = 0);
+        renderQuiz();
+      });
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        const txt = state.command + '\n种子: ' + state.seed;
+        if (navigator.clipboard) { navigator.clipboard.writeText(txt).catch(()=>{}); }
+        const btn = document.getElementById('copyBtn');
+        const old = btn.textContent; btn.textContent = '已复制'; setTimeout(()=> btn.textContent = old, 1200);
+      });
+
+      renderQuiz();
+
+      window.advanceTime = (ms) => {
+        if (state.phase === 'quiz' && state.timer > 0) {
+          state.timer = Math.max(0, state.timer - ms);
+          const pct = (state.timer / state.maxTime) * 100;
+          document.getElementById('progressBar').style.width = pct + '%';
+          if (state.timer <= 0) {
+            const q = questions[state.index];
+            state.scores[q.opts[0].type] += 0.5;
+            state.index += 1;
+            if (state.index >= questions.length) enterCrafting(); else renderQuiz();
+          }
+        }
+      };
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'DOM-MCTI-quiz-crafting',
+        phase: state.phase,
+        index: state.index,
+        timer: state.timer,
+        scores: state.scores,
+        result: state.result ? { primary: state.result, secondary: state.subResult, seed: state.seed, command: state.command } : null
+      });
+    })();
+  </script>
+</body>
+</html>

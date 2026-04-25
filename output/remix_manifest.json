@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "remixes": [
+    {
+      "id": "remix-4804456229e5",
+      "slug": "mcti",
+      "file": "mcti.html",
+      "description_file": "mcti.remix.json",
+      "title": "MCTI 我的世界生物人格测评",
+      "kind": "Remix",
+      "source_file": "sbti-fake.html",
+      "parent_slug": "sbti-fake",
+      "lineage": [
+        "sbti-fake",
+        "mcti"
+      ],
+      "summary": "基于 Minecraft 生物群系的 16 型人格测评（MCTI），在合成台揭晓你的主副型生物人格。",
+      "accent": "#22f4ee",
+      "glyph": "改",
+      "created_at": "2026-04-25T07:43:44.891979+00:00",
+      "agent_description": {
+        "one_liner": "基于 Minecraft 生物群系的 16 型人格测评（MCTI），在合成台揭晓你的主副型生物人格。",
+        "core_loop": "玩家在 8 个不同生物群系场景中做出选择，收集人格精华；答题结束后进入工作台合成阶段，经验粒子飞升并播放附魔动画，最终揭晓主型+副型组合结果。",
+        "controls": "触摸点击单选答案；在合成界面点击“合成结果”按钮触发揭晓；结果页一键复制召唤指令。",
+        "mechanics": [
+          "生物群系光照系统：每道题切换背景与选项边框色，模拟平原、沙漠、洞穴、下界、末地环境。",
+          "主副型配方机制：记录四维分值最高的两项，组合出 16 种 MCTI 亚型（如苦力怕·末影人亚型）。",
+          "工作台合成仪式：答题结束后进入合成台界面，精华按分值自动填入 2x2 槽位，用户需点击合成触发进度与粒子动画后才能看到结果。",
+          "月光倒计时条：每题附带可随 advanceTime(ms) 推进的衰减条，超时自动低分兜底。",
+          "世界种子与召唤指令：基于答案序列哈希生成唯一 Seed 与 /summon 命令，作为分享点。"
+        ],
+        "visual_language": "Minecraft 大地色系（草绿、泥土棕、矿石蓝、下界红），等宽字体营造像素感；昼夜/群系背景渐变切换；方块加载式转场；经验条与附魔台 UI。",
+        "state_model": "state.phase ∈ {quiz, crafting, result}; state.scores 记录四维分值; state.result / state.subResult 记录主副型; state.index 为当前题号; state.timer 控制单题倒计时。",
+        "share_hook": "结果页展示唯一 MCTI 世界种子与可复制的 /summon 指令文本，玩家可一键复制分享到群聊或社交平台。",
+        "known_constraints": [
+          "离线单文件",
+          "移动竖屏优先",
+          "无外链素材与字体",
+          "保留 printer artifact、phone-shell 与 pipeline API"
+        ],
+        "next_evolution_hooks": [
+          "加入基于 Canvas 的像素生物头像绘制",
+          "用 Web Audio API 模拟 MC 音效（嘶嘶声、工作台叮当声）",
+          "本地存储历史结果并对比种子相似度"
+        ]
+      }
+    },
+    {
+      "id": "remix-2d26676edea2",
+      "slug": "orange-grove-clicker",
+      "file": "orange-grove-clicker.html",
+      "description_file": "orange-grove-clicker.remix.json",
+      "title": "橘子摇晃果园",
+      "kind": "Remix",
+      "source_file": "brainrot-clicker.html",
+      "parent_slug": "brainrot-clicker",
+      "lineage": [
+        "brainrot-clicker",
+        "orange-grove-clicker"
+      ],
+      "summary": "橘子主题下落接果点击器：摇晃果树、点击接住、升级果园。",
+      "accent": "#22f4ee",
+      "glyph": "改",
+      "created_at": "2026-04-25T08:11:37.408786+00:00",
+      "agent_description": {
+        "one_liner": "橘子主题下落接果点击器：摇晃果树、点击接住、升级果园。",
+        "core_loop": "点击大按钮摇晃橘子树，让橘子物理下落；在画布上点击飞落的橘子将其接住入库；用橘子购买浇水、肥料、蜂箱与阳光灯四项升级，提升单次摇晃产量与自动掉落速度；每10颗橘子自动折算为1杯橙汁，用于分享比拼。",
+        "controls": "点击「SHAKE TREE」大按钮摇晃果树；点击画布中下落中的橘子进行接果（金橘子价值5倍）；点击商店行购买升级；点击「分享收成」复制文案。",
+        "mechanics": [
+          "摇晃产果：点击按钮一次性产生多颗带物理的橘子，初始位置在树冠随机点",
+          "点击接果：玩家需在橘子落地前点中画布，金橘子提供5倍收益",
+          "重力与摆动：橘子受重力加速下落，并随正弦风场左右摇摆，超时或落地即消失",
+          "CPS自动掉落：升级后果树自动产果，无需点击",
+          "榨汁单位：每10颗库存橘子计为1杯橙汁，作为统一分享单位"
+        ],
+        "visual_language": "暖橙与草绿的自然果园色调，画布采用深褐到暗橙的黄昏渐变，右上角有朦胧太阳与半透明云朵，底部草地呈波浪起伏；橘子以圆形带绿叶图标下落，接住时溅射橙黄果汁粒子；右下角拟人化橘子吉祥物随节奏晃动。",
+        "state_model": "oranges(库存橘子), shake(单次摇晃产量), cps(每秒自动掉落), bought[4](升级等级), falling[](活跃下落橘子对象数组：x,y,vy,r,life,gold), particles[](果汁溅射粒子数组), caught(累计接住数), missed(累计错过估算), t(全局时间), autoTimer(自动产果累加器), shakeOffset(树摇晃幅度)",
+        "share_hook": "点击「分享收成」按钮自动生成并复制文案：'我在橘子摇晃果园接住了 X 颗橘子，榨了 Y 杯橙汁！'，以橙汁杯数作为核心攀比单位。",
+        "known_constraints": [
+          "离线单文件",
+          "移动竖屏优先",
+          "无外链无CDN",
+          "单文件HTML自包含"
+        ],
+        "next_evolution_hooks": [
+          "加入季节系统（春夏秋冬影响掉落速度与风向）",
+          "加入连击倍率（连续接住触发果汁喷泉与双倍金橘子）",
+          "加入果园装扮与稀有水果图鉴收集"
+        ]
+      }
+    }
+  ]
+}

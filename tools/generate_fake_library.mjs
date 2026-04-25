@@ -7,6 +7,8 @@ fs.mkdirSync(outputDir, { recursive: true });
 const generatedAt = new Date().toISOString();
 const intent = '建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。';
 
+const coverForFile = (file) => 'covers/' + path.basename(file, '.html') + '.png';
+
 const pipelinePlan = {
   summary: '基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库',
   ui_requirements: [
@@ -812,6 +814,92 @@ const games = [
     `,
   },
   {
+    id: 'io-arena-template',
+    file: 'io-arena-template.html',
+    title: '空投乱斗.io 模板',
+    kind: '模板',
+    sourceGame: 'Wings.io / Starblast.io / 俯视 .io 射击母版',
+    accent: '#22f4ee',
+    summary: '双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。',
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <p id="hud">双摇杆开打</p>
+        <div class="row">
+          <button class="primary" id="skinBtn">换皮</button>
+          <button class="primary" id="dropBtn">补给</button>
+          <button class="primary" id="boostBtn">冲刺</button>
+          <button class="primary" id="resetBtn">重开</button>
+        </div>
+      </section>
+    `,
+    script: `
+      const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d');
+      const controlScheme='dual-thumb touchsticks';
+      const skins=[
+        {id:'neon',bg:'#05070f',grid:'rgba(34,244,238,.18)',player:'#22f4ee',enemy:'#ff3b86',ally:'#7c5cff',drop:'#ffd15a',overlay:'rgba(0,0,0,.5)'},
+        {id:'sunset',bg:'#12060c',grid:'rgba(255,108,168,.16)',player:'#ff9f68',enemy:'#ff4f87',ally:'#7c5cff',drop:'#22f4ee',overlay:'rgba(18,4,10,.56)'},
+        {id:'void',bg:'#030303',grid:'rgba(255,255,255,.1)',player:'#7c5cff',enemy:'#22f4ee',ally:'#ff3b86',drop:'#ffe066',overlay:'rgba(0,0,0,.62)'}
+      ];
+      const weaponDefs={
+        blaster:{label:'BLASTER',rate:.16,speed:430,damage:12,pellets:1,spread:.02,life:.95,color:'#ffffff'},
+        spread:{label:'SPREAD',rate:.34,speed:380,damage:8,pellets:5,spread:.34,life:.7,color:'#ffd15a'},
+        laser:{label:'LASER',rate:.5,speed:760,damage:26,pellets:1,spread:0,life:.28,color:'#22f4ee'},
+        rocket:{label:'ROCKET',rate:.68,speed:300,damage:34,pellets:1,spread:.04,life:1.3,color:'#ff7e68',homing:.08}
+      };
+      const weaponDrops=['spread','laser','rocket'];
+      window.__IO_TEMPLATE__={reference:'portrait io arena shooter template',controlScheme,weaponDrops,skins:skins.map((skin)=>skin.id),hooks:['applyArenaSkin','spawnDrop','spawnBot','drawJoystick']};
+      const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+      const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+      function makeRng(seed){let value=seed>>>0;return()=>((value=(value*1664525+1013904223)>>>0)/4294967296);}
+      let rng=makeRng(37);
+      function rand(){return rng();}
+      function pick(list){return list[Math.floor(rand()*list.length)%list.length];}
+      function applyArenaSkin(next){if(typeof next==='string'){const found=skins.findIndex((skin)=>skin.id===next);if(found>=0)state.skin=found;}else state.skin=(state.skin+1)%skins.length;render();}
+      window.applyArenaSkin=applyArenaSkin;
+      const botNames=['ACE','MIST','NOVA','BYTE','JOLT','WING','ARC','DRIFT'];
+      const controls={
+        left:{name:'move',pointerId:null,anchorX:86,anchorY:474,x:86,y:474,dx:0,dy:0,active:false},
+        right:{name:'aim',pointerId:null,anchorX:304,anchorY:474,x:304,y:474,dx:0,dy:0,active:false}
+      };
+      const state={mode:'playing',time:0,score:0,kills:0,streak:0,skin:0,round:1,nextDrop:3.8,bullets:[],drops:[],bots:[],leaderboard:[],player:null,respawnTimer:0};
+      function resetStick(stick){stick.pointerId=null;stick.active=false;stick.dx=0;stick.dy=0;stick.x=stick.anchorX;stick.y=stick.anchorY;}
+      function pointerPos(event){const rect=canvas.getBoundingClientRect();return{x:(event.clientX-rect.left)*390/rect.width,y:(event.clientY-rect.top)*560/rect.height};}
+      function updateStick(stick,x,y){const dx=x-stick.anchorX,dy=y-stick.anchorY;const length=Math.hypot(dx,dy)||1;const radius=Math.min(46,length);stick.x=stick.anchorX+dx/length*radius;stick.y=stick.anchorY+dy/length*radius;stick.dx=dx/length*Math.min(1,length/46);stick.dy=dy/length*Math.min(1,length/46);}
+      function assignStick(stick,x,y,pointerId){stick.pointerId=pointerId;stick.active=true;stick.anchorX=x;stick.anchorY=y;updateStick(stick,x,y);}
+      function releaseStick(pointerId){Object.values(controls).forEach((stick)=>{if(stick.pointerId===pointerId)resetStick(stick);});}
+      canvas.addEventListener('pointerdown',(event)=>{const pos=pointerPos(event);const stick=pos.x<195?controls.left:controls.right;assignStick(stick,pos.x,pos.y,event.pointerId);canvas.setPointerCapture(event.pointerId);});
+      canvas.addEventListener('pointermove',(event)=>{const pos=pointerPos(event);Object.values(controls).forEach((stick)=>{if(stick.pointerId===event.pointerId)updateStick(stick,pos.x,pos.y);});});
+      canvas.addEventListener('pointerup',(event)=>{releaseStick(event.pointerId);try{canvas.releasePointerCapture(event.pointerId);}catch{}});canvas.addEventListener('pointercancel',(event)=>releaseStick(event.pointerId));
+      function spawnBot(index){const side=index%4;const lane=1+index%4;const x=side===0?28:side===1?362:70+lane*52;const y=side===2?70:side===3?214+lane*32:70+lane*82;return{x,y,vx:0,vy:0,angle:Math.PI/2,hp:56,fire:.5+rand(),weapon:pick(['blaster','spread','laser']),weaponTimer:0,name:botNames[index%botNames.length],score:160+index*25,boost:0};}
+      window.spawnBot=spawnBot;
+      function spawnDrop(forceType){const type=forceType||pick(weaponDrops);state.drops.push({x:58+rand()*274,y:-20,vy:74+rand()*16,wobble:rand()*Math.PI*2,type,state:'descending',lane:Math.floor(rand()*4),life:18});}
+      window.spawnDrop=spawnDrop;
+      function resetPlayer(){state.player={x:195,y:438,vx:0,vy:0,angle:-Math.PI/2,hp:100,fire:0,weapon:'blaster',weaponTimer:0,boost:0,name:'YOU'};}
+      function reset(){rng=makeRng(37);state.mode='playing';state.time=0;state.score=0;state.kills=0;state.streak=0;state.round=1;state.nextDrop=2.8;state.bullets=[];state.drops=[];state.leaderboard=[];state.respawnTimer=0;resetPlayer();state.bots=Array.from({length:6},(_,index)=>spawnBot(index));resetStick(controls.left);resetStick(controls.right);spawnDrop('spread');updateLeaderboard();render();}
+      function fireFrom(ship,owner){const def=weaponDefs[ship.weapon]||weaponDefs.blaster;if(ship.fire>0)return;const baseAngle=ship.angle;for(let i=0;i<def.pellets;i++){const offset=def.pellets===1?0:(i-(def.pellets-1)/2)*def.spread;state.bullets.push({x:ship.x+Math.cos(baseAngle)*18,y:ship.y+Math.sin(baseAngle)*18,angle:baseAngle+offset+(rand()-.5)*def.spread*.3,speed:def.speed,damage:def.damage,life:def.life,color:def.color,owner,homing:def.homing||0});}ship.fire=def.rate;}
+      function grantDrop(type){state.player.weapon=type;state.player.weaponTimer=12;}
+      function hurtPlayer(amount){if(state.respawnTimer>0)return;state.player.hp-=amount;if(state.player.hp<=0){state.streak=0;state.mode='respawn';state.respawnTimer=1.1;}}
+      function killBot(index){state.score+=120;state.kills+=1;state.streak=Math.min(9,state.streak+1);state.bots[index]=spawnBot(index+Math.floor(state.time*10));if(state.kills%4===0)state.round+=1;if(state.drops.length<3)spawnDrop();}
+      function updatePlayer(dt){const ship=state.player;ship.fire=Math.max(0,ship.fire-dt);ship.boost=Math.max(0,ship.boost-dt);if(state.respawnTimer>0){state.respawnTimer=Math.max(0,state.respawnTimer-dt);if(state.respawnTimer===0){state.mode='playing';resetPlayer();}return;}const move=controls.left;const aim=controls.right;const speed=(ship.boost>0?310:226);ship.vx=(ship.vx+move.dx*speed)*.78;ship.vy=(ship.vy+move.dy*speed)*.78;ship.x=clamp(ship.x+ship.vx*dt,24,366);ship.y=clamp(ship.y+ship.vy*dt,42,534);if(Math.hypot(move.dx,move.dy)>.08)ship.angle=Math.atan2(move.dy,move.dx);if(Math.hypot(aim.dx,aim.dy)>.14){ship.angle=Math.atan2(aim.dy,aim.dx);fireFrom(ship,'player');}if(ship.weapon!=='blaster'){ship.weaponTimer=Math.max(0,ship.weaponTimer-dt);if(ship.weaponTimer===0)ship.weapon='blaster';}state.drops=state.drops.filter((drop)=>{if(drop.state!=='pickup')return true;if(Math.hypot(ship.x-drop.x,ship.y-drop.y)<28){grantDrop(drop.type);state.score+=25;return false;}return true;});}
+      function updateBots(dt){state.bots.forEach((bot,index)=>{bot.fire=Math.max(0,bot.fire-dt);const target=state.player;const angle=Math.atan2(target.y-bot.y,target.x-bot.x);const desired=dist(bot,target)>170?1:.45;const strafe=index%2?1:-1;bot.vx=(bot.vx+Math.cos(angle)*desired*110+Math.cos(angle+Math.PI/2)*strafe*34)*.76;bot.vy=(bot.vy+Math.sin(angle)*desired*110+Math.sin(angle+Math.PI/2)*strafe*34)*.76;bot.x=clamp(bot.x+bot.vx*dt,26,364);bot.y=clamp(bot.y+bot.vy*dt,40,538);bot.angle=angle;if(state.respawnTimer===0&&dist(bot,target)<290&&Math.abs(bot.x-target.x)+Math.abs(bot.y-target.y)<340)fireFrom(bot,'bot-'+index);if(bot.weapon!=='blaster'){bot.weaponTimer=Math.max(0,bot.weaponTimer-dt);if(bot.weaponTimer===0)bot.weapon='blaster';}});}
+      function updateDrops(dt){state.drops.forEach((drop)=>{drop.wobble+=dt*4;drop.life-=dt;if(drop.state==='descending'){drop.y+=drop.vy*dt;if(drop.y>126+drop.lane*82){drop.state='pickup';drop.y=126+drop.lane*82;}}else drop.y+=Math.sin(drop.wobble)*.2;});state.drops=state.drops.filter((drop)=>drop.life>0);}
+      function updateBullets(dt){state.bullets.forEach((bullet)=>{if(bullet.homing&&bullet.owner==='player'&&state.bots.length){let target=state.bots[0];state.bots.forEach((bot)=>{if(dist(bot,bullet)<dist(target,bullet))target=bot;});const targetAngle=Math.atan2(target.y-bullet.y,target.x-bullet.x);bullet.angle+=Math.atan2(Math.sin(targetAngle-bullet.angle),Math.cos(targetAngle-bullet.angle))*bullet.homing;}if(bullet.homing&&bullet.owner!=='player'&&state.respawnTimer===0){const targetAngle=Math.atan2(state.player.y-bullet.y,state.player.x-bullet.x);bullet.angle+=Math.atan2(Math.sin(targetAngle-bullet.angle),Math.cos(targetAngle-bullet.angle))*bullet.homing;}bullet.x+=Math.cos(bullet.angle)*bullet.speed*dt;bullet.y+=Math.sin(bullet.angle)*bullet.speed*dt;bullet.life-=dt;});state.bullets=state.bullets.filter((bullet)=>{if(bullet.life<=0||bullet.x<-20||bullet.x>410||bullet.y<-20||bullet.y>580)return false;if(bullet.owner==='player'){for(let i=0;i<state.bots.length;i++){const bot=state.bots[i];if(Math.hypot(bot.x-bullet.x,bot.y-bullet.y)<15){bot.hp-=bullet.damage;if(bot.hp<=0)killBot(i);else bot.score=Math.max(10,bot.score-8);return false;}}}else if(state.respawnTimer===0&&Math.hypot(state.player.x-bullet.x,state.player.y-bullet.y)<16){hurtPlayer(bullet.damage);return false;}return true;});}
+      function updateLeaderboard(){state.leaderboard=[{name:'YOU',value:state.score+state.kills*110+state.player.hp},{name:'DROP',value:state.drops.length*40},...state.bots.map((bot)=>({name:bot.name,value:Math.round(bot.score+bot.hp)}))].sort((a,b)=>b.value-a.value).slice(0,5);}
+      function drawArena(){const skin=skins[state.skin];ctx.fillStyle=skin.bg;ctx.fillRect(0,0,390,560);ctx.strokeStyle=skin.grid;ctx.lineWidth=1;for(let x=15;x<390;x+=39){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,560);ctx.stroke();}for(let y=20;y<560;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(390,y);ctx.stroke();}ctx.fillStyle='rgba(255,255,255,.08)';for(let i=0;i<14;i++){ctx.beginPath();ctx.arc((i*29+state.time*12)%390,((i*47+state.time*18)%620)-30,1.2+(i%3)*.6,0,Math.PI*2);ctx.fill();}}
+      function drawShip(ship,color,label){ctx.save();ctx.translate(ship.x,ship.y);ctx.rotate(ship.angle);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(18,0);ctx.lineTo(-12,-10);ctx.lineTo(-6,0);ctx.lineTo(-12,10);ctx.closePath();ctx.fill();ctx.fillStyle='rgba(255,255,255,.95)';ctx.fillRect(-14,-2,7,4);ctx.restore();ctx.fillStyle='#fff';ctx.font='800 10px sans-serif';ctx.textAlign='center';ctx.fillText(label,ship.x,ship.y+24);ctx.textAlign='left';}
+      function drawDrop(drop){ctx.save();ctx.translate(drop.x,drop.y);ctx.fillStyle='rgba(255,255,255,.86)';if(drop.state==='descending'){ctx.beginPath();ctx.arc(0,-12,12,Math.PI,0);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.65)';ctx.beginPath();ctx.moveTo(-12,-12);ctx.lineTo(-6,2);ctx.moveTo(12,-12);ctx.lineTo(6,2);ctx.stroke();}ctx.fillStyle=skins[state.skin].drop;ctx.fillRect(-10,0,20,16);ctx.fillStyle='#050505';ctx.font='900 9px sans-serif';ctx.textAlign='center';ctx.fillText(drop.type.slice(0,2).toUpperCase(),0,12);ctx.restore();ctx.textAlign='left';}
+      function drawBullet(bullet){ctx.strokeStyle=bullet.color;ctx.lineWidth=bullet.owner==='player'?3:2;ctx.beginPath();ctx.moveTo(bullet.x,bullet.y);ctx.lineTo(bullet.x-Math.cos(bullet.angle)*8,bullet.y-Math.sin(bullet.angle)*8);ctx.stroke();}
+      function drawJoystick(stick,tint){ctx.save();ctx.globalAlpha=stick.active ? .34 : .14;ctx.strokeStyle=tint;ctx.lineWidth=2;ctx.beginPath();ctx.arc(stick.anchorX,stick.anchorY,32,0,Math.PI*2);ctx.stroke();ctx.fillStyle=tint;ctx.globalAlpha=stick.active ? .28 : .08;ctx.beginPath();ctx.arc(stick.x,stick.y,16,0,Math.PI*2);ctx.fill();ctx.restore();}
+      window.drawJoystick=drawJoystick;
+      function render(){drawArena();state.drops.forEach(drawDrop);state.bullets.forEach(drawBullet);state.bots.forEach((bot)=>drawShip(bot,skins[state.skin].enemy,bot.name));if(state.respawnTimer===0)drawShip(state.player,skins[state.skin].player,'YOU');drawJoystick(controls.left,'rgba(255,255,255,.85)');drawJoystick(controls.right,skins[state.skin].ally);ctx.fillStyle=skins[state.skin].overlay;ctx.fillRect(248,12,124,110);ctx.fillStyle='#fff';ctx.font='900 12px sans-serif';ctx.fillText('leaderboard',260,30);state.leaderboard.forEach((row,index)=>ctx.fillText((index+1)+'. '+row.name,260,48+index*14));ctx.fillStyle='rgba(0,0,0,.48)';ctx.fillRect(16,12,170,48);ctx.fillStyle='#fff';ctx.font='900 12px sans-serif';ctx.fillText(weaponDefs[state.player.weapon].label,26,31);ctx.fillText('HP '+Math.max(0,Math.ceil(state.player.hp))+'  K '+state.kills+'  x'+Math.max(1,state.streak),26,48);ctx.fillStyle='rgba(255,255,255,.2)';ctx.fillRect(16,66,140,6);ctx.fillStyle=skins[state.skin].player;ctx.fillRect(16,66,140*(state.player.weapon==='blaster'?1:state.player.weaponTimer/12),6);if(state.mode==='respawn'){ctx.fillStyle='rgba(0,0,0,.54)';ctx.fillRect(94,220,202,74);ctx.fillStyle='#fff';ctx.font='900 24px sans-serif';ctx.fillText('REDEPLOY',130,264);}document.getElementById('hud').textContent='round '+state.round+' · '+controlScheme+' · '+weaponDefs[state.player.weapon].label+' · top '+state.leaderboard.map((row)=>row.name).join('/');}
+      document.getElementById('skinBtn').addEventListener('click',()=>applyArenaSkin());document.getElementById('dropBtn').addEventListener('click',()=>spawnDrop());document.getElementById('boostBtn').addEventListener('click',()=>{if(state.respawnTimer===0)state.player.boost=.45;});document.getElementById('resetBtn').addEventListener('click',reset);
+      function step(ms){const dt=ms/1000;state.time+=dt;state.nextDrop-=dt;if(state.nextDrop<=0){spawnDrop();state.nextDrop=4.4+rand()*2.2;}updatePlayer(dt);updateBots(dt);updateDrops(dt);updateBullets(dt);updateLeaderboard();render();}
+      reset();setInterval(()=>step(16),16);window.advanceTime=(ms)=>{for(let i=0;i<Math.max(1,Math.round(ms/16));i++)step(16);};window.render_game_to_text=()=>JSON.stringify({coordinate_system:'portrait canvas arena 390x560 with dual-thumb controls',mode:state.mode,skin:skins[state.skin].id,controlScheme,weapon:state.player.weapon,weaponDrops,player:{x:Math.round(state.player.x),y:Math.round(state.player.y),hp:Math.round(state.player.hp),boost:Number(state.player.boost.toFixed(2)),weaponTimer:Number(state.player.weaponTimer.toFixed(2))},drops:state.drops.map((drop)=>({type:drop.type,state:drop.state,x:Math.round(drop.x),y:Math.round(drop.y)})),score:state.score,kills:state.kills,bullets:state.bullets.length,leaderboard:state.leaderboard,bots:state.bots.length});
+    `,
+  },
+  {
     id: 'mystic-score',
     file: 'mystic-score.html',
     title: '赛博玄学评分器',
@@ -835,6 +923,308 @@ const games = [
       document.getElementById('beliefRange').addEventListener('input',e=>state.belief=Number(e.target.value));document.getElementById('castBtn').addEventListener('click',cast);render();window.advanceTime=()=>{};window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM share card',mode:state.mode,name:state.name,belief:state.belief,score:state.score,tags:state.tags});
     `,
   },
+  {
+    id: 'tarot-daily',
+    file: 'tarot-daily.html',
+    title: '打工塔罗三连',
+    kind: '塔罗',
+    sourceGame: 'Tarot.js / TarotSchema 式三牌阵',
+    accent: '#c45cff',
+    summary: '输入代号抽三张赛博塔罗，给出今日抽象建议。',
+    markup: `
+      <section class="panel">
+        <label class="field-label">占卜代号<input id="tarotName" class="input" value="夜猫网友"></label>
+        <button class="primary" id="drawTarot">抽三张</button>
+      </section>
+      <section class="oracle-grid" id="tarotSlots"></section>
+      <section class="result-card mystic-card">
+        <p class="kicker">今日牌面</p>
+        <h2 id="tarotHeadline">等待洗牌</h2>
+        <p id="tarotCopy">宇宙正在摸鱼。</p>
+        <div id="tarotTags"></div>
+      </section>
+    `,
+    script: `
+      const deck=[
+        {name:'愚者请假',mark:'0',light:'适合开新坑，但别先建十个群。',dark:'冲动会把你带进需求池。'},
+        {name:'魔术师改稿',mark:'I',light:'手上工具够了，先交一个能跑的版本。',dark:'别把仪式感当进度。'},
+        {name:'女祭司静音',mark:'II',light:'答案藏在未读消息的第二行。',dark:'过度脑补会让缓存爆掉。'},
+        {name:'皇帝排期',mark:'IV',light:'今天适合定边界，不适合临时加需求。',dark:'控制欲可能伪装成责任感。'},
+        {name:'恋人双开',mark:'VI',light:'选一个方向深挖，不要同时喜欢所有方案。',dark:'暧昧的选择会拖慢加载。'},
+        {name:'战车通勤',mark:'VII',light:'向前推进，哪怕姿势很难看。',dark:'速度太快会错过站。'},
+        {name:'隐士离线',mark:'IX',light:'断网半小时，脑子会自动修复。',dark:'别把消失当作沟通。'},
+        {name:'命运转盘',mark:'X',light:'今天的随机数偏向你。',dark:'不要把锅甩给水逆太久。'},
+        {name:'倒吊人等审',mark:'XII',light:'换个角度看，问题只是命名太烂。',dark:'等待不会自动变成策略。'},
+        {name:'星星补丁',mark:'XVII',light:'小修小补也能救回体感。',dark:'许愿前先保存。'}
+      ];
+      const positions=['现状','阻碍','建议'];
+      const state={name:'夜猫网友',cards:[],mode:'idle',seed:0};
+      function hash(text){let h=17;for(const ch of text)h=(h*33+ch.charCodeAt(0))%104729;return h;}
+      function drawCards(){
+        state.name=document.getElementById('tarotName').value||'无名网友';
+        state.seed=hash(state.name+'-'+new Date().toDateString());
+        const pool=deck.map((card)=>({...card}));
+        state.cards=[];
+        let seed=state.seed;
+        for(let i=0;i<3;i++){
+          seed=(seed*9301+49297)%233280;
+          const index=seed%pool.length;
+          const card=pool.splice(index,1)[0];
+          seed=(seed*9301+49297)%233280;
+          card.reversed=seed%3===0;
+          card.position=positions[i];
+          state.cards.push(card);
+        }
+        state.mode='ready';
+        render();
+      }
+      function render(){
+        document.getElementById('tarotSlots').innerHTML=positions.map((label,index)=>{
+          const card=state.cards[index];
+          const name=card?card.name:'牌背';
+          const mark=card?(card.reversed?'↯':'✦'):'?';
+          const extra=card?(card.reversed?'逆位':'正位'):'待抽';
+          return '<article class="oracle-card"><span>'+label+'</span><b>'+mark+'</b><strong>'+name+'</strong><span>'+extra+'</span></article>';
+        }).join('');
+        if(!state.cards.length){
+          document.getElementById('tarotHeadline').textContent='等待洗牌';
+          document.getElementById('tarotCopy').textContent='宇宙正在摸鱼。';
+          document.getElementById('tarotTags').innerHTML='';
+          return;
+        }
+        const advice=state.cards[2];
+        document.getElementById('tarotHeadline').textContent=state.name+'抽到 '+advice.name;
+        document.getElementById('tarotCopy').textContent=advice.reversed?advice.dark:advice.light;
+        document.getElementById('tarotTags').innerHTML=state.cards.map((card)=>'<span class="tag">'+card.position+'：'+card.name+(card.reversed?'逆':'正')+'</span>').join('');
+      }
+      document.getElementById('drawTarot').addEventListener('click',drawCards);
+      render();
+      window.advanceTime=()=>{};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM tarot spread',mode:state.mode,name:state.name,cards:state.cards.map((card)=>({position:card.position,name:card.name,reversed:card.reversed}))});
+    `,
+  },
+  {
+    id: 'bazi-lite',
+    file: 'bazi-lite.html',
+    title: '八字偏科生成器',
+    kind: '算命',
+    sourceGame: 'Gmuli-Bazi-Calc 式四柱输入',
+    accent: '#e4a63b',
+    summary: '生日时辰生成假认真四柱，重点看五行哪里离谱。',
+    markup: `
+      <section class="panel">
+        <label class="field-label">出生时间<input id="birthInput" class="input" type="datetime-local" value="1997-08-08T09:30"></label>
+        <label class="field-label">出生地暗号<input id="placeInput" class="input" value="工位东南角"></label>
+        <button class="primary" id="castBazi">排个娱乐盘</button>
+      </section>
+      <section class="result-card mystic-card">
+        <p class="kicker">四柱偏科表</p>
+        <div class="pillar-grid" id="pillars"></div>
+        <div class="element-bars" id="elementBars"></div>
+        <p id="baziCopy">等你把生日交给玄学缓存。</p>
+        <div id="baziTags"></div>
+      </section>
+    `,
+    script: `
+      const stems=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+      const branches=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+      const stemElements=['木','木','火','火','土','土','金','金','水','水'];
+      const branchElements=['水','土','木','木','土','火','火','土','金','金','土','水'];
+      const labels=['年柱','月柱','日柱','时柱'];
+      const state={mode:'idle',pillars:[],elements:{木:0,火:0,土:0,金:0,水:0},verdict:''};
+      function hash(text){let h=23;for(const ch of text)h=(h*31+ch.charCodeAt(0))%65521;return h;}
+      function cast(){
+        const birth=document.getElementById('birthInput').value||'1997-08-08T09:30';
+        const place=document.getElementById('placeInput').value||'工位';
+        const date=new Date(birth);
+        const base=Math.abs(Math.floor(date.getTime()/3600000)+hash(place)+date.getMonth()*37+date.getDate()*11);
+        state.elements={木:0,火:0,土:0,金:0,水:0};
+        state.pillars=labels.map((label,index)=>{
+          const stemIndex=(base+index*17)%stems.length;
+          const branchIndex=(base+index*19)%branches.length;
+          state.elements[stemElements[stemIndex]]+=1;
+          state.elements[branchElements[branchIndex]]+=1;
+          return {label,stem:stems[stemIndex],branch:branches[branchIndex],element:stemElements[stemIndex]+branchElements[branchIndex]};
+        });
+        const sorted=Object.entries(state.elements).sort((a,b)=>b[1]-a[1]);
+        state.verdict=sorted[0][0]+'过载，'+sorted[sorted.length-1][0]+'缺货';
+        state.mode='ready';
+        render();
+      }
+      function render(){
+        document.getElementById('pillars').innerHTML=(state.pillars.length?state.pillars:labels.map((label)=>({label,stem:'?',branch:'?',element:'等待'}))).map((pillar)=>'<div class="pillar"><span>'+pillar.label+'</span><b>'+pillar.stem+pillar.branch+'</b><span>'+pillar.element+'</span></div>').join('');
+        document.getElementById('elementBars').innerHTML=Object.entries(state.elements).map(([name,value])=>'<div class="element-bar"><span>'+name+'</span><i style="width:'+(18+value*12)+'%"></i><b>'+value+'</b></div>').join('');
+        document.getElementById('baziCopy').textContent=state.mode==='ready'?'命盘结论：'+state.verdict+'，今日宜少解释，多截图。':'等你把生日交给玄学缓存。';
+        document.getElementById('baziTags').innerHTML=state.mode==='ready'?['假认真排盘','仅供娱乐','适合发群'].map((tag)=>'<span class="tag">'+tag+'</span>').join(''):'';
+      }
+      document.getElementById('castBazi').addEventListener('click',cast);
+      render();
+      window.advanceTime=()=>{};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM bazi board',mode:state.mode,pillars:state.pillars,elements:state.elements,verdict:state.verdict});
+    `,
+  },
+  {
+    id: 'astro-wheel',
+    file: 'astro-wheel.html',
+    title: '星盘甩锅轮',
+    kind: '看盘',
+    sourceGame: 'CircularNatalHoroscopeJS / AstroChart 式圆盘',
+    accent: '#5bbcff',
+    summary: '一键画出可分享星盘，把今天的问题甩给相位。',
+    canvas: true,
+    markup: `
+      <canvas id="astroCanvas" width="390" height="330" class="play-canvas short"></canvas>
+      <section class="panel compact">
+        <label class="field-label">盘主代号<input id="astroName" class="input" value="水逆打工人"></label>
+        <button class="primary" id="castAstro">生成甩锅星盘</button>
+      </section>
+      <section class="result-card mystic-card">
+        <p class="kicker">相位摘要</p>
+        <h2 id="astroHeadline">等待行星站队</h2>
+        <div class="aspect-list" id="aspectList"></div>
+      </section>
+    `,
+    script: `
+      const canvas=document.getElementById('astroCanvas');
+      const ctx=canvas.getContext('2d');
+      const signs=['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
+      const bodies=[
+        {name:'太阳',mark:'☉',color:'#ffd15a'},
+        {name:'月亮',mark:'☾',color:'#d6e6ff'},
+        {name:'水星',mark:'☿',color:'#22f4ee'},
+        {name:'金星',mark:'♀',color:'#ff88bd'},
+        {name:'火星',mark:'♂',color:'#ff674d'},
+        {name:'土星',mark:'♄',color:'#b891ff'}
+      ];
+      const state={mode:'idle',name:'水逆打工人',points:[],aspects:[],spin:0};
+      function hash(text){let h=29;for(const ch of text)h=(h*37+ch.charCodeAt(0))%99991;return h;}
+      function polar(angle,radius){const rad=(angle-90+state.spin)*Math.PI/180;return {x:195+Math.cos(rad)*radius,y:165+Math.sin(rad)*radius};}
+      function cast(){
+        state.name=document.getElementById('astroName').value||'无名盘主';
+        const seed=hash(state.name+'-'+new Date().toDateString());
+        state.points=bodies.map((body,index)=>{
+          const angle=(seed+index*53+index*index*7)%360;
+          return {...body,angle,sign:signs[Math.floor(angle/30)]};
+        });
+        state.aspects=[
+          state.points[0].name+'落在'+state.points[0].sign+'：今天适合高调装懂',
+          state.points[2].name+'刑'+state.points[4].name+'：消息别秒回，先喝水',
+          state.points[1].name+'拱'+state.points[5].name+'：拖延会被包装成深思熟虑'
+        ];
+        state.mode='ready';
+        render();
+      }
+      function draw(){
+        ctx.clearRect(0,0,390,330);
+        ctx.fillStyle='#06070d';
+        ctx.fillRect(0,0,390,330);
+        const cx=195,cy=165;
+        ctx.strokeStyle='rgba(255,255,255,.18)';
+        ctx.lineWidth=1;
+        for(const radius of [58,96,132]){
+          ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.stroke();
+        }
+        for(let i=0;i<12;i++){
+          const a=i*30+state.spin;
+          const inner=polar(a,58);
+          const outer=polar(a,140);
+          ctx.beginPath();ctx.moveTo(inner.x,inner.y);ctx.lineTo(outer.x,outer.y);ctx.stroke();
+          const label=polar(a+15,116);
+          ctx.fillStyle='rgba(255,255,255,.62)';
+          ctx.font='11px -apple-system,BlinkMacSystemFont,sans-serif';
+          ctx.textAlign='center';
+          ctx.fillText(signs[i],label.x,label.y);
+        }
+        const points=state.points.length?state.points:bodies.map((body,index)=>({...body,angle:index*60,sign:signs[index]}));
+        points.forEach((point,index)=>{
+          const pos=polar(point.angle,78+index%2*22);
+          ctx.fillStyle=point.color;
+          ctx.beginPath();ctx.arc(pos.x,pos.y,14,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle='#050505';
+          ctx.font='18px serif';
+          ctx.textAlign='center';
+          ctx.fillText(point.mark,pos.x,pos.y+6);
+        });
+        ctx.fillStyle='#fff';
+        ctx.font='900 18px -apple-system,BlinkMacSystemFont,sans-serif';
+        ctx.fillText(state.mode==='ready'?state.name:'甩锅星盘',cx,cy+5);
+      }
+      function render(){
+        draw();
+        document.getElementById('astroHeadline').textContent=state.mode==='ready'?state.name+'的今日锅位':'等待行星站队';
+        document.getElementById('aspectList').innerHTML=(state.aspects.length?state.aspects:['太阳还没上线','月亮正在加载','水星拒绝背锅']).map((item)=>'<span>'+item+'</span>').join('');
+      }
+      document.getElementById('castAstro').addEventListener('click',cast);
+      render();
+      window.advanceTime=(ms=0)=>{state.spin=(state.spin+ms/60)%360;draw();};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'canvas astrology wheel',mode:state.mode,name:state.name,points:state.points.map((point)=>({name:point.name,angle:point.angle,sign:point.sign})),aspects:state.aspects});
+    `,
+  },
+  {
+    id: 'yijing-coins',
+    file: 'yijing-coins.html',
+    title: '六爻离谱铜钱',
+    kind: '易经',
+    sourceGame: 'I Ching coin divination flow',
+    accent: '#d6b45f',
+    summary: '点六次摇铜钱，得到一卦适合转发的离谱签文。',
+    markup: `
+      <section class="panel">
+        <label class="field-label">所问之事<input id="wishInput" class="input" value="今天能不能准点下班"></label>
+        <button class="primary" id="coinBtn">摇第一爻</button>
+        <div class="coin-row" id="coins"><span class="coin">?</span><span class="coin">?</span><span class="coin">?</span></div>
+      </section>
+      <section class="result-card mystic-card">
+        <p class="kicker">本卦</p>
+        <h2 id="hexName">未成卦</h2>
+        <div class="hex-lines" id="hexLines"></div>
+        <p id="hexCopy">六爻未齐，玄学还不敢乱说。</p>
+        <div class="cast-log" id="castLog"></div>
+      </section>
+    `,
+    script: `
+      const hexNames=['乾为天','坤为地','水雷屯','山水蒙','风天小畜','天泽履','地天泰','天地否','雷火丰','火山旅','泽水困','水风井'];
+      const verdicts=['宜先截图，后解释。','看似卡住，其实是在加载隐藏剧情。','贵人会以撤回消息的形式出现。','今天别硬刚，绕路也是一种推进。','大事缓办，小事装忙。','答案在第三个选项，但你会先点错。'];
+      const state={mode:'casting',wish:'今天能不能准点下班',lines:[],coins:['?','?','?'],seed:0,result:null};
+      function hash(text){let h=41;for(const ch of text)h=(h*31+ch.charCodeAt(0))%99989;return h;}
+      function roll(){
+        state.seed=(state.seed*9301+49297)%233280;
+        return state.seed%2?3:2;
+      }
+      function castLine(){
+        if(state.lines.length>=6){
+          state.lines=[];
+          state.mode='casting';
+          state.result=null;
+        }
+        state.wish=document.getElementById('wishInput').value||'无名之问';
+        if(state.lines.length===0)state.seed=hash(state.wish+'-'+new Date().toDateString());
+        const values=[roll(),roll(),roll()];
+        state.coins=values.map((value)=>value===3?'字':'背');
+        state.lines.push(values.reduce((sum,value)=>sum+value,0));
+        if(state.lines.length===6){
+          const pattern=state.lines.map((value)=>value%2).join('');
+          const index=parseInt(pattern,2)%hexNames.length;
+          state.result={name:hexNames[index],copy:verdicts[(index+state.seed)%verdicts.length]};
+          state.mode='ready';
+        }
+        render();
+      }
+      function render(){
+        document.getElementById('coins').innerHTML=state.coins.map((coin)=>'<span class="coin">'+coin+'</span>').join('');
+        document.getElementById('coinBtn').textContent=state.lines.length>=6?'重摇一卦':'摇第 '+(state.lines.length+1)+' 爻';
+        const shown=state.lines.slice().reverse();
+        document.getElementById('hexLines').innerHTML=(shown.length?shown:[0,0,0,0,0,0]).map((value)=>'<div class="hex-line '+(value&&value%2===0?'broken':'solid')+'"><i></i>'+(value&&value%2===0?'<i></i>':'')+'</div>').join('');
+        document.getElementById('hexName').textContent=state.result?state.result.name:'未成卦';
+        document.getElementById('hexCopy').textContent=state.result?state.wish+'：'+state.result.copy:'六爻未齐，玄学还不敢乱说。';
+        document.getElementById('castLog').innerHTML=state.lines.map((line,index)=>'<span>第 '+(index+1)+' 爻：'+(line%2?'阳':'阴')+(line===6||line===9?'，动':'')+'</span>').join('');
+      }
+      document.getElementById('coinBtn').addEventListener('click',castLine);
+      render();
+      window.advanceTime=()=>{};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM six-line hexagram',mode:state.mode,wish:state.wish,lines:state.lines,result:state.result});
+    `,
+  },
 ];
 
 function artifactFor(game) {
@@ -847,6 +1237,7 @@ function artifactFor(game) {
     game: {
       id: game.id,
       file: game.file,
+      cover: coverForFile(game.file),
       title: game.title,
       kind: game.kind,
       source_game: game.sourceGame,
@@ -868,9 +1259,9 @@ function commonCss(accent) {
   return `
     :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: ${accent}; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; }
+    html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
     body { display: grid; place-items: start center; overscroll-behavior: none; }
-    button, input { font: inherit; }
+    button, input { font: inherit; min-width: 0; }
     button, a, input { touch-action: manipulation; }
     .phone-shell { width: min(100vw, 430px); min-height: 100svh; background:
       radial-gradient(circle at 50% 4%, rgba(255,59,134,.42), transparent 34%),
@@ -879,22 +1270,32 @@ function commonCss(accent) {
     .app-top { position: sticky; top: 0; z-index: 5; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(14px, env(safe-area-inset-left)); border-bottom: 1px solid rgba(255,255,255,.08); background: linear-gradient(to bottom, rgba(0,0,0,.78), rgba(0,0,0,.28)); color: #fff; backdrop-filter: blur(16px); }
     .brand { color: inherit; text-decoration: none; font-weight: 900; }
     .app-top a:last-child { color: #fff; opacity: .72; text-decoration: none; font-weight: 900; font-size: 13px; }
-    .screen { padding: 12px 12px calc(18px + env(safe-area-inset-bottom)); flex: 1; }
-    .play-screen { display: flex; flex-direction: column; min-height: calc(100svh - 50px); }
+    .screen { padding: 12px 12px calc(18px + env(safe-area-inset-bottom)); flex: 1; min-width: 0; }
+    .play-screen { display: flex; flex-direction: column; min-height: calc(100svh - 50px); min-width: 0; }
     .hero { min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; padding: 12px 2px; border-bottom: 1px solid rgba(255,255,255,.1); }
     .play-hero { min-height: 88px; }
     .kicker { margin: 0; color: var(--cyan); font-size: 11px; font-weight: 1000; letter-spacing: .12em; text-transform: uppercase; }
     h1 { margin: 0; font-size: clamp(34px, 11vw, 54px); line-height: .88; letter-spacing: 0; color: #fff; text-shadow: 0 6px 28px rgba(255,59,134,.2); }
     h2 { margin: 0 0 12px; font-size: clamp(25px, 8vw, 36px); line-height: 1; letter-spacing: 0; }
     .summary { margin: 0; color: rgba(255,255,255,.62); line-height: 1.42; font-size: 13px; }
-    .game-stage { display: grid; gap: 10px; padding-top: 10px; touch-action: none; flex: 1; align-content: start; }
-    .panel { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 14px; box-shadow: 0 18px 54px rgba(0,0,0,.28); backdrop-filter: blur(18px); color: #fff; }
+    .game-stage { display: grid; gap: 10px; padding-top: 10px; touch-action: none; flex: 1; align-content: start; min-width: 0; }
+    .game-stage > * { min-width: 0; max-width: 100%; }
+    .panel { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 14px; box-shadow: 0 18px 54px rgba(0,0,0,.28); backdrop-filter: blur(18px); color: #fff; min-width: 0; max-width: 100%; }
     .compact { padding: 12px; }
     .primary { min-height: 54px; border: 0; border-radius: 999px; padding: 0 18px; background: linear-gradient(135deg, var(--accent), #ff6aa8); color: #fff; font-weight: 1000; cursor: pointer; box-shadow: 0 12px 30px rgba(255,59,134,.28); }
     .primary:disabled, button:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
     .hidden { display: none !important; }
     .play-canvas { width: 100%; height: auto; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: #09070d; display: block; touch-action: none; box-shadow: 0 24px 70px rgba(0,0,0,.34); }
     .play-canvas.short { aspect-ratio: 390 / 320; }
+    html.embed-mode, html.embed-mode body { min-height: 100%; background: #000; }
+    html.embed-mode body { display: block; overflow: hidden; }
+    html.embed-mode .phone-shell { width: 100vw; min-height: 100svh; border: 0; background: #000; box-shadow: none; }
+    html.embed-mode .app-top, html.embed-mode .play-hero { display: none; }
+    html.embed-mode .screen { padding: 0 10px 10px; }
+    html.embed-mode .play-screen { min-height: 100svh; }
+    html.embed-mode .game-stage { padding-top: 10px; gap: 8px; }
+    html.embed-mode .play-canvas { max-height: calc(100svh - 116px); object-fit: contain; }
+    html.embed-mode .panel { box-shadow: none; }
     .stack { display: grid; gap: 10px; }
     .choice, .shop-row, .chip, .plot { border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; min-height: 58px; padding: 12px 14px; text-align: left; font-weight: 850; cursor: pointer; }
     .choice:active, .chip:active, .plot:active, .big-tap:active { transform: scale(.98); }
@@ -921,15 +1322,16 @@ function commonCss(accent) {
     .rule { display: flex; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px; background: rgba(255,59,134,.11); }
     .rule.ok { background: rgba(34,244,238,.12); border-color: rgba(34,244,238,.42); }
     .win-note { padding: 12px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 900; }
-    .slots { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
-    .slots span { min-height: 84px; display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.22); border-radius: 18px; font-size: 28px; font-weight: 1000; background: rgba(255,255,255,.09); color: #fff; }
-    .craft-toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
-    .craft-stats { display: flex; justify-content: space-between; gap: 10px; margin: 10px 0 0; color: var(--cyan); font-size: 12px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; }
+    .slots { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; min-width: 0; }
+    .slots span { min-width: 0; min-height: 84px; display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.22); border-radius: 18px; padding: 8px; text-align: center; font-size: clamp(18px, 6vw, 28px); line-height: 1.08; font-weight: 1000; background: rgba(255,255,255,.09); color: #fff; overflow: hidden; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin: 12px 0; min-width: 0; }
+    .craft-stats { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; margin: 10px 0 0; color: var(--cyan); font-size: 12px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; min-width: 0; }
+    .craft-stats span, #craftLog { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
     .craft-history { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 0; scrollbar-width: none; }
     .craft-history::-webkit-scrollbar { display: none; }
     .craft-history span { flex: 0 0 auto; max-width: 270px; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-weight: 800; white-space: nowrap; }
-    .chip-pool { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip { min-height: 42px; text-align: center; width: auto; max-width: calc(100vw - 48px); overflow-wrap: anywhere; white-space: normal; }
+    .chip-pool { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; max-width: 100%; }
+    .chip { min-width: 0; min-height: 42px; text-align: center; width: auto; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
     .chip small { display: block; margin-top: 4px; color: rgba(255,255,255,.48); font-size: 10px; font-weight: 900; }
     .picked { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 78%); }
     .checkbox-grid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4px; }
@@ -942,6 +1344,27 @@ function commonCss(accent) {
     .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .tag { display: inline-flex; margin: 6px 6px 0 0; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); }
     .mystic-card { background: radial-gradient(circle at 20% 10%, rgba(255,59,134,.34), rgba(255,255,255,.08) 48%); }
+    .oracle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .oracle-card { min-height: 154px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 10px; display: grid; align-content: space-between; background: linear-gradient(160deg, color-mix(in srgb, var(--game-accent), #050505 44%), rgba(255,255,255,.08)); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+    .oracle-card b { font-size: 28px; line-height: 1; }
+    .oracle-card span { color: rgba(255,255,255,.68); font-size: 11px; font-weight: 900; }
+    .oracle-card strong { font-size: 13px; line-height: 1.1; }
+    .pillar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .pillar { min-height: 90px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 9px 6px; display: grid; place-items: center; gap: 4px; background: rgba(255,255,255,.08); text-align: center; }
+    .pillar b { font-size: 28px; line-height: 1; }
+    .pillar span { color: rgba(255,255,255,.58); font-size: 10px; font-weight: 1000; }
+    .element-bars { display: grid; gap: 7px; margin-top: 12px; }
+    .element-bar { display: grid; grid-template-columns: 34px 1fr 30px; align-items: center; gap: 8px; font-size: 12px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .element-bar i { height: 9px; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--game-accent)); }
+    .aspect-list { display: grid; gap: 8px; margin-top: 10px; }
+    .aspect-list span, .cast-log span { display: block; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 9px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-size: 12px; font-weight: 850; }
+    .coin-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 10px 0; }
+    .coin { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.22); background: radial-gradient(circle at 35% 25%, #ffe7a3, #b56d25 64%, #4d2415); color: #2d160c; font-size: 20px; font-weight: 1000; box-shadow: 0 12px 32px rgba(0,0,0,.28); }
+    .hex-lines { display: grid; gap: 7px; padding: 8px 0; }
+    .hex-line { height: 16px; display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .hex-line.broken { grid-template-columns: 1fr 1fr; }
+    .hex-line i { display: block; border-radius: 999px; background: linear-gradient(90deg, #ffe7a3, var(--game-accent)); }
+    .cast-log { display: grid; gap: 8px; }
     @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
   `;
 }
@@ -953,7 +1376,9 @@ function gamePage(game) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="icon" href="data:,">
   <title>${game.title} - 赝品库</title>
+  <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
   <style>${commonCss(game.accent)}</style>
 </head>
 <body data-printer-artifact="fake-game-library" data-game-page="${game.id}" data-output-format="multi_html">
@@ -988,106 +1413,799 @@ function indexPage() {
     intent,
     generated_at: generatedAt,
     intent_plan: pipelinePlan,
-    complexity: { total: 64, components: 18, interactions: 15, pages: 12, data_flow: 19 },
+    complexity: { total: 78, components: 24, interactions: 26, pages: games.length, data_flow: 20 },
   };
-  const coverGlyphs = ['SBTI','羊','脑','刺','撞','密','合','☑','跑','种','io','玄'];
-  const feed = games.map((game, i) => `
-        <article class="feed-item" style="--game-accent:${game.accent}; --n:${i};">
-          <a class="cover-hit" href="${game.file}" aria-label="打开${game.title}"></a>
-          <div class="cover-stack" aria-hidden="true">
-            <i></i><i></i><i></i>
-          </div>
-          <div class="cover-art">
-            <span>${coverGlyphs[i]}</span>
-          </div>
-          <aside class="feed-actions">
-            <a href="${game.file}" aria-label="Play ${game.title}">▶</a>
-            <button type="button" data-jump="${i + 1}" aria-label="下一个">↓</button>
-          </aside>
+  const coverGlyphs = ['SBTI','羊','脑','刺','撞','密','合','☑','跑','种','io','战','玄','塔','命','星','卦'];
+  const homeItems = games.map((game, i) => ({
+    id: game.id,
+    instanceId: `${game.id}-0`,
+    file: game.file,
+    title: game.title,
+    sourceTitle: game.title,
+    kind: game.kind,
+    sourceGame: game.sourceGame,
+    summary: game.summary,
+    accent: game.accent,
+    glyph: coverGlyphs[i],
+    cover: coverForFile(game.file),
+    author: '@赝品库',
+    likes: 1200 + i * 137,
+    saves: 240 + i * 31,
+    baseIndex: i,
+    loop: 0,
+    remixed: false,
+  }));
+  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char]);
+  const formatCount = (value) => value >= 10000 ? `${(value / 10000).toFixed(1)}w` : value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value);
+  const embedSrc = (file) => `${escapeHtml(file)}?embed=1`;
+  const feedItemMarkup = (item, i) => {
+    const eager = i < 2;
+    const frameSrc = embedSrc(item.file);
+    return `
+        <article class="feed-item" style="--game-accent:${escapeHtml(item.accent)}; --n:${i};" data-instance-id="${escapeHtml(item.instanceId)}" data-src="${escapeHtml(item.file)}">
+          <section class="live-card is-playing" aria-label="${escapeHtml(item.title)} HTML 预览">
+            <iframe class="html-frame" title="${escapeHtml(item.title)}" src="${eager ? frameSrc : 'about:blank'}" data-src="${frameSrc}" data-loaded="${eager ? 'true' : 'false'}" loading="${eager ? 'eager' : 'lazy'}" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
           <footer class="feed-caption">
-            <h2>${game.title}</h2>
-            <a class="play-pill" href="${game.file}">PLAY</a>
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>${escapeHtml(item.title)}</h2>
           </footer>
-        </article>`).join('');
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 ${escapeHtml(item.title)}"><b>♡</b><span data-count="like">${formatCount(item.likes)}</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 ${escapeHtml(item.title)}"><b>☆</b><span data-count="save">${formatCount(item.saves)}</span></button>
+            <a class="action-button" href="${escapeHtml(item.file)}" aria-label="打开 ${escapeHtml(item.title)}"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix ${escapeHtml(item.title)}"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>`;
+  };
+  const feed = homeItems.map(feedItemMarkup).join('');
+  const waterCardMarkup = (item, i) => {
+    const coverHeight = 132 + (i % 5) * 18 + (i % 2) * 12;
+    const coverImage = item.cover ? `<img class="water-cover-image" src="${escapeHtml(item.cover)}" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()">` : '';
+    return `
+      <button class="water-card" type="button" data-open-feed="${i}" data-instance-id="${escapeHtml(item.instanceId)}" style="--game-accent:${escapeHtml(item.accent)}; --cover-h:${coverHeight}px;">
+        <span class="water-cover">${coverImage}<b>${escapeHtml(item.glyph)}</b><i>${escapeHtml(item.kind)}</i></span>
+        <span class="water-title">${escapeHtml(item.title)}</span>
+        <span class="water-summary">${escapeHtml(item.summary)}</span>
+        <span class="water-meta"><span>${escapeHtml(item.author)}</span><span>♡ ${formatCount(item.likes)}</span></span>
+      </button>`;
+  };
+  const waterfall = homeItems.map(waterCardMarkup).join('');
+  const remixTwists = [
+    { label: '夜市版', glyph: '夜', accent: '#00c2ff', summary: '把节奏压进霓虹夜场，反馈更密、奖励更亮。', prompt: '霓虹夜市、快反馈、强分享截图' },
+    { label: '地铁版', glyph: '站', accent: '#ffcf33', summary: '改成单手通勤节奏，十秒内给出一次明确变化。', prompt: '地铁通勤、单手操作、十秒循环' },
+    { label: '反转版', glyph: '反', accent: '#ff5a3d', summary: '保留核心玩法，但把目标和失败条件倒过来。', prompt: '目标反转、失败变奖励、规则逐步变形' },
+    { label: '抽卡版', glyph: '抽', accent: '#9b7cff', summary: '每次操作都掉落一个新词条，适合继续二创。', prompt: '词条掉落、稀有度、可截图收集' },
+    { label: '双人版', glyph: '双', accent: '#31d07f', summary: '把单人循环变成互相干扰的同屏挑战。', prompt: '双人同屏、轻对抗、短局结算' },
+  ];
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>赝品库 - 移动端 HTML 小游戏</title>
+  <link rel="icon" href="data:,">
+  <title>HTML 刷刷 - 赝品库 Remix Feed</title>
   <style>
     ${commonCss('#111')}
     html, body { background: #040404; }
     body { place-items: start center; }
-    #homeShell { background: #050505; color: #fff; border-color: rgba(255,255,255,.12); }
-    #homeShell .app-top { position: fixed; left: 50%; transform: translateX(-50%); width: min(100vw, 430px); height: 56px; border: 0; background: linear-gradient(to bottom, rgba(0,0,0,.68), transparent); color: #fff; }
-    #homeShell .brand { font-size: 18px; }
-    #homeShell .app-top a:last-child { color: #fff; opacity: .72; }
+    #homeShell { background: #000; color: #fff; border-color: rgba(255,255,255,.1); }
+    #homeShell .app-top { display: none; }
+    [hidden] { display: none !important; }
+    .home-screen { min-height: 100svh; max-height: 100svh; overflow-y: auto; padding: calc(12px + env(safe-area-inset-top)) 12px calc(22px + env(safe-area-inset-bottom)); background: #050505; scrollbar-width: none; }
+    .home-screen::-webkit-scrollbar { display: none; }
+    .home-head { position: sticky; top: calc(-12px - env(safe-area-inset-top)); z-index: 10; display: grid; gap: 10px; padding: 12px 0 10px; background: linear-gradient(#050505 72%, rgba(5,5,5,0)); }
+    .home-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .home-brand { margin: 0; font-size: 22px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
+    .home-brand span { color: #ff375f; }
+    .start-feed { min-height: 36px; border: 0; border-radius: 999px; padding: 0 14px; background: #fff; color: #050505; font-weight: 1000; }
+    .home-search { display: flex; align-items: center; gap: 8px; min-height: 38px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 0 13px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.72); font-size: 13px; font-weight: 750; }
+    .home-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 1px; scrollbar-width: none; }
+    .home-tags::-webkit-scrollbar { display: none; }
+    .home-tags span { flex: 0 0 auto; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 7px 11px; background: rgba(255,255,255,.06); color: rgba(255,255,255,.76); font-size: 12px; font-weight: 850; }
+    .home-tags .active { background: rgba(255,55,95,.18); border-color: rgba(255,55,95,.36); color: #fff; }
+    .waterfall { column-count: 2; column-gap: 10px; padding: 2px 0 12px; }
+    .water-card { width: 100%; margin: 0 0 10px; break-inside: avoid; display: grid; gap: 7px; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 0 0 10px; overflow: hidden; background: #111; color: #fff; text-align: left; cursor: pointer; box-shadow: 0 14px 42px rgba(0,0,0,.24); }
+    .water-card:active { transform: scale(.985); }
+    .water-cover { position: relative; height: var(--cover-h); display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--game-accent), white 12%), transparent 38%), linear-gradient(155deg, color-mix(in srgb, var(--game-accent), #050505 46%), #080808 70%); }
+    .water-cover-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; transform: scale(1.01); }
+    .water-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,.06), transparent 42%, rgba(0,0,0,.38)); }
+    .water-cover b { position: relative; z-index: 1; font-size: clamp(24px, 10vw, 44px); line-height: 1; font-weight: 1000; letter-spacing: 0; text-shadow: 0 10px 28px rgba(0,0,0,.34); }
+    .water-cover.has-render b { display: none; }
+    .water-cover i { position: absolute; z-index: 1; left: 9px; top: 9px; border-radius: 999px; padding: 4px 7px; background: rgba(0,0,0,.34); color: rgba(255,255,255,.9); font-style: normal; font-size: 10px; font-weight: 900; }
+    .water-title { padding: 0 10px; font-size: 13px; line-height: 1.24; font-weight: 950; color: rgba(255,255,255,.94); }
+    .water-summary { padding: 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: rgba(255,255,255,.58); font-size: 11px; line-height: 1.35; font-weight: 700; }
+    .water-meta { padding: 0 10px; display: flex; justify-content: space-between; gap: 8px; color: rgba(255,255,255,.5); font-size: 10px; line-height: 1; font-weight: 850; }
     .feed-screen { padding: 0; height: 100svh; overflow: hidden; }
-    .feed { height: 100svh; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; }
+    .feed-back { position: fixed; z-index: 12; left: max(12px, calc((100vw - 430px) / 2 + 12px)); top: calc(12px + env(safe-area-inset-top)); width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; background: rgba(0,0,0,.28); color: #fff; font-size: 26px; line-height: 1; backdrop-filter: blur(12px); }
+    .feed { height: 100svh; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; background: #000; }
     .feed::-webkit-scrollbar { display: none; }
-    .feed-item { position: relative; height: 100svh; min-height: 640px; scroll-snap-align: start; display: grid; place-items: center; overflow: hidden; isolation: isolate; background:
-      radial-gradient(circle at 50% 38%, rgba(255,59,134,.72) 0 18%, transparent 42%),
-      radial-gradient(circle at 10% 18%, rgba(34,244,238,.22), transparent 28%),
-      linear-gradient(160deg, #9c164c, #100810 58%, #030303); }
-    .feed-item::before { content: ""; position: absolute; inset: -20%; z-index: -2; background:
-      repeating-linear-gradient(90deg, rgba(255,255,255,.09) 0 1px, transparent 1px 88px),
-      repeating-linear-gradient(0deg, rgba(255,255,255,.07) 0 1px, transparent 1px 88px); transform: rotate(calc((var(--n) - 5) * 2deg)); opacity: .42; }
-    .feed-item::after { content: ""; position: absolute; inset: 40% 0 0; z-index: 1; background: linear-gradient(to bottom, transparent, rgba(0,0,0,.62) 44%, rgba(0,0,0,.92)); pointer-events: none; }
-    .cover-hit { position: absolute; inset: 0; z-index: 2; }
-    .cover-stack { position: absolute; inset: 76px 22px 210px; display: grid; place-items: center; pointer-events: none; opacity: .94; }
-    .cover-stack i { position: absolute; width: min(70vw, 300px); aspect-ratio: 9 / 14; border-radius: 22px; border: 1px solid rgba(255,255,255,.18); background:
-      linear-gradient(150deg, rgba(255,255,255,.18), transparent 36%),
-      linear-gradient(150deg, rgba(255,59,134,.45), rgba(34,244,238,.12)); box-shadow: 0 24px 80px rgba(0,0,0,.36); }
-    .cover-stack i:nth-child(1) { transform: translate(-94px, -30px) rotate(-11deg) scale(.82); opacity: .45; }
-    .cover-stack i:nth-child(2) { transform: translate(92px, 28px) rotate(10deg) scale(.82); opacity: .4; }
-    .cover-stack i:nth-child(3) { transform: translate(0, 0) rotate(calc((var(--n) - 5) * .7deg)); }
-    .cover-art { position: relative; z-index: 1; width: min(72vw, 292px); aspect-ratio: 9 / 14; border-radius: 24px; display: grid; place-items: center; overflow: hidden; background:
-      radial-gradient(circle at 32% 18%, rgba(255,255,255,.35), transparent 22%),
-      radial-gradient(circle at 70% 78%, rgba(255,255,255,.22), transparent 26%),
-      linear-gradient(145deg, #ff5d9b, #53112d 66%, #111); box-shadow: 0 34px 110px rgba(255,59,134,.22), 0 34px 110px rgba(0,0,0,.48); }
-    .cover-art::before { content: ""; position: absolute; inset: 12px; border: 1px solid rgba(255,255,255,.24); border-radius: 18px; }
-    .cover-art::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 36%; background: linear-gradient(to top, rgba(0,0,0,.34), transparent); }
-    .cover-art span { position: relative; z-index: 1; max-width: 86%; color: #fff; font-size: clamp(54px, 22vw, 96px); line-height: .86; font-weight: 1000; letter-spacing: 0; text-align: center; text-shadow: 0 8px 32px rgba(0,0,0,.32); }
-    .feed-caption { position: absolute; z-index: 4; left: 22px; right: 92px; bottom: calc(28px + env(safe-area-inset-bottom)); display: grid; gap: 14px; pointer-events: none; }
-    .feed-caption h2 { margin: 0; color: #fff; font-size: clamp(36px, 12vw, 56px); line-height: .9; text-shadow: 0 4px 24px rgba(0,0,0,.38); }
-    .play-pill { pointer-events: auto; width: max-content; min-width: 112px; min-height: 48px; display: inline-grid; place-items: center; border-radius: 999px; background: #fff; color: #050505; text-decoration: none; font-weight: 1000; letter-spacing: .08em; }
-    .feed-actions { position: absolute; z-index: 5; right: 16px; bottom: calc(42px + env(safe-area-inset-bottom)); display: grid; gap: 12px; }
-    .feed-actions a, .feed-actions button { width: 54px; height: 54px; border: 1px solid rgba(255,255,255,.22); border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.12); color: #fff; text-decoration: none; font-size: 22px; font-weight: 900; backdrop-filter: blur(16px); cursor: pointer; }
-    .feed-actions button { font-size: 24px; padding: 0; }
-    .swipe-hint { position: fixed; z-index: 6; left: 50%; bottom: calc(8px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(100vw, 430px); text-align: center; color: rgba(255,255,255,.58); font-size: 11px; letter-spacing: .18em; pointer-events: none; }
-    @media (min-width: 700px) { body { padding: 18px 0; } #homeShell { min-height: calc(100svh - 36px); height: calc(100svh - 36px); overflow: hidden; } #homeShell .app-top { top: 18px; } .feed-screen, .feed, .feed-item { height: calc(100svh - 36px); } .feed-item { min-height: 640px; } }
+    .feed-item { position: relative; height: 100svh; min-height: 640px; scroll-snap-align: start; scroll-snap-stop: always; display: grid; place-items: center; overflow: hidden; isolation: isolate; background: #000; }
+    .feed-item::before { content: ""; position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--game-accent), transparent 36%), transparent 54%), #000; opacity: .55; }
+    .feed-item::after { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(to bottom, rgba(0,0,0,.36), transparent 22%, transparent 56%, rgba(0,0,0,.78)); pointer-events: none; }
+    .live-card { position: absolute; z-index: 1; inset: 0; overflow: hidden; border: 0; border-radius: 0; background: #000; box-shadow: none; opacity: 1; transform: none; }
+    .feed-item.is-active .live-card { transform: none; opacity: 1; border-color: transparent; }
+    .html-frame { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; display: block; background: #000; pointer-events: auto; }
+    .feed-caption { position: absolute; z-index: 5; left: 16px; right: 86px; bottom: calc(22px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 30px 1fr; column-gap: 8px; align-items: center; pointer-events: none; text-shadow: 0 2px 14px rgba(0,0,0,.72); }
+    .avatar { position: relative; width: 30px; height: 30px; display: block; border-radius: 50%; background: color-mix(in srgb, var(--game-accent), #111 48%); border: 1px solid rgba(255,255,255,.34); box-shadow: 0 8px 24px rgba(0,0,0,.32); overflow: hidden; }
+    .avatar::before { content: ""; position: absolute; left: 10px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.92); }
+    .avatar::after { content: ""; position: absolute; left: 7px; bottom: 6px; width: 14px; height: 8px; border-radius: 9px 9px 3px 3px; background: rgba(255,255,255,.92); }
+    .feed-caption h2 { margin: 0; color: rgba(255,255,255,.92); font-size: 15px; line-height: 1.16; font-weight: 850; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-actions { position: absolute; z-index: 6; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); display: grid; gap: 14px; }
+    .action-button { width: 52px; min-height: 50px; border: 0; border-radius: 0; display: grid; place-items: center; align-content: center; gap: 3px; background: transparent; color: #fff; text-decoration: none; cursor: pointer; text-shadow: 0 2px 14px rgba(0,0,0,.68); }
+    .action-button b { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.26); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(12px); font-size: 24px; line-height: 1; font-weight: 1000; }
+    .action-button span { min-height: 10px; color: rgba(255,255,255,.9); font-size: 10px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
+    .feed-item.is-liked [data-like] b { background: #ff2f68; border-color: rgba(255,255,255,.24); }
+    .feed-item.is-saved [data-save] b { background: #ffb02e; color: #111; border-color: rgba(255,255,255,.24); }
+    .remix-action b { background: color-mix(in srgb, var(--game-accent), rgba(0,0,0,.38) 54%); }
+    .action-button:active { transform: scale(.96); }
+    .swipe-hint, .remix-dock { display: none; }
+    .remix-modal { position: fixed; inset: 0; z-index: 30; display: none; place-items: end center; background: rgba(0,0,0,.56); color: #fff; }
+    .remix-modal.is-visible { display: grid; }
+    .remix-panel { width: min(100vw, 430px); max-height: 92svh; overflow-y: auto; border: 1px solid rgba(255,255,255,.16); border-radius: 22px 22px 0 0; padding: 14px; background: rgba(8,8,10,.94); box-shadow: 0 -24px 90px rgba(0,0,0,.54); backdrop-filter: blur(20px); display: grid; gap: 12px; }
+    .remix-head { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
+    .remix-head h2 { margin: 0; font-size: 22px; line-height: 1; }
+    .remix-close { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; background: rgba(255,255,255,.08); color: #fff; font-size: 18px; font-weight: 1000; }
+    .remix-field { display: grid; gap: 7px; color: rgba(255,255,255,.86); font-size: 12px; font-weight: 900; }
+    .remix-input, .remix-textarea { width: 100%; border: 1px solid rgba(255,255,255,.18); border-radius: 14px; padding: 11px 12px; background: rgba(255,255,255,.08); color: #fff; font: inherit; outline: none; }
+    .remix-textarea { min-height: 96px; resize: vertical; line-height: 1.42; }
+    .remix-progress { height: 7px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.12); }
+    .remix-progress[hidden] { display: none; }
+    .remix-progress i { display: block; width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #22f4ee, #ff4f87); transition: width .28s ease; }
+    .remix-step { display: grid; gap: 12px; }
+    .remix-step[hidden] { display: none; }
+    .remix-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .remix-secondary { min-height: 46px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 0 12px; background: rgba(255,255,255,.08); color: #fff; font-weight: 1000; }
+    .remix-preview { width: 100%; height: 380px; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: #050505; display: none; }
+    .remix-preview.is-visible { display: block; }
+    .remix-status { min-height: 18px; margin: 0; color: rgba(255,255,255,.68); font-size: 12px; line-height: 1.35; }
+    @media (max-width: 360px) { .feed-actions { right: 8px; } .feed-caption { right: 76px; } .action-button { width: 48px; } .action-button b { width: 42px; height: 42px; } }
+    @media (min-width: 700px) { body { padding: 18px 0; } #homeShell { min-height: calc(100svh - 36px); height: calc(100svh - 36px); overflow: hidden; } .feed-screen, .feed, .feed-item { height: calc(100svh - 36px); } .feed-item { min-height: 640px; } }
   </style>
 </head>
 <body data-printer-artifact="fake-game-library" data-output-format="multi_html">
   <div class="phone-shell" id="homeShell">
-    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="progress.md">LOG</a></header>
-    <main class="screen feed-screen">
+    <main class="screen home-screen" id="homeScreen">
+      <header class="home-head">
+        <div class="home-bar">
+          <h1 class="home-brand">HTML<span>刷刷</span></h1>
+          <button class="start-feed" type="button" data-start-feed>开始刷刷</button>
+        </div>
+        <div class="home-search"><span>⌕</span><span>搜索游戏、玩法、Remix</span></div>
+        <nav class="home-tags" aria-label="分类">
+          <span class="active">推荐</span><span>小游戏</span><span>玄学</span><span>.io</span><span>解谜</span><span>新 Remix</span>
+        </nav>
+      </header>
+      <section class="waterfall" id="waterfall" aria-label="游戏瀑布流">${waterfall}
+      </section>
+    </main>
+    <main class="screen feed-screen" id="feedScreen" hidden>
+      <button class="feed-back" type="button" id="feedBack" aria-label="返回首页">‹</button>
       <section class="feed" id="feed">${feed}
       </section>
-      <div class="swipe-hint">SWIPE</div>
     </main>
   </div>
+  <section class="remix-modal" id="remixModal" aria-hidden="true">
+    <div class="remix-panel" role="dialog" aria-modal="true" aria-labelledby="remixTitle">
+      <header class="remix-head">
+        <div>
+          <p class="kicker">REMIX HARNESS</p>
+          <h2 id="remixTitle">Remix</h2>
+        </div>
+        <button class="remix-close" type="button" id="remixClose" aria-label="关闭">×</button>
+      </header>
+      <label class="remix-field">想怎么调整<textarea class="remix-textarea" id="remixPrompt" placeholder="比如：改成霓虹夜市版，加入连击、倒计时和截图结果卡。"></textarea></label>
+      <button class="primary" type="button" id="draftBtn">生成调整</button>
+      <div class="remix-progress" id="remixProgress" hidden><i id="remixProgressBar"></i></div>
+      <iframe class="remix-preview" id="draftPreview" title="Remix 草稿预览"></iframe>
+      <section class="remix-step" id="publishStep" data-remix-stage="name" hidden>
+        <label class="remix-field">名字<input class="remix-input" id="remixName" placeholder="给这个调整后的游戏取名"></label>
+        <div class="remix-actions-row">
+          <button class="remix-secondary" type="button" id="deleteDraftBtn">重新调整</button>
+          <button class="primary" type="button" id="publishBtn" disabled>发布</button>
+        </div>
+      </section>
+      <p class="remix-status" id="remixStatus">启动 tools/remix_harness_server.py 后可用真实生成。</p>
+    </div>
+  </section>
+  <script src="remix_manifest.js"></script>
   <script>
     window.__PRINTER_ARTIFACT__ = ${JSON.stringify(artifact)};
     (() => {
       const feed = document.getElementById('feed');
-      document.querySelectorAll('[data-jump]').forEach((button) => {
-        button.addEventListener('click', (event) => {
+      const homeScreen = document.getElementById('homeScreen');
+      const waterfall = document.getElementById('waterfall');
+      const feedScreen = document.getElementById('feedScreen');
+      const feedBack = document.getElementById('feedBack');
+      const baseItems = ${JSON.stringify(homeItems)};
+      const remixTwists = ${JSON.stringify(remixTwists)};
+      const publishedRemixes = (window.__PRINTER_REMIX_MANIFEST__ && Array.isArray(window.__PRINTER_REMIX_MANIFEST__.remixes)) ? window.__PRINTER_REMIX_MANIFEST__.remixes : [];
+      function itemFromManifest(entry, offset = 0) {
+        return {
+          id: entry.slug || entry.id || ('remix-' + offset),
+          instanceId: (entry.slug || entry.id || ('remix-' + offset)) + '-published-0',
+          file: entry.file,
+          title: entry.title || entry.slug || 'Remix',
+          sourceTitle: entry.title || entry.slug || 'Remix',
+          kind: entry.kind || 'Remix',
+          sourceGame: entry.source_file || entry.parent_slug || 'Remix Harness',
+          summary: entry.summary || (entry.agent_description && entry.agent_description.one_liner) || '本地发布的 Remix。',
+          accent: entry.accent || '#22f4ee',
+          glyph: entry.glyph || '改',
+          cover: entry.cover || ('covers/' + String(entry.file || entry.slug || 'remix').replace(/\.html$/, '') + '.png'),
+          author: '@Remix',
+          likes: 400 + offset * 37,
+          saves: 120 + offset * 17,
+          baseIndex: baseItems.length + offset,
+          loop: 0,
+          remixed: true,
+          remixPrompt: entry.prompt && entry.prompt.text ? entry.prompt.text : '',
+        };
+      }
+      const manifestItems = publishedRemixes.map(itemFromManifest).filter((item) => item.file);
+      let feedItems = baseItems.concat(manifestItems).map((item) => ({ ...item }));
+      let nextAppend = feedItems.length;
+      let activeIndex = 0;
+      let remixCount = 0;
+      let scrollFrame = 0;
+      let dockTimer = 0;
+      let harnessAvailable = false;
+      let currentDraft = null;
+      let currentRemixArticle = null;
+      let currentRemixPromptKey = '';
+      const remixPromptByFile = new Map();
+      const social = new Map(feedItems.map((item) => [item.instanceId, { liked: false, saved: false, likes: item.likes, saves: item.saves }]));
+      const escapeHtml = (value) => {
+        const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return String(value).replace(/[&<>"']/g, (char) => entities[char]);
+      };
+      const formatCount = (value) => value >= 10000 ? (value / 10000).toFixed(1) + 'w' : value >= 1000 ? (value / 1000).toFixed(1) + 'k' : String(value);
+      const embedSrc = (value) => escapeHtml(value) + '?embed=1';
+      function waterCardMarkup(item, index) {
+        const coverHeight = 132 + (index % 5) * 18 + (index % 2) * 12;
+        const coverImage = item.cover ? '<img class="water-cover-image" src="' + escapeHtml(item.cover) + '" alt="" loading="lazy" onload="this.closest(\\'.water-cover\\').classList.add(\\'has-render\\')" onerror="this.remove()">' : '';
+        return '<button class="water-card" type="button" data-open-feed="' + index + '" data-instance-id="' + escapeHtml(item.instanceId) + '" style="--game-accent:' + escapeHtml(item.accent) + '; --cover-h:' + coverHeight + 'px;">' +
+          '<span class="water-cover">' + coverImage + '<b>' + escapeHtml(item.glyph) + '</b><i>' + escapeHtml(item.kind) + '</i></span>' +
+          '<span class="water-title">' + escapeHtml(item.title) + '</span>' +
+          '<span class="water-summary">' + escapeHtml(item.summary) + '</span>' +
+          '<span class="water-meta"><span>' + escapeHtml(item.author) + '</span><span>♡ ' + formatCount(item.likes) + '</span></span>' +
+        '</button>';
+      }
+      function syncWaterfallIndices() {
+        if (!waterfall) return;
+        waterfall.querySelectorAll('.water-card[data-instance-id]').forEach((card) => {
+          const index = feedItems.findIndex((item) => item.instanceId === card.dataset.instanceId);
+          if (index >= 0) card.dataset.openFeed = String(index);
+        });
+      }
+      function appendWaterfallCard(item, index) {
+        if (!waterfall || !item || !item.file) return;
+        waterfall.insertAdjacentHTML('beforeend', waterCardMarkup(item, index));
+      }
+      function markupFor(item, index) {
+        const eager = index < 2 || item.remixed;
+        const frameSrc = embedSrc(item.file);
+        if (!social.has(item.instanceId)) social.set(item.instanceId, { liked: false, saved: false, likes: item.likes, saves: item.saves });
+        const state = social.get(item.instanceId);
+        return '<article class="feed-item" style="--game-accent:' + escapeHtml(item.accent) + '; --n:' + (index % baseItems.length) + ';" data-instance-id="' + escapeHtml(item.instanceId) + '" data-src="' + escapeHtml(item.file) + '">' +
+          '<section class="live-card is-playing" aria-label="' + escapeHtml(item.title) + ' HTML 预览">' +
+            '<iframe class="html-frame" title="' + escapeHtml(item.title) + '" src="' + (eager ? frameSrc : 'about:blank') + '" data-src="' + frameSrc + '" data-loaded="' + (eager ? 'true' : 'false') + '" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>' +
+          '</section>' +
+          '<footer class="feed-caption"><span class="avatar" aria-hidden="true"></span><h2>' + escapeHtml(item.title) + '</h2></footer>' +
+          '<aside class="feed-actions">' +
+            '<button class="action-button" type="button" data-like aria-label="点赞 ' + escapeHtml(item.title) + '"><b>' + (state.liked ? '♥' : '♡') + '</b><span data-count="like">' + formatCount(state.likes) + '</span></button>' +
+            '<button class="action-button" type="button" data-save aria-label="收藏 ' + escapeHtml(item.title) + '"><b>' + (state.saved ? '★' : '☆') + '</b><span data-count="save">' + formatCount(state.saves) + '</span></button>' +
+            '<a class="action-button" href="' + escapeHtml(item.file) + '" aria-label="打开 ' + escapeHtml(item.title) + '"><b>▶</b></a>' +
+            '<button class="action-button remix-action" type="button" data-remix aria-label="Remix ' + escapeHtml(item.title) + '"><b>↻</b></button>' +
+            '<button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>' +
+          '</aside>' +
+        '</article>';
+      }
+      if (manifestItems.length) {
+        feed.insertAdjacentHTML('beforeend', manifestItems.map((item, index) => markupFor(item, baseItems.length + index)).join(''));
+      }
+      manifestItems.forEach((item, index) => appendWaterfallCard(item, baseItems.length + index));
+      function articleList() {
+        return Array.from(feed.querySelectorAll('.feed-item'));
+      }
+      function currentIndex() {
+        const articles = articleList();
+        const rootBox = feed.getBoundingClientRect();
+        const target = rootBox.top + rootBox.height / 2;
+        let bestIndex = 0;
+        let bestDelta = Infinity;
+        articles.forEach((article, index) => {
+          const box = article.getBoundingClientRect();
+          const delta = Math.abs(box.top + box.height / 2 - target);
+          if (delta < bestDelta) {
+            bestDelta = delta;
+            bestIndex = index;
+          }
+        });
+        return bestIndex;
+      }
+      function loadFrame(article) {
+        const frame = article && article.querySelector('.html-frame');
+        if (!frame) return;
+        if (frame.dataset.loaded !== 'true') {
+          frame.src = frame.dataset.src;
+          frame.dataset.loaded = 'true';
+        }
+        bridgeFrameGestures(frame);
+      }
+      function bridgeFrameGestures(frame) {
+        if (!frame || frame.dataset.gestureBridge === 'true') return;
+        const attach = () => {
+          let doc = null;
+          try {
+            doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+          } catch (error) {
+            return;
+          }
+          if (!doc || doc.__PRINTER_FEED_GESTURE_BRIDGED__) return;
+          doc.__PRINTER_FEED_GESTURE_BRIDGED__ = true;
+          let lastX = 0;
+          let lastY = 0;
+          doc.addEventListener('wheel', (event) => {
+            if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+            event.preventDefault();
+            feed.scrollTop += event.deltaY;
+          }, { passive: false });
+          doc.addEventListener('touchstart', (event) => {
+            const touch = event.touches && event.touches[0];
+            if (!touch) return;
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+          }, { passive: true });
+          doc.addEventListener('touchmove', (event) => {
+            const touch = event.touches && event.touches[0];
+            if (!touch) return;
+            const dx = touch.clientX - lastX;
+            const dy = touch.clientY - lastY;
+            if (Math.abs(dy) <= Math.abs(dx) + 8) return;
+            event.preventDefault();
+            feed.scrollTop -= dy;
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+          }, { passive: false });
+        };
+        frame.dataset.gestureBridge = 'true';
+        frame.addEventListener('load', attach);
+        attach();
+      }
+      function loadAround(index) {
+        const articles = articleList();
+        for (let i = Math.max(0, index - 1); i <= Math.min(articles.length - 1, index + 1); i += 1) {
+          loadFrame(articles[i]);
+        }
+      }
+      function openFeedAt(index = 0) {
+        homeScreen.hidden = true;
+        feedScreen.hidden = false;
+        const articles = articleList();
+        const safeIndex = Math.max(0, Math.min(index, articles.length - 1));
+        window.requestAnimationFrame(() => {
+          if (articles[safeIndex]) feed.scrollTop = articles[safeIndex].offsetTop;
+          loadAround(safeIndex);
+          updateActive();
+        });
+      }
+      function showHome() {
+        feedScreen.hidden = true;
+        homeScreen.hidden = false;
+      }
+      function updateActive() {
+        activeIndex = currentIndex();
+        articleList().forEach((article, index) => article.classList.toggle('is-active', index === activeIndex));
+        loadAround(activeIndex);
+        ensureTail();
+      }
+      function loopItem(position) {
+        const base = baseItems[position % baseItems.length];
+        const loop = Math.floor(position / baseItems.length);
+        return {
+          ...base,
+          instanceId: base.id + '-loop-' + loop,
+          loop,
+          summary: loop > 0 ? base.summary + ' 第 ' + (loop + 1) + ' 次刷到，仍然可以继续 Remix。' : base.summary,
+        };
+      }
+      function appendMore(count = 8) {
+        const start = feedItems.length;
+        const html = [];
+        for (let offset = 0; offset < count; offset += 1) {
+          const item = loopItem(nextAppend);
+          nextAppend += 1;
+          feedItems.push(item);
+          html.push(markupFor(item, start + offset));
+        }
+        feed.insertAdjacentHTML('beforeend', html.join(''));
+      }
+      function ensureTail() {
+        if (feedItems.length - activeIndex < 5) appendMore();
+      }
+      function makeRemix(item) {
+        const twist = remixTwists[remixCount % remixTwists.length];
+        remixCount += 1;
+        const sourceTitle = item.sourceTitle || item.title.replace(/ · .*/, '');
+        return {
+          ...item,
+          id: item.id + '-remix-' + remixCount,
+          instanceId: item.id + '-remix-' + remixCount,
+          title: sourceTitle + ' · ' + twist.label,
+          sourceTitle,
+          kind: 'Remix',
+          summary: twist.summary,
+          accent: twist.accent,
+          glyph: twist.glyph,
+          remixed: true,
+          remixPrompt: '把《' + sourceTitle + '》改造成：' + twist.prompt,
+        };
+      }
+      function showRemixDock(item) {
+        window.clearTimeout(dockTimer);
+        dockTimer = window.setTimeout(() => {}, 240);
+      }
+      const remixModal = document.getElementById('remixModal');
+      const remixTitle = document.getElementById('remixTitle');
+      const remixPrompt = document.getElementById('remixPrompt');
+      const remixStatus = document.getElementById('remixStatus');
+      const remixProgress = document.getElementById('remixProgress');
+      const remixProgressBar = document.getElementById('remixProgressBar');
+      const draftPreview = document.getElementById('draftPreview');
+      const publishStep = document.getElementById('publishStep');
+      const remixName = document.getElementById('remixName');
+      const publishBtn = document.getElementById('publishBtn');
+      const draftBtn = document.getElementById('draftBtn');
+      const deleteDraftBtn = document.getElementById('deleteDraftBtn');
+      const remixClose = document.getElementById('remixClose');
+      let progressTimer = 0;
+      let progressStartedAt = 0;
+      function localSlug(value) {
+        return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'remix';
+      }
+      function slugForCurrentDraft(name) {
+        const derived = localSlug(name);
+        if (derived === 'remix' && currentDraft && currentDraft.slug_suggestion) return currentDraft.slug_suggestion;
+        return derived;
+      }
+      function remixPromptKeyFor(item, article) {
+        return item.file || article?.dataset?.src || item.instanceId || item.title || 'current';
+      }
+      function isTextEntryTarget(target) {
+        return Boolean(target && target.closest && target.closest('input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]'));
+      }
+      function setRemixStatus(text) {
+        if (remixStatus) remixStatus.textContent = text;
+      }
+      function setRemixProgress(percent, message) {
+        const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+        if (remixProgress) remixProgress.hidden = safePercent <= 0;
+        if (remixProgressBar) remixProgressBar.style.width = safePercent + '%';
+        if (message) setRemixStatus(message);
+      }
+      function stopProgressTicker() {
+        if (progressTimer) window.clearInterval(progressTimer);
+        progressTimer = 0;
+      }
+      function startProgressTicker() {
+        stopProgressTicker();
+        progressStartedAt = Date.now();
+        progressTimer = window.setInterval(() => {
+          const elapsed = Math.max(1, Math.round((Date.now() - progressStartedAt) / 1000));
+          const currentWidth = remixProgressBar ? parseFloat(remixProgressBar.style.width || '0') : 0;
+          if (currentWidth >= 42 && currentWidth < 92) {
+            setRemixStatus('模型生成中... ' + elapsed + 's，通常 20-60s。');
+          }
+        }, 1000);
+      }
+      function formatRemixError(error) {
+        let message = error && error.message ? error.message : String(error || '');
+        try {
+          const parsed = JSON.parse(message);
+          if (parsed && parsed.detail) message = String(parsed.detail);
+        } catch (parseError) {}
+        if (message === 'Failed to fetch' || /NetworkError|Load failed|fetch/i.test(message)) {
+          harnessAvailable = false;
+          return 'Harness 服务未连接。请先运行 python tools/remix_harness_server.py --port 8787，然后刷新页面。';
+        }
+        if (/model response JSON was incomplete|JSON was incomplete/i.test(message)) {
+          return '模型输出被截断。现在已改为更稳的 raw HTML 生成格式；请再点一次生成。';
+        }
+        return message;
+      }
+      const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+      async function parseJsonResponse(response) {
+        const text = await response.text();
+        if (!response.ok) throw new Error(text);
+        return text ? JSON.parse(text) : {};
+      }
+      async function pollDraftJob(jobId, initialJob) {
+        let job = initialJob;
+        while (true) {
+          if (job) {
+            setRemixProgress(job.percent || 8, job.message || '正在生成...');
+            if (job.status === 'done') return job.draft;
+            if (job.status === 'error') throw new Error(job.error || job.message || '生成失败');
+          }
+          await sleep(850);
+          const response = await fetch('/api/remix/draft-jobs/' + encodeURIComponent(jobId), { cache: 'no-store' });
+          job = await parseJsonResponse(response);
+        }
+      }
+      async function createDraftWithProgress(payload) {
+        setRemixProgress(5, '提交生成任务...');
+        const response = await fetch('/api/remix/draft-jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (response.status === 404) {
+          setRemixProgress(36, '旧版 Harness 生成中...');
+          const fallback = await fetch('/api/remix/draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return parseJsonResponse(fallback);
+        }
+        const job = await parseJsonResponse(response);
+        return pollDraftJob(job.job_id, job);
+      }
+      function openRemixPanel(article) {
+        const item = feedItems[articleList().indexOf(article)] || { file: article.dataset.src, title: article.querySelector('h2')?.textContent || 'Remix' };
+        currentRemixArticle = article;
+        currentRemixPromptKey = remixPromptKeyFor(item, article);
+        currentDraft = null;
+        remixTitle.textContent = 'Remix ' + item.title;
+        remixPrompt.value = remixPromptByFile.get(currentRemixPromptKey) || '';
+        remixName.value = '';
+        draftPreview.removeAttribute('src');
+        draftPreview.classList.remove('is-visible');
+        setRemixProgress(0, '');
+        publishStep.hidden = true;
+        publishBtn.disabled = true;
+        remixModal.classList.add('is-visible');
+        remixModal.setAttribute('aria-hidden', 'false');
+        setRemixStatus(harnessAvailable ? '输入一句调整，然后生成。' : 'Harness 服务未连接，当前会回退成本地假 Remix。');
+      }
+      function closeRemixPanel() {
+        remixModal.classList.remove('is-visible');
+        remixModal.setAttribute('aria-hidden', 'true');
+      }
+      async function createHarnessDraft() {
+        if (!currentRemixArticle) return;
+        const item = feedItems[articleList().indexOf(currentRemixArticle)] || { file: currentRemixArticle.dataset.src };
+        const promptText = remixPrompt.value.trim();
+        if (currentRemixPromptKey) remixPromptByFile.set(currentRemixPromptKey, remixPrompt.value);
+        if (!promptText) {
+          setRemixStatus('先写一句想怎么调整。');
+          remixPrompt.focus();
+          return;
+        }
+        draftBtn.disabled = true;
+        publishBtn.disabled = true;
+        publishStep.hidden = true;
+        setRemixProgress(12, '准备生成调整...');
+        startProgressTicker();
+        try {
+          currentDraft = await createDraftWithProgress({
+            source_file: item.file,
+            prompt_text: promptText,
+            voice_transcript: ''
+          });
+          draftPreview.src = currentDraft.preview_url;
+          draftPreview.classList.add('is-visible');
+          remixName.value = currentDraft.title || item.title + ' Remix';
+          publishStep.hidden = false;
+          publishBtn.disabled = false;
+          setRemixProgress(100, '调整完成，取个名字后发布。');
+        } catch (error) {
+          setRemixStatus('生成失败：' + formatRemixError(error));
+        } finally {
+          stopProgressTicker();
+          draftBtn.disabled = false;
+        }
+      }
+      async function publishHarnessDraft() {
+        if (!currentDraft || !currentRemixArticle) return;
+        publishBtn.disabled = true;
+        setRemixStatus('正在发布到 output...');
+        try {
+          const title = (remixName.value || currentDraft.title || 'Remix').trim();
+          const response = await fetch('/api/remix/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              draft_id: currentDraft.draft_id,
+              slug: slugForCurrentDraft(title),
+              title,
+              agent_description: currentDraft.agent_description || {}
+            })
+          });
+          if (!response.ok) throw new Error(await response.text());
+          const result = await response.json();
+          const newItem = itemFromManifest(result.manifest_entry || {}, feedItems.length);
+          const index = articleList().indexOf(currentRemixArticle);
+          feedItems.splice(index + 1, 0, newItem);
+          currentRemixArticle.insertAdjacentHTML('afterend', markupFor(newItem, index + 1));
+          appendWaterfallCard(newItem, index + 1);
+          syncWaterfallIndices();
+          const inserted = currentRemixArticle.nextElementSibling;
+          window.requestAnimationFrame(() => {
+            inserted.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            loadFrame(inserted);
+            updateActive();
+          });
+          setRemixStatus('已发布：' + result.file);
+          currentDraft = null;
+        } catch (error) {
+          publishBtn.disabled = false;
+          setRemixStatus('发布失败：' + formatRemixError(error));
+        }
+      }
+      async function deleteHarnessDraft() {
+        if (!currentDraft) {
+          closeRemixPanel();
+          return;
+        }
+        const draftId = currentDraft.draft_id;
+        currentDraft = null;
+        try {
+          await fetch('/api/remix/draft/' + encodeURIComponent(draftId), { method: 'DELETE' });
+        } catch (error) {}
+        draftPreview.removeAttribute('src');
+        draftPreview.classList.remove('is-visible');
+        publishStep.hidden = true;
+        publishBtn.disabled = true;
+        setRemixStatus('已丢弃草稿，可以继续改文本再生成。');
+      }
+      fetch('/api/remix/sources', { cache: 'no-store' })
+        .then((response) => {
+          harnessAvailable = response.ok;
+          setRemixStatus(harnessAvailable ? 'Harness 服务已连接。' : '启动 tools/remix_harness_server.py 后可用真实生成。');
+        })
+        .catch(() => {
+          harnessAvailable = false;
+          setRemixStatus('启动 tools/remix_harness_server.py 后可用真实生成。');
+        });
+      remixClose.addEventListener('click', closeRemixPanel);
+      remixPrompt.addEventListener('input', () => {
+        if (currentRemixPromptKey) remixPromptByFile.set(currentRemixPromptKey, remixPrompt.value);
+      });
+      draftBtn.addEventListener('click', createHarnessDraft);
+      publishBtn.addEventListener('click', publishHarnessDraft);
+      deleteDraftBtn.addEventListener('click', deleteHarnessDraft);
+      homeScreen.addEventListener('click', (event) => {
+        const start = event.target.closest('[data-start-feed]');
+        const card = event.target.closest('[data-open-feed]');
+        if (start) {
+          openFeedAt(0);
+        } else if (card) {
+          openFeedAt(Number(card.dataset.openFeed || 0));
+        }
+      });
+      feedBack.addEventListener('click', showHome);
+      function syncArticleSocial(article) {
+        const item = feedItems[articleList().indexOf(article)];
+        if (!item) return;
+        const state = social.get(item.instanceId);
+        if (!state) return;
+        article.classList.toggle('is-liked', state.liked);
+        article.classList.toggle('is-saved', state.saved);
+        const likeButton = article.querySelector('[data-like] b');
+        const saveButton = article.querySelector('[data-save] b');
+        if (likeButton) likeButton.textContent = state.liked ? '♥' : '♡';
+        if (saveButton) saveButton.textContent = state.saved ? '★' : '☆';
+        const likeCount = article.querySelector('[data-count="like"]');
+        const saveCount = article.querySelector('[data-count="save"]');
+        if (likeCount) likeCount.textContent = formatCount(state.likes);
+        if (saveCount) saveCount.textContent = formatCount(state.saves);
+      }
+      function insertRemix(article) {
+        const index = articleList().indexOf(article);
+        const source = feedItems[index] || feedItems[activeIndex] || baseItems[0];
+        const remix = makeRemix(source);
+        remix.likes = Math.max(1, Math.floor((source.likes || 1) * .42));
+        remix.saves = Math.max(1, Math.floor((source.saves || 1) * .48));
+        feedItems.splice(index + 1, 0, remix);
+        article.insertAdjacentHTML('afterend', markupFor(remix, index + 1));
+        showRemixDock(remix);
+        const inserted = article.nextElementSibling;
+        window.requestAnimationFrame(() => {
+          inserted.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          loadFrame(inserted);
+          updateActive();
+        });
+      }
+      feed.addEventListener('click', (event) => {
+        const action = event.target.closest('[data-jump], [data-remix], [data-like], [data-save]');
+        if (!action) return;
+        const article = action.closest('.feed-item');
+        if (action.matches('[data-like], [data-save]')) {
           event.preventDefault();
           event.stopPropagation();
-          const items = Array.from(document.querySelectorAll('.feed-item'));
-          const index = Number(button.dataset.jump) % items.length;
-          items[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+          const item = feedItems[articleList().indexOf(article)];
+          const state = item && social.get(item.instanceId);
+          if (!state) return;
+          if (action.matches('[data-like]')) {
+            state.liked = !state.liked;
+            state.likes += state.liked ? 1 : -1;
+          } else {
+            state.saved = !state.saved;
+            state.saves += state.saved ? 1 : -1;
+          }
+          syncArticleSocial(article);
+        } else if (action.matches('[data-jump]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          ensureTail();
+          const next = Math.min(articleList().length - 1, currentIndex() + 1);
+          articleList()[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (action.matches('[data-remix]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (harnessAvailable) {
+            openRemixPanel(article);
+          } else {
+            insertRemix(article);
+          }
+        }
+      });
+      feed.addEventListener('scroll', () => {
+        if (scrollFrame) return;
+        scrollFrame = window.requestAnimationFrame(() => {
+          scrollFrame = 0;
+          updateActive();
         });
-      });
+      }, { passive: true });
       window.addEventListener('keydown', (event) => {
-        const items = Array.from(document.querySelectorAll('.feed-item'));
-        const current = Math.max(0, Math.round(feed.scrollTop / Math.max(1, feed.clientHeight)));
-        if (event.key === 'ArrowDown') items[Math.min(items.length - 1, current + 1)].scrollIntoView({ behavior: 'smooth', block: 'start' });
-        if (event.key === 'ArrowUp') items[Math.max(0, current - 1)].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (isTextEntryTarget(event.target)) return;
+        if (remixModal.classList.contains('is-visible')) {
+          if (event.key === 'Escape') closeRemixPanel();
+          return;
+        }
+        if (feedScreen.hidden) {
+          if (event.key === 'Enter') openFeedAt(0);
+          return;
+        }
+        const articles = articleList();
+        const current = currentIndex();
+        if (event.key === 'ArrowDown') {
+          ensureTail();
+          articles[Math.min(articles.length - 1, current + 1)].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (event.key === 'ArrowUp') articles[Math.max(0, current - 1)].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (event.key.toLowerCase() === 'r') {
+          if (harnessAvailable) openRemixPanel(articles[current]);
+          else insertRemix(articles[current]);
+        }
       });
-      window.render_home_to_text = () => JSON.stringify({ coordinate_system: 'vertical snap feed', items: ${games.length}, visibleIndex: Math.round(feed.scrollTop / Math.max(1, feed.clientHeight)) });
+      loadAround(0);
+      window.remixCurrent = () => {
+        const article = articleList()[currentIndex()];
+        if (feedScreen.hidden) openFeedAt(currentIndex());
+        if (harnessAvailable) openRemixPanel(article);
+        else insertRemix(article);
+      };
+      window.render_home_to_text = () => JSON.stringify({
+        coordinate_system: 'vertical infinite html feed',
+        baseItems: baseItems.length,
+        items: feedItems.length,
+        visibleIndex: activeIndex,
+        visibleTitle: feedItems[activeIndex] ? feedItems[activeIndex].title : null,
+        remixes: remixCount,
+        publishedRemixes: publishedRemixes.length,
+        harnessAvailable,
+        supportsRemix: true,
+      });
     })();
   </script>
 </body>
@@ -1099,13 +2217,37 @@ function writeJson(file, data) {
   fs.writeFileSync(path.join(outputDir, file), JSON.stringify(data, null, 2), 'utf8');
 }
 
+function ensureRemixManifest() {
+  const manifestPath = path.join(outputDir, 'remix_manifest.json');
+  let manifest = { schema_version: 1, remixes: [] };
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+      if (existing && Array.isArray(existing.remixes)) {
+        manifest = {
+          schema_version: existing.schema_version || 1,
+          remixes: existing.remixes,
+        };
+      }
+    } catch {}
+  } else {
+    writeJson('remix_manifest.json', manifest);
+  }
+  fs.writeFileSync(
+    path.join(outputDir, 'remix_manifest.js'),
+    'window.__PRINTER_REMIX_MANIFEST__ = ' + JSON.stringify(manifest, null, 2) + ';\n',
+    'utf8',
+  );
+}
+
 fs.writeFileSync(path.join(outputDir, 'index.html'), indexPage(), 'utf8');
 for (const game of games) fs.writeFileSync(path.join(outputDir, game.file), gamePage(game), 'utf8');
+ensureRemixManifest();
 
-const files = ['index.html', ...games.map((game) => game.file)];
+const files = ['index.html', ...games.map((game) => game.file), 'remix_manifest.json', 'remix_manifest.js'];
 writeJson('run_report.json', {
   output_format: 'multi_html',
-  complexity: { total: 78, components: 24, interactions: 24, pages: 12, data_flow: 18 },
+  complexity: { total: 84, components: 26, interactions: 28, pages: games.length, data_flow: 18 },
   intent_plan: pipelinePlan,
   warnings: [],
   files,
@@ -1122,4 +2264,4 @@ writeJson('fake_manifest.json', {
   games: games.map((game) => artifactFor(game).game),
 });
 
-console.log(`Generated ${files.length} portrait HTML files in ${outputDir}`);
+console.log(`Generated ${files.length} fake-library files in ${outputDir}`);

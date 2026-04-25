@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-2d26676edea2",
+  "slug": "orange-grove-clicker",
+  "title": "橘子摇晃果园",
+  "source_file": "brainrot-clicker.html",
+  "parent_slug": "brainrot-clicker",
+  "lineage": [
+    "brainrot-clicker",
+    "orange-grove-clicker"
+  ],
+  "created_at": "2026-04-25T08:11:37.408786+00:00",
+  "prompt": {
+    "text": "变成橘子主题",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "橘子主题下落接果点击器：摇晃果树、点击接住、升级果园。",
+    "core_loop": "点击大按钮摇晃橘子树，让橘子物理下落；在画布上点击飞落的橘子将其接住入库；用橘子购买浇水、肥料、蜂箱与阳光灯四项升级，提升单次摇晃产量与自动掉落速度；每10颗橘子自动折算为1杯橙汁，用于分享比拼。",
+    "controls": "点击「SHAKE TREE」大按钮摇晃果树；点击画布中下落中的橘子进行接果（金橘子价值5倍）；点击商店行购买升级；点击「分享收成」复制文案。",
+    "mechanics": [
+      "摇晃产果：点击按钮一次性产生多颗带物理的橘子，初始位置在树冠随机点",
+      "点击接果：玩家需在橘子落地前点中画布，金橘子提供5倍收益",
+      "重力与摆动：橘子受重力加速下落，并随正弦风场左右摇摆，超时或落地即消失",
+      "CPS自动掉落：升级后果树自动产果，无需点击",
+      "榨汁单位：每10颗库存橘子计为1杯橙汁，作为统一分享单位"
+    ],
+    "visual_language": "暖橙与草绿的自然果园色调，画布采用深褐到暗橙的黄昏渐变，右上角有朦胧太阳与半透明云朵，底部草地呈波浪起伏；橘子以圆形带绿叶图标下落，接住时溅射橙黄果汁粒子；右下角拟人化橘子吉祥物随节奏晃动。",
+    "state_model": "oranges(库存橘子), shake(单次摇晃产量), cps(每秒自动掉落), bought[4](升级等级), falling[](活跃下落橘子对象数组：x,y,vy,r,life,gold), particles[](果汁溅射粒子数组), caught(累计接住数), missed(累计错过估算), t(全局时间), autoTimer(自动产果累加器), shakeOffset(树摇晃幅度)",
+    "share_hook": "点击「分享收成」按钮自动生成并复制文案：'我在橘子摇晃果园接住了 X 颗橘子，榨了 Y 杯橙汁！'，以橙汁杯数作为核心攀比单位。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链无CDN",
+      "单文件HTML自包含"
+    ],
+    "next_evolution_hooks": [
+      "加入季节系统（春夏秋冬影响掉落速度与风向）",
+      "加入连击倍率（连续接住触发果汁喷泉与双倍金橘子）",
+      "加入果园装扮与稀有水果图鉴收集"
+    ]
+  },
+  "files": {
+    "html": "orange-grove-clicker.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

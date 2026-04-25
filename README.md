@@ -39,12 +39,22 @@ pip install -r requirements.txt
 环境变量:
 
 ```bash
-# 必填
-OPENAI_API_KEY=your_api_key
-OPENAI_BASE_URL=https://api.openai.com/v1
+# 必填，OpenRouter + Kimi K2.6
+# Either key name works. OPENAI_API_KEY is preferred; OPEN_ROUTER_API is supported as a local alias.
+OPENAI_API_KEY=your_openrouter_api_key
+OPEN_ROUTER_API=
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
 
 # 可选
-OPENAI_MODEL=gpt-4o
+OPENAI_MODEL=moonshotai/kimi-k2.6
+OPENAI_REMIX_MODEL=moonshotai/kimi-k2.6
+OPENROUTER_HTTP_REFERER=http://127.0.0.1:8787
+OPENROUTER_X_TITLE=Printer Remix Harness
+
+# 语音转录通常需要单独支持 /audio/transcriptions 的端点。
+OPENAI_TRANSCRIBE_API_KEY=
+OPENAI_TRANSCRIBE_BASE_URL=https://api.openai.com/v1
+OPENAI_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe
 HEADLESS=true
 WAIT_TIME=5
 MAX_TOKENS=16000
@@ -86,6 +96,22 @@ python web_printer_selenium.py \
 python web_printer_selenium.py https://example.com output.html 5
 ```
 
+### Remix Harness
+
+本地 remix 服务会把 `output/index.html` 里的 Remix 按钮接到真实生成流程：
+
+```bash
+python tools/remix_harness_server.py --port 8787
+```
+
+然后打开：
+
+```text
+http://127.0.0.1:8787/index.html
+```
+
+点击任意游戏的 Remix，输入文本 prompt 或上传/录制语音。生成草稿后可预览、编辑 agent description，并发布到 `output/<slug>.html`。发布时还会写入 `output/<slug>.remix.json` 和 `output/remix_manifest.json`，下一次 remix 会优先把这份 description 作为 agent 上下文。
+
 ## 输出类型
 
 1. single_html
@@ -108,6 +134,12 @@ python web_printer_selenium.py https://example.com output.html 5
 每次执行会生成:
 - 代码文件（单文件或多文件）
 - run_report.json（复杂度评分、意图规划、警告、产物清单）
+
+Remix Harness 发布时额外维护:
+- `<slug>.html`
+- `<slug>.remix.json`
+- `remix_manifest.json`
+- `remix_manifest.js`
 
 ## 注意事项
 

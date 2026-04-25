@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-4804456229e5",
+  "slug": "mcti",
+  "title": "MCTI 我的世界生物人格测评",
+  "source_file": "sbti-fake.html",
+  "parent_slug": "sbti-fake",
+  "lineage": [
+    "sbti-fake",
+    "mcti"
+  ],
+  "created_at": "2026-04-25T07:43:44.891979+00:00",
+  "prompt": {
+    "text": "改成MineCraft生物版本的 MCTI, 来做人格测试",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "基于 Minecraft 生物群系的 16 型人格测评（MCTI），在合成台揭晓你的主副型生物人格。",
+    "core_loop": "玩家在 8 个不同生物群系场景中做出选择，收集人格精华；答题结束后进入工作台合成阶段，经验粒子飞升并播放附魔动画，最终揭晓主型+副型组合结果。",
+    "controls": "触摸点击单选答案；在合成界面点击“合成结果”按钮触发揭晓；结果页一键复制召唤指令。",
+    "mechanics": [
+      "生物群系光照系统：每道题切换背景与选项边框色，模拟平原、沙漠、洞穴、下界、末地环境。",
+      "主副型配方机制：记录四维分值最高的两项，组合出 16 种 MCTI 亚型（如苦力怕·末影人亚型）。",
+      "工作台合成仪式：答题结束后进入合成台界面，精华按分值自动填入 2x2 槽位，用户需点击合成触发进度与粒子动画后才能看到结果。",
+      "月光倒计时条：每题附带可随 advanceTime(ms) 推进的衰减条，超时自动低分兜底。",
+      "世界种子与召唤指令：基于答案序列哈希生成唯一 Seed 与 /summon 命令，作为分享点。"
+    ],
+    "visual_language": "Minecraft 大地色系（草绿、泥土棕、矿石蓝、下界红），等宽字体营造像素感；昼夜/群系背景渐变切换；方块加载式转场；经验条与附魔台 UI。",
+    "state_model": "state.phase ∈ {quiz, crafting, result}; state.scores 记录四维分值; state.result / state.subResult 记录主副型; state.index 为当前题号; state.timer 控制单题倒计时。",
+    "share_hook": "结果页展示唯一 MCTI 世界种子与可复制的 /summon 指令文本，玩家可一键复制分享到群聊或社交平台。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材与字体",
+      "保留 printer artifact、phone-shell 与 pipeline API"
+    ],
+    "next_evolution_hooks": [
+      "加入基于 Canvas 的像素生物头像绘制",
+      "用 Web Audio API 模拟 MC 音效（嘶嘶声、工作台叮当声）",
+      "本地存储历史结果并对比种子相似度"
+    ]
+  },
+  "files": {
+    "html": "mcti.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

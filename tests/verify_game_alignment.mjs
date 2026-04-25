@@ -84,6 +84,16 @@ requireIncludes('stimulation-fake.html', [
   'drawModule',
 ]);
 
+requireIncludes('io-arena-template.html', [
+  'window.__IO_TEMPLATE__',
+  'controlScheme',
+  'weaponDrops',
+  'spawnBot',
+  'drawJoystick',
+  'applyArenaSkin',
+  'leaderboard',
+]);
+
 if (failures.length) {
   console.error('Game alignment verification failed:');
   for (const failure of failures) console.error(`- ${failure}`);

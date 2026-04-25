@@ -1,0 +1,176 @@
+{
+  "intent": "建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。",
+  "generated_at": "2026-04-25T08:22:27.084Z",
+  "games": [
+    {
+      "id": "sbti-fake",
+      "file": "sbti-fake.html",
+      "cover": "covers/sbti-fake.png",
+      "title": "伪 SBTI 崩溃人格测评",
+      "kind": "测评",
+      "source_game": "SBTI / MBTI 式社交测评",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "sheep-stack",
+      "file": "sheep-stack.html",
+      "cover": "covers/sheep-stack.png",
+      "title": "羊块堆堆消",
+      "kind": "消除",
+      "source_game": "羊了个羊式堆叠三消",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "brainrot-clicker",
+      "file": "brainrot-clicker.html",
+      "cover": "covers/brainrot-clicker.png",
+      "title": "脑腐咔嗒工厂",
+      "kind": "点击",
+      "source_game": "Italian Brainrot / 增量点击器",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "stimulation-fake",
+      "file": "stimulation-fake.html",
+      "cover": "covers/stimulation-fake.png",
+      "title": "刺激值按钮",
+      "kind": "点击",
+      "source_game": "Stimulation Clicker 式过载点击器",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "cattle-bump",
+      "file": "cattle-bump.html",
+      "cover": "covers/cattle-bump.png",
+      "title": "疯羊碰碰场",
+      "kind": "动作",
+      "source_game": "Crazy Cattle 3D 的 2D 撞飞版",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "password-hell",
+      "file": "password-hell.html",
+      "cover": "covers/password-hell.png",
+      "title": "密码地狱试炼",
+      "kind": "解谜",
+      "source_game": "The Password Game 式规则升级",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "infinite-craft-fake",
+      "file": "infinite-craft-fake.html",
+      "cover": "covers/infinite-craft-fake.png",
+      "title": "无限乱炖实验室",
+      "kind": "合成",
+      "source_game": "Infinite Craft 式元素合成",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "million-checkboxes-fake",
+      "file": "million-checkboxes-fake.html",
+      "cover": "covers/million-checkboxes-fake.png",
+      "title": "四百个勾选框",
+      "kind": "协作幻觉",
+      "source_game": "One Million Checkboxes 式集体勾选",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "dino-fake",
+      "file": "dino-fake.html",
+      "cover": "covers/dino-fake.png",
+      "title": "断网小蜥蜴",
+      "kind": "跑酷",
+      "source_game": "Google Dino 式离线跑酷",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "garden-idle",
+      "file": "garden-idle.html",
+      "cover": "covers/garden-idle.png",
+      "title": "摸鱼花园",
+      "kind": "放置",
+      "source_game": "Grow a Garden 式轻放置",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "agar-fake",
+      "file": "agar-fake.html",
+      "cover": "covers/agar-fake.png",
+      "title": "圆点吞吞.io",
+      "kind": ".io",
+      "source_game": "Agar.io 式吞噬成长",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "io-arena-template",
+      "file": "io-arena-template.html",
+      "cover": "covers/io-arena-template.png",
+      "title": "空投乱斗.io 模板",
+      "kind": "模板",
+      "source_game": "Wings.io / Starblast.io / 俯视 .io 射击母版",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "mystic-score",
+      "file": "mystic-score.html",
+      "cover": "covers/mystic-score.png",
+      "title": "赛博玄学评分器",
+      "kind": "玄学",
+      "source_game": "玄学运势 / 分享卡测评",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "tarot-daily",
+      "file": "tarot-daily.html",
+      "cover": "covers/tarot-daily.png",
+      "title": "打工塔罗三连",
+      "kind": "塔罗",
+      "source_game": "Tarot.js / TarotSchema 式三牌阵",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "bazi-lite",
+      "file": "bazi-lite.html",
+      "cover": "covers/bazi-lite.png",
+      "title": "八字偏科生成器",
+      "kind": "算命",
+      "source_game": "Gmuli-Bazi-Calc 式四柱输入",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "astro-wheel",
+      "file": "astro-wheel.html",
+      "cover": "covers/astro-wheel.png",
+      "title": "星盘甩锅轮",
+      "kind": "看盘",
+      "source_game": "CircularNatalHoroscopeJS / AstroChart 式圆盘",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "yijing-coins",
+      "file": "yijing-coins.html",
+      "cover": "covers/yijing-coins.png",
+      "title": "六爻离谱铜钱",
+      "kind": "易经",
+      "source_game": "I Ching coin divination flow",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "output_format": "multi_html",
+  "complexity": {
+    "total": 84,
+    "components": 26,
+    "interactions": 28,
+    "pages": 17,
+    "data_flow": 18
+  },
+  "intent_plan": {
+    "summary": "基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库",
+    "ui_requirements": [
+      "所有游戏优先适配手机竖屏，桌面端居中显示手机 shell",
+      "动作和实时反馈类游戏使用 canvas playfield",
+      "每个产物必须自包含、无外链、可双击打开"
+    ],
+    "technical_requirements": [
+      "每个游戏暴露 window.render_game_to_text()",
+      "每个游戏暴露 window.advanceTime(ms)",
+      "输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"
+    ],
+    "complexity_bias": 18,
+    "output_hint": "multi_html",
+    "confidence": 0.82,
+    "requires_interactivity": true,
+    "interaction_features": [
+      "触摸操作",
+      "Canvas 游戏循环",
+      "本地状态管理",
+      "移动端竖屏布局"
+    ]
+  },
+  "warnings": [],
+  "files": [
+    "index.html",
+    "sbti-fake.html",
+    "sheep-stack.html",
+    "brainrot-clicker.html",
+    "stimulation-fake.html",
+    "cattle-bump.html",
+    "password-hell.html",
+    "infinite-craft-fake.html",
+    "million-checkboxes-fake.html",
+    "dino-fake.html",
+    "garden-idle.html",
+    "agar-fake.html",
+    "io-arena-template.html",
+    "mystic-score.html",
+    "tarot-daily.html",
+    "bazi-lite.html",
+    "astro-wheel.html",
+    "yijing-coins.html",
+    "remix_manifest.json",
+    "remix_manifest.js"
+  ],
+  "generated_at": "2026-04-25T08:22:27.084Z",
+  "source": {
+    "entrypoint": "printer/web_printer_selenium.py",
+    "followed_logic": [
+      "parse intent",
+      "plan intent",
+      "score complexity",
+      "generate artifacts",
+      "write run_report"
+    ],
+    "deterministic_generator": "printer/tools/generate_fake_library.mjs"
+  }
+}

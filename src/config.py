@@ -25,16 +25,23 @@ class Config:
     @classmethod
     def from_env(cls) -> "Config":
         """从环境变量加载配置"""
-        api_key = os.environ.get("OPENAI_API_KEY")
+        uses_openrouter_alias = bool(os.environ.get("OPEN_ROUTER_API") or os.environ.get("OPENROUTER_API_KEY"))
+        base_url = os.environ.get(
+            "OPENAI_BASE_URL",
+            "https://openrouter.ai/api/v1" if uses_openrouter_alias else "https://api.openai.com/v1",
+        )
+        openrouter_key = os.environ.get("OPEN_ROUTER_API") or os.environ.get("OPENROUTER_API_KEY")
+        standard_key = os.environ.get("OPENAI_API_KEY")
+        api_key = (openrouter_key or standard_key) if "openrouter.ai" in base_url else (standard_key or openrouter_key)
         if not api_key:
-            raise ValueError("需要设置 OPENAI_API_KEY 环境变量")
+            raise ValueError("需要设置 OPENAI_API_KEY 或 OPEN_ROUTER_API 环境变量")
 
-        base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        default_model = "moonshotai/kimi-k2.6" if "openrouter.ai" in base_url else "gpt-4o"
 
         return cls(
             openai_api_key=api_key,
             openai_base_url=base_url,
-            model=os.environ.get("OPENAI_MODEL", "gpt-4o"),
+            model=os.environ.get("OPENAI_MODEL", default_model),
             headless=os.environ.get("HEADLESS", "true").lower() == "true",
             default_wait_time=int(os.environ.get("WAIT_TIME", "5")),
             max_tokens=int(os.environ.get("MAX_TOKENS", "16000")),

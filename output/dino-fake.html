@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <link rel="icon" href="data:,">
-  <title>无限乱炖实验室 - 赝品库</title>
+  <title>断网小蜥蜴 - 赝品库</title>
   <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
   <style>
-    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #34a853; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
+    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #5f6368; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
     body { display: grid; place-items: start center; overscroll-behavior: none; }
@@ -118,156 +118,44 @@
     @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
   </style>
 </head>
-<body data-printer-artifact="fake-game-library" data-game-page="infinite-craft-fake" data-output-format="multi_html">
+<body data-printer-artifact="fake-game-library" data-game-page="dino-fake" data-output-format="multi_html">
   <div class="phone-shell">
-    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="infinite-craft-fake.html">重载</a></header>
+    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="dino-fake.html">重载</a></header>
     <main class="screen play-screen">
       <section class="hero play-hero">
-        <p class="kicker">合成</p>
-        <h1>无限乱炖实验室</h1>
+        <p class="kicker">跑酷</p>
+        <h1>断网小蜥蜴</h1>
       </section>
       <section class="game-stage">
         
-      <section class="panel craft-machine">
-        <div class="slots"><span id="slotA">?</span><b>+</b><span id="slotB">?</span></div>
-        <div class="craft-toolbar">
-          <button class="primary" id="combineBtn">合成</button>
-          <button class="primary" id="stewBtn">乱炖 x5</button>
-        </div>
-        <p id="craftLog">从四元素开始。</p>
-        <div class="craft-stats"><span id="craftStats">4 DISCOVERED</span><span id="craftSpace">6 PAIRS</span></div>
-        <div class="craft-history" id="historyRail"></div>
-        <label class="field-label">搜索概念<input id="searchInput" class="input" placeholder="水 / 热搜 / SBTI"></label>
-      </section>
-      <section class="chip-pool" id="pool"></section>
+      <canvas id="gameCanvas" width="390" height="520" class="play-canvas"></canvas>
+      <section class="panel compact"><p id="hud">点击跳跃</p><button class="primary" id="resetBtn">重开</button></section>
     
       </section>
     </main>
   </div>
   <script>
-    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T08:22:27.084Z","game":{"id":"infinite-craft-fake","file":"infinite-craft-fake.html","cover":"covers/infinite-craft-fake.png","title":"无限乱炖实验室","kind":"合成","source_game":"Infinite Craft 式元素合成","mobile_portrait":true,"canvas_playfield":false},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":44,"components":14,"interactions":12,"pages":3,"data_flow":9}};
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T08:22:27.084Z","game":{"id":"dino-fake","file":"dino-fake.html","cover":"covers/dino-fake.png","title":"断网小蜥蜴","kind":"跑酷","source_game":"Google Dino 式离线跑酷","mobile_portrait":true,"canvas_playfield":true},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":58,"components":14,"interactions":20,"pages":3,"data_flow":9}};
     (() => {
       
-      const key=(a,b)=>[a,b].sort().join('+');
-      const saveKey='printer_fake_infinite_craft_v3';
-      const recipeList=[
-        ['火','水','蒸汽','matter'],['土','水','泥','matter'],['火','风','烟','air'],['火','土','陶','matter'],['水','风','浪','water'],['土','风','尘','air'],
-        ['火','泥','砖','city'],['蒸汽','风','云','air'],['云','火','热搜','internet'],['泥','热搜','抽象','meme'],['抽象','水','冷笑话','meme'],
-        ['砖','风','房贷','city'],['房贷','热搜','打工人','life'],['冷笑话','火','群聊','internet'],['抽象','群聊','SBTI','meme'],
-        ['尘','水','咖啡','life'],['咖啡','打工人','续命','life'],['云','咖啡','电子雨','internet'],['电子雨','群聊','First Discovery','meme'],
-        ['SBTI','热搜','人格塌房','meme'],['羊','抽象','羊块宇宙','game'],['土','打工人','工位盆栽','life'],['风','咖啡','凌晨灵感','life'],
-        ['水','SBTI','流体人格','meme'],['火','群聊','红温现场','internet']
-      ];
-      const combos=Object.fromEntries(recipeList.map((row)=>[key(row[0],row[1]),row[2]]));
-      window.__CRAFT_RECIPES__ = combos;
-      window.__CRAFT_ENGINE__ = { procedural: true, randomStew: true, localStorageKey: saveKey, recipeList: recipeList.length };
-      const recipeCache = {};
-      let craftHistory = [];
-      const itemMeta = {
-        水:{family:'water',depth:0},火:{family:'fire',depth:0},风:{family:'air',depth:0},土:{family:'earth',depth:0},
-        羊:{family:'game',depth:1},脑腐:{family:'meme',depth:1},群聊:{family:'internet',depth:1}
-      };
-      const baseItems=['水','火','风','土','羊','脑腐','群聊'];
-      const state={items:[...baseItems],selected:[],last:'',query:'',totalCombines:0,autoStewCount:0};
-      const families=['meme','life','internet','game','city','food','weather','machine','animal','dream'];
-      const prefixes=['赛博','量子','凌晨三点的','反向','会眨眼的','可食用','玄学','自带BGM的','打工版','低电量','全自动','已读不回的'];
-      const middles=['奶茶','羊群','工位','热搜','房贷','云朵','表情包','按钮','会议','锦鲤','验证码','小恐龙','圆点','花园'];
-      const suffixes=['管理局','模拟器','发生器','宇宙','浓汤','人格','补丁','副本','盲盒','瀑布','电台','协议','考古现场','连锁反应'];
-      function hash(text){let h=2166136261;for(const ch of text){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
-      function depthOf(item){return itemMeta[item]?itemMeta[item].depth:1;}
-      function familyOf(item){return itemMeta[item]?itemMeta[item].family:families[hash(item)%families.length];}
-      function rememberMeta(item,a,b,family){itemMeta[item]={family,depth:Math.max(depthOf(a),depthOf(b))+1,bornFrom:[a,b]};}
-      recipeList.forEach((row)=>{ rememberMeta(row[2],row[0],row[1],row[3]); });
-      function restore(){
-        try{
-          const raw=localStorage.getItem(saveKey);
-          if(!raw)return;
-          const saved=JSON.parse(raw);
-          if(Array.isArray(saved.items)&&saved.items.length>=4)state.items=[...new Set([...baseItems,...saved.items])].slice(0,600);
-          if(Array.isArray(saved.history))craftHistory=saved.history.slice(-40);
-          if(saved.meta&&typeof saved.meta==='object')Object.assign(itemMeta,saved.meta);
-          state.totalCombines=Number(saved.totalCombines)||0;
-        }catch{}
-      }
-      function save(){
-        try{localStorage.setItem(saveKey,JSON.stringify({items:state.items.slice(-600),history:craftHistory.slice(-40),meta:itemMeta,totalCombines:state.totalCombines}));}catch{}
-      }
-      function makeProceduralResult(a,b){
-        const k=key(a,b);
-        if(recipeCache[k])return recipeCache[k];
-        const h=hash(k);
-        const family=families[(h+familyOf(a).length+familyOf(b).length)%families.length];
-        const p=prefixes[h%prefixes.length];
-        const m=middles[(h>>>4)%middles.length];
-        const s=suffixes[(h>>>9)%suffixes.length];
-        const pattern=h%7;
-        let result;
-        if(pattern===0)result=p+a;
-        else if(pattern===1)result=b+s;
-        else if(pattern===2)result=p+m+s;
-        else if(pattern===3)result=a+'味'+b;
-        else if(pattern===4)result=b+'和'+a+'的孩子';
-        else if(pattern===5)result=p+b+'协议';
-        else result=a+b+'浓汤';
-        if(result.length>12)result=result.slice(0,10)+'*';
-        recipeCache[k]=result;
-        rememberMeta(result,a,b,family);
-        return result;
-      }
-      function resultFor(a,b){
-        const k=key(a,b);
-        const explicit=combos[k];
-        if(explicit){ if(!itemMeta[explicit])rememberMeta(explicit,a,b,'classic'); return explicit; }
-        return makeProceduralResult(a,b);
-      }
-      function addHistory(a,b,result,isNew,mode){
-        craftHistory.push({a,b,result,isNew,mode,depth:depthOf(result)});
-        craftHistory=craftHistory.slice(-40);
-      }
-      function pairSpace(){return Math.max(0,state.items.length*(state.items.length-1)/2);}
-      function combinePair(a,b,mode='manual'){
-        const result=resultFor(a,b);
-        const isNew=!state.items.includes(result);
-        if(isNew)state.items.push(result);
-        state.totalCombines++;
-        state.last=(isNew?'First Discovery：':'再次发现：')+result;
-        addHistory(a,b,result,isNew,mode);
-        save();
-        return result;
-      }
-      function randomStew(rounds=5){
-        state.query='';
-        for(let r=0;r<rounds;r++){
-          const n=state.items.length;
-          const i=(state.totalCombines*17+r*7+state.autoStewCount*13)%n;
-          let j=(state.totalCombines*31+r*11+state.autoStewCount*5+3)%n;
-          if(i===j)j=(j+1)%n;
-          const result=combinePair(state.items[i],state.items[j],'randomStew');
-          state.selected=[result];
-          state.autoStewCount++;
-        }
-        document.getElementById('searchInput').value='';
-        render();
-      }
-      function render(){
-        document.getElementById('slotA').textContent=state.selected[0]||'?';
-        document.getElementById('slotB').textContent=state.selected[1]||'?';
-        document.getElementById('craftLog').textContent=state.last||'随便点两个词，或者直接乱炖。';
-        document.getElementById('craftStats').textContent=state.items.length+' DISCOVERED · '+state.totalCombines+' MIXES';
-        document.getElementById('craftSpace').textContent=Math.floor(pairSpace())+' PAIRS';
-        document.getElementById('historyRail').innerHTML=craftHistory.slice(-8).reverse().map((item)=>'<span>'+item.a+' + '+item.b+' = '+item.result+'</span>').join('');
-        const shown=state.items.filter((item)=>!state.query||item.includes(state.query)).slice().reverse().slice(0,96);
-        document.getElementById('pool').innerHTML=shown.map(item=>'<button class="chip '+(state.selected.includes(item)?'picked':'')+'" data-item="'+item+'">'+item+'<small>Lv.'+depthOf(item)+'</small></button>').join('');
-        document.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=>{const item=btn.dataset.item;if(state.selected.includes(item))state.selected=state.selected.filter(x=>x!==item);else{if(state.selected.length>=2)state.selected.shift();state.selected.push(item);}render();}));
-      }
-      document.getElementById('searchInput').addEventListener('input',(event)=>{state.query=event.target.value.trim();render();});
-      document.getElementById('combineBtn').addEventListener('click',()=>{if(state.selected.length<2){state.last='需要两个元素，或点乱炖。';render();return;}const result=combinePair(state.selected[0],state.selected[1]);state.selected=[result];render();});
-      document.getElementById('stewBtn').addEventListener('click',()=>randomStew(5));
-      restore();
-      render();
-      window.randomStew=randomStew;
-      window.advanceTime=(ms)=>{ if(ms>=500) randomStew(Math.min(8,Math.max(1,Math.floor(ms/500)))); };
-      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM infinite craft grid',discovered:state.items.length,pairSpace:Math.floor(pairSpace()),selected:state.selected,last:state.last,recipeCache:Object.keys(recipeCache).length,craftHistory:craftHistory.slice(-5),searchInput:state.query,depth:Math.max(...state.items.map(depthOf)),totalCombines:state.totalCombines,randomStew:state.autoStewCount});
+      const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d');
+      window.__DINO_DEBUG_CONFIG__={reference:'Chrome Dino offline runner',canvas:[390,520],jump:true,duck:true,bird:true};
+      let hiScore=Number(localStorage.getItem('fakeDinoHiScore')||0);
+      const state={mode:'running',y:0,vy:0,ground:405,score:0,speed:220,obstacles:[],clouds:[],ducking:false,spawn:0};
+      function reset(){state.mode='running';state.y=state.ground;state.vy=0;state.score=0;state.speed=220;state.spawn=0;state.ducking=false;state.clouds=Array.from({length:4},(_,i)=>({x:50+i*95,y:58+i%2*34,w:42+i*8}));state.obstacles=[{type:'cactus',x:360,w:24,h:46,label:'会'}];render();}
+      function jump(){if(state.mode!=='running'){reset();return;}if(state.y>=state.ground){state.vy=state.ducking?-420:-560;state.ducking=false;}}
+      function setDucking(on){state.ducking=on&&state.y>=state.ground&&state.mode==='running';render();}
+      window.addEventListener('keydown',e=>{if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();jump();}if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')setDucking(true);});
+      window.addEventListener('keyup',e=>{if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')setDucking(false);});
+      canvas.addEventListener('pointerdown',(e)=>{const r=canvas.getBoundingClientRect();const y=(e.clientY-r.top)*520/r.height;y>360?setDucking(true):jump();});
+      canvas.addEventListener('pointerup',()=>setDucking(false));
+      function addObstacle(){const bird=state.score>55&&Math.floor(state.score+state.spawn)%4===0;state.obstacles.push(bird?{type:'bird',x:430,w:38,h:24,y:state.ground-42,label:'飞'}:{type:'cactus',x:430,w:24+(Math.floor(state.score)%3)*8,h:38+(Math.floor(state.score)%2)*18,label:['会','需','锅'][Math.floor(state.score)%3]});state.spawn++;}
+      function step(ms){if(state.mode!=='running'){render();return;}const dt=ms/1000;state.score+=dt*10;state.speed+=dt*5;state.vy+=1450*dt;state.y=Math.min(state.ground,state.y+state.vy*dt);state.clouds.forEach(c=>{c.x-=state.speed*.15*dt;if(c.x<-70)c.x=430;});state.obstacles.forEach(o=>o.x-=state.speed*dt);if(state.obstacles[0]&&state.obstacles[0].x<-60)state.obstacles.shift();const last=state.obstacles[state.obstacles.length-1];if(!last||last.x<230)addObstacle();const dino={x:58,y:state.ducking?state.y+16:state.y-18,w:state.ducking?52:44,h:state.ducking?28:68};state.obstacles.forEach(o=>{const oy=o.type==='bird'?o.y:state.ground+36-o.h;const hit=dino.x<o.x+o.w&&dino.x+dino.w>o.x&&dino.y<oy+o.h&&dino.y+dino.h>oy;if(hit){state.mode='lost';hiScore=Math.max(hiScore,Math.floor(state.score));localStorage.setItem('fakeDinoHiScore',String(hiScore));}});render();}
+      function drawCloud(c){ctx.fillStyle='rgba(34,244,238,.18)';ctx.beginPath();ctx.arc(c.x,c.y,12,0,Math.PI*2);ctx.arc(c.x+14,c.y-5,14,0,Math.PI*2);ctx.arc(c.x+30,c.y,10,0,Math.PI*2);ctx.fillRect(c.x,c.y,38,10);ctx.fill();}
+      function render(){ctx.fillStyle='#08070a';ctx.fillRect(0,0,390,520);state.clouds.forEach(drawCloud);ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(18,state.ground+36);ctx.lineTo(370,state.ground+36);ctx.stroke();ctx.fillStyle='#fff';if(state.ducking){ctx.fillRect(58,state.y+10,52,24);ctx.fillRect(94,state.y-2,22,20);}else{ctx.fillRect(58,state.y,34,34);ctx.fillRect(82,state.y-18,20,22);ctx.fillRect(64,state.y+32,8,18);ctx.fillRect(86,state.y+32,8,18);}state.obstacles.forEach(o=>{if(o.type==='bird'){ctx.fillStyle='#22f4ee';ctx.beginPath();ctx.moveTo(o.x,o.y+12);ctx.lineTo(o.x+18,o.y);ctx.lineTo(o.x+38,o.y+12);ctx.lineTo(o.x+18,o.y+24);ctx.closePath();ctx.fill();ctx.fillStyle='#050505';ctx.font='14px sans-serif';ctx.fillText(o.label,o.x+12,o.y+17);}else{ctx.fillStyle='#ff3b86';ctx.fillRect(o.x,state.ground+36-o.h,o.w,o.h);ctx.fillStyle='#fff';ctx.font='16px sans-serif';ctx.fillText(o.label,o.x+4,state.ground+22);}});ctx.fillStyle='#fff';ctx.font='18px monospace';ctx.fillText('HI '+hiScore.toString().padStart(5,'0')+' '+Math.floor(state.score).toString().padStart(5,'0'),172,36);if(state.mode==='lost'){ctx.font='28px sans-serif';ctx.fillText('GAME OVER',110,230);}document.getElementById('hud').textContent=state.mode+' · score '+Math.floor(state.score)+' · hiScore '+hiScore+(state.ducking?' · ducking':'');}
+      document.getElementById('resetBtn').addEventListener('click',reset); reset(); setInterval(()=>step(16),16);
+      window.advanceTime=(ms)=>{for(let i=0;i<Math.max(1,Math.round(ms/16));i++)step(16);};
+      window.render_game_to_text=()=>JSON.stringify({coordinate_system:'canvas 390x520 origin top-left',mode:state.mode,score:Math.floor(state.score),hiScore,y:Math.round(state.y),ducking:state.ducking,clouds:state.clouds.map(c=>Math.round(c.x)),obstacles:state.obstacles.map(o=>({type:o.type,bird:o.type==='bird',x:Math.round(o.x)}))});
     
     })();
   </script>

@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" href="data:,">
+  <title>HTML 刷刷 - 赝品库 Remix Feed</title>
+  <style>
+    
+    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #111; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
+    body { display: grid; place-items: start center; overscroll-behavior: none; }
+    button, input { font: inherit; min-width: 0; }
+    button, a, input { touch-action: manipulation; }
+    .phone-shell { width: min(100vw, 430px); min-height: 100svh; background:
+      radial-gradient(circle at 50% 4%, rgba(255,59,134,.42), transparent 34%),
+      radial-gradient(circle at 10% 24%, rgba(34,244,238,.16), transparent 26%),
+      linear-gradient(180deg, #160611 0, #080509 42%, #030303 100%); border-left: 1px solid var(--line); border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; }
+    .app-top { position: sticky; top: 0; z-index: 5; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(14px, env(safe-area-inset-left)); border-bottom: 1px solid rgba(255,255,255,.08); background: linear-gradient(to bottom, rgba(0,0,0,.78), rgba(0,0,0,.28)); color: #fff; backdrop-filter: blur(16px); }
+    .brand { color: inherit; text-decoration: none; font-weight: 900; }
+    .app-top a:last-child { color: #fff; opacity: .72; text-decoration: none; font-weight: 900; font-size: 13px; }
+    .screen { padding: 12px 12px calc(18px + env(safe-area-inset-bottom)); flex: 1; min-width: 0; }
+    .play-screen { display: flex; flex-direction: column; min-height: calc(100svh - 50px); min-width: 0; }
+    .hero { min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; padding: 12px 2px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .play-hero { min-height: 88px; }
+    .kicker { margin: 0; color: var(--cyan); font-size: 11px; font-weight: 1000; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(34px, 11vw, 54px); line-height: .88; letter-spacing: 0; color: #fff; text-shadow: 0 6px 28px rgba(255,59,134,.2); }
+    h2 { margin: 0 0 12px; font-size: clamp(25px, 8vw, 36px); line-height: 1; letter-spacing: 0; }
+    .summary { margin: 0; color: rgba(255,255,255,.62); line-height: 1.42; font-size: 13px; }
+    .game-stage { display: grid; gap: 10px; padding-top: 10px; touch-action: none; flex: 1; align-content: start; min-width: 0; }
+    .game-stage > * { min-width: 0; max-width: 100%; }
+    .panel { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 14px; box-shadow: 0 18px 54px rgba(0,0,0,.28); backdrop-filter: blur(18px); color: #fff; min-width: 0; max-width: 100%; }
+    .compact { padding: 12px; }
+    .primary { min-height: 54px; border: 0; border-radius: 999px; padding: 0 18px; background: linear-gradient(135deg, var(--accent), #ff6aa8); color: #fff; font-weight: 1000; cursor: pointer; box-shadow: 0 12px 30px rgba(255,59,134,.28); }
+    .primary:disabled, button:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
+    .hidden { display: none !important; }
+    .play-canvas { width: 100%; height: auto; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: #09070d; display: block; touch-action: none; box-shadow: 0 24px 70px rgba(0,0,0,.34); }
+    .play-canvas.short { aspect-ratio: 390 / 320; }
+    html.embed-mode, html.embed-mode body { min-height: 100%; background: #000; }
+    html.embed-mode body { display: block; overflow: hidden; }
+    html.embed-mode .phone-shell { width: 100vw; min-height: 100svh; border: 0; background: #000; box-shadow: none; }
+    html.embed-mode .app-top, html.embed-mode .play-hero { display: none; }
+    html.embed-mode .screen { padding: 0 10px 10px; }
+    html.embed-mode .play-screen { min-height: 100svh; }
+    html.embed-mode .game-stage { padding-top: 10px; gap: 8px; }
+    html.embed-mode .play-canvas { max-height: calc(100svh - 116px); object-fit: contain; }
+    html.embed-mode .panel { box-shadow: none; }
+    .stack { display: grid; gap: 10px; }
+    .choice, .shop-row, .chip, .plot { border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; min-height: 58px; padding: 12px 14px; text-align: left; font-weight: 850; cursor: pointer; }
+    .choice:active, .chip:active, .plot:active, .big-tap:active { transform: scale(.98); }
+    .meter { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+    .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--accent)); }
+    .result-card { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 14px; color: #fff; }
+    .bars { display: grid; gap: 8px; margin: 12px 0; }
+    .bars span { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 8px; font-size: 12px; }
+    .bars i { display: block; height: 9px; border-radius: 999px; background: var(--accent); }
+    .tray { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .tray span { aspect-ratio: 1; border: 1px dashed rgba(255,255,255,.24); border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.09); font-weight: 900; }
+    .big-tap { min-height: 118px; border: 0; border-radius: 28px; background: linear-gradient(145deg, var(--accent), #ff8ab9); color: #fff; display: grid; place-items: center; gap: 4px; font-weight: 1000; box-shadow: inset 0 -16px 30px rgba(0,0,0,.18), 0 20px 60px rgba(255,59,134,.32); }
+    .big-tap.dark { background: linear-gradient(145deg, #151018, #31112a 54%, var(--accent)); color: #fff; }
+    .big-tap b { font-size: 32px; }
+    .big-tap span { font-size: 12px; letter-spacing: .2em; }
+    .shop { display: grid; gap: 8px; }
+    .shop-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .shop-row span { color: rgba(255,255,255,.68); font-size: 12px; }
+    .field-label { display: grid; gap: 8px; font-weight: 900; }
+    .input { width: 100%; min-height: 58px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 0 14px; background: rgba(255,255,255,.1); color: #fff; font-size: 20px; font-weight: 900; outline: none; }
+    .input:focus { border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(34,244,238,.15); }
+    .input::placeholder { color: rgba(255,255,255,.42); }
+    .rules { display: grid; gap: 8px; margin-top: 12px; }
+    .rule { display: flex; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px; background: rgba(255,59,134,.11); }
+    .rule.ok { background: rgba(34,244,238,.12); border-color: rgba(34,244,238,.42); }
+    .win-note { padding: 12px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 900; }
+    .slots { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; min-width: 0; }
+    .slots span { min-width: 0; min-height: 84px; display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.22); border-radius: 18px; padding: 8px; text-align: center; font-size: clamp(18px, 6vw, 28px); line-height: 1.08; font-weight: 1000; background: rgba(255,255,255,.09); color: #fff; overflow: hidden; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin: 12px 0; min-width: 0; }
+    .craft-stats { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; margin: 10px 0 0; color: var(--cyan); font-size: 12px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; min-width: 0; }
+    .craft-stats span, #craftLog { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-history { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 0; scrollbar-width: none; }
+    .craft-history::-webkit-scrollbar { display: none; }
+    .craft-history span { flex: 0 0 auto; max-width: 270px; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-weight: 800; white-space: nowrap; }
+    .chip-pool { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; max-width: 100%; }
+    .chip { min-width: 0; min-height: 42px; text-align: center; width: auto; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+    .chip small { display: block; margin-top: 4px; color: rgba(255,255,255,.48); font-size: 10px; font-weight: 900; }
+    .picked { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 78%); }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4px; }
+    .fake-check input { position: absolute; opacity: 0; }
+    .fake-check span { display: block; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.22); border-radius: 6px; background: rgba(255,255,255,.08); }
+    .fake-check input:checked + span { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 3px #050505; }
+    .garden-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .plot { min-height: 98px; background: rgba(255,255,255,.1); text-align: center; display: grid; place-items: center; }
+    .plot.ready { background: linear-gradient(145deg, rgba(34,244,238,.25), rgba(255,59,134,.22)); border-color: rgba(34,244,238,.55); }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .tag { display: inline-flex; margin: 6px 6px 0 0; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); }
+    .mystic-card { background: radial-gradient(circle at 20% 10%, rgba(255,59,134,.34), rgba(255,255,255,.08) 48%); }
+    .oracle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .oracle-card { min-height: 154px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 10px; display: grid; align-content: space-between; background: linear-gradient(160deg, color-mix(in srgb, var(--game-accent), #050505 44%), rgba(255,255,255,.08)); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+    .oracle-card b { font-size: 28px; line-height: 1; }
+    .oracle-card span { color: rgba(255,255,255,.68); font-size: 11px; font-weight: 900; }
+    .oracle-card strong { font-size: 13px; line-height: 1.1; }
+    .pillar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .pillar { min-height: 90px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 9px 6px; display: grid; place-items: center; gap: 4px; background: rgba(255,255,255,.08); text-align: center; }
+    .pillar b { font-size: 28px; line-height: 1; }
+    .pillar span { color: rgba(255,255,255,.58); font-size: 10px; font-weight: 1000; }
+    .element-bars { display: grid; gap: 7px; margin-top: 12px; }
+    .element-bar { display: grid; grid-template-columns: 34px 1fr 30px; align-items: center; gap: 8px; font-size: 12px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .element-bar i { height: 9px; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--game-accent)); }
+    .aspect-list { display: grid; gap: 8px; margin-top: 10px; }
+    .aspect-list span, .cast-log span { display: block; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 9px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-size: 12px; font-weight: 850; }
+    .coin-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 10px 0; }
+    .coin { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.22); background: radial-gradient(circle at 35% 25%, #ffe7a3, #b56d25 64%, #4d2415); color: #2d160c; font-size: 20px; font-weight: 1000; box-shadow: 0 12px 32px rgba(0,0,0,.28); }
+    .hex-lines { display: grid; gap: 7px; padding: 8px 0; }
+    .hex-line { height: 16px; display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .hex-line.broken { grid-template-columns: 1fr 1fr; }
+    .hex-line i { display: block; border-radius: 999px; background: linear-gradient(90deg, #ffe7a3, var(--game-accent)); }
+    .cast-log { display: grid; gap: 8px; }
+    @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
+  
+    html, body { background: #040404; }
+    body { place-items: start center; }
+    #homeShell { background: #000; color: #fff; border-color: rgba(255,255,255,.1); }
+    #homeShell .app-top { display: none; }
+    [hidden] { display: none !important; }
+    .home-screen { min-height: 100svh; max-height: 100svh; overflow-y: auto; padding: calc(12px + env(safe-area-inset-top)) 12px calc(22px + env(safe-area-inset-bottom)); background: #050505; scrollbar-width: none; }
+    .home-screen::-webkit-scrollbar { display: none; }
+    .home-head { position: sticky; top: calc(-12px - env(safe-area-inset-top)); z-index: 10; display: grid; gap: 10px; padding: 12px 0 10px; background: linear-gradient(#050505 72%, rgba(5,5,5,0)); }
+    .home-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .home-brand { margin: 0; font-size: 22px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
+    .home-brand span { color: #ff375f; }
+    .start-feed { min-height: 36px; border: 0; border-radius: 999px; padding: 0 14px; background: #fff; color: #050505; font-weight: 1000; }
+    .home-search { display: flex; align-items: center; gap: 8px; min-height: 38px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 0 13px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.72); font-size: 13px; font-weight: 750; }
+    .home-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 1px; scrollbar-width: none; }
+    .home-tags::-webkit-scrollbar { display: none; }
+    .home-tags span { flex: 0 0 auto; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 7px 11px; background: rgba(255,255,255,.06); color: rgba(255,255,255,.76); font-size: 12px; font-weight: 850; }
+    .home-tags .active { background: rgba(255,55,95,.18); border-color: rgba(255,55,95,.36); color: #fff; }
+    .waterfall { column-count: 2; column-gap: 10px; padding: 2px 0 12px; }
+    .water-card { width: 100%; margin: 0 0 10px; break-inside: avoid; display: grid; gap: 7px; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 0 0 10px; overflow: hidden; background: #111; color: #fff; text-align: left; cursor: pointer; box-shadow: 0 14px 42px rgba(0,0,0,.24); }
+    .water-card:active { transform: scale(.985); }
+    .water-cover { position: relative; height: var(--cover-h); display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--game-accent), white 12%), transparent 38%), linear-gradient(155deg, color-mix(in srgb, var(--game-accent), #050505 46%), #080808 70%); }
+    .water-cover-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; transform: scale(1.01); }
+    .water-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,.06), transparent 42%, rgba(0,0,0,.38)); }
+    .water-cover b { position: relative; z-index: 1; font-size: clamp(24px, 10vw, 44px); line-height: 1; font-weight: 1000; letter-spacing: 0; text-shadow: 0 10px 28px rgba(0,0,0,.34); }
+    .water-cover.has-render b { display: none; }
+    .water-cover i { position: absolute; z-index: 1; left: 9px; top: 9px; border-radius: 999px; padding: 4px 7px; background: rgba(0,0,0,.34); color: rgba(255,255,255,.9); font-style: normal; font-size: 10px; font-weight: 900; }
+    .water-title { padding: 0 10px; font-size: 13px; line-height: 1.24; font-weight: 950; color: rgba(255,255,255,.94); }
+    .water-summary { padding: 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: rgba(255,255,255,.58); font-size: 11px; line-height: 1.35; font-weight: 700; }
+    .water-meta { padding: 0 10px; display: flex; justify-content: space-between; gap: 8px; color: rgba(255,255,255,.5); font-size: 10px; line-height: 1; font-weight: 850; }
+    .feed-screen { padding: 0; height: 100svh; overflow: hidden; }
+    .feed-back { position: fixed; z-index: 12; left: max(12px, calc((100vw - 430px) / 2 + 12px)); top: calc(12px + env(safe-area-inset-top)); width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; background: rgba(0,0,0,.28); color: #fff; font-size: 26px; line-height: 1; backdrop-filter: blur(12px); }
+    .feed { height: 100svh; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; background: #000; }
+    .feed::-webkit-scrollbar { display: none; }
+    .feed-item { position: relative; height: 100svh; min-height: 640px; scroll-snap-align: start; scroll-snap-stop: always; display: grid; place-items: center; overflow: hidden; isolation: isolate; background: #000; }
+    .feed-item::before { content: ""; position: absolute; inset: 0; z-index: 0; background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--game-accent), transparent 36%), transparent 54%), #000; opacity: .55; }
+    .feed-item::after { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(to bottom, rgba(0,0,0,.36), transparent 22%, transparent 56%, rgba(0,0,0,.78)); pointer-events: none; }
+    .live-card { position: absolute; z-index: 1; inset: 0; overflow: hidden; border: 0; border-radius: 0; background: #000; box-shadow: none; opacity: 1; transform: none; }
+    .feed-item.is-active .live-card { transform: none; opacity: 1; border-color: transparent; }
+    .html-frame { position: absolute; left: 0; top: 0; width: 100%; height: 100%; border: 0; display: block; background: #000; pointer-events: auto; }
+    .feed-caption { position: absolute; z-index: 5; left: 16px; right: 86px; bottom: calc(22px + env(safe-area-inset-bottom)); display: grid; grid-template-columns: 30px 1fr; column-gap: 8px; align-items: center; pointer-events: none; text-shadow: 0 2px 14px rgba(0,0,0,.72); }
+    .avatar { position: relative; width: 30px; height: 30px; display: block; border-radius: 50%; background: color-mix(in srgb, var(--game-accent), #111 48%); border: 1px solid rgba(255,255,255,.34); box-shadow: 0 8px 24px rgba(0,0,0,.32); overflow: hidden; }
+    .avatar::before { content: ""; position: absolute; left: 10px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.92); }
+    .avatar::after { content: ""; position: absolute; left: 7px; bottom: 6px; width: 14px; height: 8px; border-radius: 9px 9px 3px 3px; background: rgba(255,255,255,.92); }
+    .feed-caption h2 { margin: 0; color: rgba(255,255,255,.92); font-size: 15px; line-height: 1.16; font-weight: 850; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-actions { position: absolute; z-index: 6; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); display: grid; gap: 14px; }
+    .action-button { width: 52px; min-height: 50px; border: 0; border-radius: 0; display: grid; place-items: center; align-content: center; gap: 3px; background: transparent; color: #fff; text-decoration: none; cursor: pointer; text-shadow: 0 2px 14px rgba(0,0,0,.68); }
+    .action-button b { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,0,0,.26); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(12px); font-size: 24px; line-height: 1; font-weight: 1000; }
+    .action-button span { min-height: 10px; color: rgba(255,255,255,.9); font-size: 10px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
+    .feed-item.is-liked [data-like] b { background: #ff2f68; border-color: rgba(255,255,255,.24); }
+    .feed-item.is-saved [data-save] b { background: #ffb02e; color: #111; border-color: rgba(255,255,255,.24); }
+    .remix-action b { background: color-mix(in srgb, var(--game-accent), rgba(0,0,0,.38) 54%); }
+    .action-button:active { transform: scale(.96); }
+    .swipe-hint, .remix-dock { display: none; }
+    .remix-modal { position: fixed; inset: 0; z-index: 30; display: none; place-items: end center; background: rgba(0,0,0,.56); color: #fff; }
+    .remix-modal.is-visible { display: grid; }
+    .remix-panel { width: min(100vw, 430px); max-height: 92svh; overflow-y: auto; border: 1px solid rgba(255,255,255,.16); border-radius: 22px 22px 0 0; padding: 14px; background: rgba(8,8,10,.94); box-shadow: 0 -24px 90px rgba(0,0,0,.54); backdrop-filter: blur(20px); display: grid; gap: 12px; }
+    .remix-head { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
+    .remix-head h2 { margin: 0; font-size: 22px; line-height: 1; }
+    .remix-close { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; background: rgba(255,255,255,.08); color: #fff; font-size: 18px; font-weight: 1000; }
+    .remix-field { display: grid; gap: 7px; color: rgba(255,255,255,.86); font-size: 12px; font-weight: 900; }
+    .remix-input, .remix-textarea { width: 100%; border: 1px solid rgba(255,255,255,.18); border-radius: 14px; padding: 11px 12px; background: rgba(255,255,255,.08); color: #fff; font: inherit; outline: none; }
+    .remix-textarea { min-height: 96px; resize: vertical; line-height: 1.42; }
+    .remix-progress { height: 7px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.12); }
+    .remix-progress[hidden] { display: none; }
+    .remix-progress i { display: block; width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #22f4ee, #ff4f87); transition: width .28s ease; }
+    .remix-step { display: grid; gap: 12px; }
+    .remix-step[hidden] { display: none; }
+    .remix-actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .remix-secondary { min-height: 46px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 0 12px; background: rgba(255,255,255,.08); color: #fff; font-weight: 1000; }
+    .remix-preview { width: 100%; height: 380px; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: #050505; display: none; }
+    .remix-preview.is-visible { display: block; }
+    .remix-status { min-height: 18px; margin: 0; color: rgba(255,255,255,.68); font-size: 12px; line-height: 1.35; }
+    @media (max-width: 360px) { .feed-actions { right: 8px; } .feed-caption { right: 76px; } .action-button { width: 48px; } .action-button b { width: 42px; height: 42px; } }
+    @media (min-width: 700px) { body { padding: 18px 0; } #homeShell { min-height: calc(100svh - 36px); height: calc(100svh - 36px); overflow: hidden; } .feed-screen, .feed, .feed-item { height: calc(100svh - 36px); } .feed-item { min-height: 640px; } }
+  </style>
+</head>
+<body data-printer-artifact="fake-game-library" data-output-format="multi_html">
+  <div class="phone-shell" id="homeShell">
+    <main class="screen home-screen" id="homeScreen">
+      <header class="home-head">
+        <div class="home-bar">
+          <h1 class="home-brand">HTML<span>刷刷</span></h1>
+          <button class="start-feed" type="button" data-start-feed>开始刷刷</button>
+        </div>
+        <div class="home-search"><span>⌕</span><span>搜索游戏、玩法、Remix</span></div>
+        <nav class="home-tags" aria-label="分类">
+          <span class="active">推荐</span><span>小游戏</span><span>玄学</span><span>.io</span><span>解谜</span><span>新 Remix</span>
+        </nav>
+      </header>
+      <section class="waterfall" id="waterfall" aria-label="游戏瀑布流">
+      <button class="water-card" type="button" data-open-feed="0" data-instance-id="sbti-fake-0" style="--game-accent:#ff4f87; --cover-h:132px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/sbti-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>SBTI</b><i>测评</i></span>
+        <span class="water-title">伪 SBTI 崩溃人格测评</span>
+        <span class="water-summary">八题生成荒诞人格结果卡，适合截图分享。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 1.2k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="1" data-instance-id="sheep-stack-0" style="--game-accent:#30b36b; --cover-h:162px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/sheep-stack.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>羊</b><i>消除</i></span>
+        <span class="water-title">羊块堆堆消</span>
+        <span class="water-summary">只点亮牌，三张同图标入槽即消，槽满失败。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 1.3k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="2" data-instance-id="brainrot-clicker-0" style="--game-accent:#f1b900; --cover-h:168px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/brainrot-clicker.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>脑</b><i>点击</i></span>
+        <span class="water-title">脑腐咔嗒工厂</span>
+        <span class="water-summary">点出伪意大利动物，升级后 canvas 弹幕越来越吵。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 1.5k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="3" data-instance-id="stimulation-fake-0" style="--game-accent:#7c5cff; --cover-h:198px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/stimulation-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>刺</b><i>点击</i></span>
+        <span class="water-title">刺激值按钮</span>
+        <span class="water-summary">每个升级都让手机屏幕更像失控的信息流。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 1.6k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="4" data-instance-id="cattle-bump-0" style="--game-accent:#ff7a2f; --cover-h:204px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/cattle-bump.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>撞</b><i>动作</i></span>
+        <span class="water-title">疯羊碰碰场</span>
+        <span class="water-summary">触摸方向推动主羊，撞飞编号羊，留在圆圈里。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 1.7k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="5" data-instance-id="password-hell-0" style="--game-accent:#00a6d6; --cover-h:144px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/password-hell.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>密</b><i>解谜</i></span>
+        <span class="water-title">密码地狱试炼</span>
+        <span class="water-summary">移动端输入框挑战，规则一条比一条难受。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 1.9k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="6" data-instance-id="infinite-craft-fake-0" style="--game-accent:#34a853; --cover-h:150px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/infinite-craft-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>合</b><i>合成</i></span>
+        <span class="water-title">无限乱炖实验室</span>
+        <span class="water-summary">两个词一碰，互联网又多一个概念。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.0k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="7" data-instance-id="million-checkboxes-fake-0" style="--game-accent:#111111; --cover-h:180px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/million-checkboxes-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>☑</b><i>协作幻觉</i></span>
+        <span class="water-title">四百个勾选框</span>
+        <span class="water-summary">假装全网在线，其实是本地小宇宙。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.2k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="8" data-instance-id="dino-fake-0" style="--game-accent:#5f6368; --cover-h:186px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/dino-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>跑</b><i>跑酷</i></span>
+        <span class="water-title">断网小蜥蜴</span>
+        <span class="water-summary">点击跳跃，越过会议、需求和锅。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.3k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="9" data-instance-id="garden-idle-0" style="--game-accent:#6aa84f; --cover-h:216px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/garden-idle.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>种</b><i>放置</i></span>
+        <span class="water-title">摸鱼花园</span>
+        <span class="water-summary">种、等、收，库存刷新让你再来一次。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.4k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="10" data-instance-id="agar-fake-0" style="--game-accent:#4285f4; --cover-h:132px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/agar-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>io</b><i>.io</i></span>
+        <span class="water-title">圆点吞吞.io</span>
+        <span class="water-summary">拖动移动，吃小点长大，别被大圆点吃掉。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.6k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="11" data-instance-id="io-arena-template-0" style="--game-accent:#22f4ee; --cover-h:162px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/io-arena-template.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>战</b><i>模板</i></span>
+        <span class="water-title">空投乱斗.io 模板</span>
+        <span class="water-summary">双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.7k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="12" data-instance-id="mystic-score-0" style="--game-accent:#9b59b6; --cover-h:168px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/mystic-score.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>玄</b><i>玄学</i></span>
+        <span class="water-title">赛博玄学评分器</span>
+        <span class="water-summary">输入名字，生成今日抽象运势卡。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 2.8k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="13" data-instance-id="tarot-daily-0" style="--game-accent:#c45cff; --cover-h:198px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/tarot-daily.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>塔</b><i>塔罗</i></span>
+        <span class="water-title">打工塔罗三连</span>
+        <span class="water-summary">输入代号抽三张赛博塔罗，给出今日抽象建议。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.0k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="14" data-instance-id="bazi-lite-0" style="--game-accent:#e4a63b; --cover-h:204px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/bazi-lite.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>命</b><i>算命</i></span>
+        <span class="water-title">八字偏科生成器</span>
+        <span class="water-summary">生日时辰生成假认真四柱，重点看五行哪里离谱。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.1k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="15" data-instance-id="astro-wheel-0" style="--game-accent:#5bbcff; --cover-h:144px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/astro-wheel.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>星</b><i>看盘</i></span>
+        <span class="water-title">星盘甩锅轮</span>
+        <span class="water-summary">一键画出可分享星盘，把今天的问题甩给相位。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.3k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="16" data-instance-id="yijing-coins-0" style="--game-accent:#d6b45f; --cover-h:150px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/yijing-coins.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>卦</b><i>易经</i></span>
+        <span class="water-title">六爻离谱铜钱</span>
+        <span class="water-summary">点六次摇铜钱，得到一卦适合转发的离谱签文。</span>
+        <span class="water-meta"><span>@赝品库</span><span>♡ 3.4k</span></span>
+      </button>
+      </section>
+    </main>
+    <main class="screen feed-screen" id="feedScreen" hidden>
+      <button class="feed-back" type="button" id="feedBack" aria-label="返回首页">‹</button>
+      <section class="feed" id="feed">
+        <article class="feed-item" style="--game-accent:#ff4f87; --n:0;" data-instance-id="sbti-fake-0" data-src="sbti-fake.html">
+          <section class="live-card is-playing" aria-label="伪 SBTI 崩溃人格测评 HTML 预览">
+            <iframe class="html-frame" title="伪 SBTI 崩溃人格测评" src="sbti-fake.html?embed=1" data-src="sbti-fake.html?embed=1" data-loaded="true" loading="eager" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>伪 SBTI 崩溃人格测评</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 伪 SBTI 崩溃人格测评"><b>♡</b><span data-count="like">1.2k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 伪 SBTI 崩溃人格测评"><b>☆</b><span data-count="save">240</span></button>
+            <a class="action-button" href="sbti-fake.html" aria-label="打开 伪 SBTI 崩溃人格测评"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 伪 SBTI 崩溃人格测评"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#30b36b; --n:1;" data-instance-id="sheep-stack-0" data-src="sheep-stack.html">
+          <section class="live-card is-playing" aria-label="羊块堆堆消 HTML 预览">
+            <iframe class="html-frame" title="羊块堆堆消" src="sheep-stack.html?embed=1" data-src="sheep-stack.html?embed=1" data-loaded="true" loading="eager" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>羊块堆堆消</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 羊块堆堆消"><b>♡</b><span data-count="like">1.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 羊块堆堆消"><b>☆</b><span data-count="save">271</span></button>
+            <a class="action-button" href="sheep-stack.html" aria-label="打开 羊块堆堆消"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 羊块堆堆消"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#f1b900; --n:2;" data-instance-id="brainrot-clicker-0" data-src="brainrot-clicker.html">
+          <section class="live-card is-playing" aria-label="脑腐咔嗒工厂 HTML 预览">
+            <iframe class="html-frame" title="脑腐咔嗒工厂" src="about:blank" data-src="brainrot-clicker.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>脑腐咔嗒工厂</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 脑腐咔嗒工厂"><b>♡</b><span data-count="like">1.5k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 脑腐咔嗒工厂"><b>☆</b><span data-count="save">302</span></button>
+            <a class="action-button" href="brainrot-clicker.html" aria-label="打开 脑腐咔嗒工厂"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 脑腐咔嗒工厂"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#7c5cff; --n:3;" data-instance-id="stimulation-fake-0" data-src="stimulation-fake.html">
+          <section class="live-card is-playing" aria-label="刺激值按钮 HTML 预览">
+            <iframe class="html-frame" title="刺激值按钮" src="about:blank" data-src="stimulation-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>刺激值按钮</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 刺激值按钮"><b>♡</b><span data-count="like">1.6k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 刺激值按钮"><b>☆</b><span data-count="save">333</span></button>
+            <a class="action-button" href="stimulation-fake.html" aria-label="打开 刺激值按钮"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 刺激值按钮"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#ff7a2f; --n:4;" data-instance-id="cattle-bump-0" data-src="cattle-bump.html">
+          <section class="live-card is-playing" aria-label="疯羊碰碰场 HTML 预览">
+            <iframe class="html-frame" title="疯羊碰碰场" src="about:blank" data-src="cattle-bump.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>疯羊碰碰场</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 疯羊碰碰场"><b>♡</b><span data-count="like">1.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 疯羊碰碰场"><b>☆</b><span data-count="save">364</span></button>
+            <a class="action-button" href="cattle-bump.html" aria-label="打开 疯羊碰碰场"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 疯羊碰碰场"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#00a6d6; --n:5;" data-instance-id="password-hell-0" data-src="password-hell.html">
+          <section class="live-card is-playing" aria-label="密码地狱试炼 HTML 预览">
+            <iframe class="html-frame" title="密码地狱试炼" src="about:blank" data-src="password-hell.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>密码地狱试炼</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 密码地狱试炼"><b>♡</b><span data-count="like">1.9k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 密码地狱试炼"><b>☆</b><span data-count="save">395</span></button>
+            <a class="action-button" href="password-hell.html" aria-label="打开 密码地狱试炼"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 密码地狱试炼"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#34a853; --n:6;" data-instance-id="infinite-craft-fake-0" data-src="infinite-craft-fake.html">
+          <section class="live-card is-playing" aria-label="无限乱炖实验室 HTML 预览">
+            <iframe class="html-frame" title="无限乱炖实验室" src="about:blank" data-src="infinite-craft-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>无限乱炖实验室</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 无限乱炖实验室"><b>♡</b><span data-count="like">2.0k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 无限乱炖实验室"><b>☆</b><span data-count="save">426</span></button>
+            <a class="action-button" href="infinite-craft-fake.html" aria-label="打开 无限乱炖实验室"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 无限乱炖实验室"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#111111; --n:7;" data-instance-id="million-checkboxes-fake-0" data-src="million-checkboxes-fake.html">
+          <section class="live-card is-playing" aria-label="四百个勾选框 HTML 预览">
+            <iframe class="html-frame" title="四百个勾选框" src="about:blank" data-src="million-checkboxes-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>四百个勾选框</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 四百个勾选框"><b>♡</b><span data-count="like">2.2k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 四百个勾选框"><b>☆</b><span data-count="save">457</span></button>
+            <a class="action-button" href="million-checkboxes-fake.html" aria-label="打开 四百个勾选框"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 四百个勾选框"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#5f6368; --n:8;" data-instance-id="dino-fake-0" data-src="dino-fake.html">
+          <section class="live-card is-playing" aria-label="断网小蜥蜴 HTML 预览">
+            <iframe class="html-frame" title="断网小蜥蜴" src="about:blank" data-src="dino-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>断网小蜥蜴</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 断网小蜥蜴"><b>♡</b><span data-count="like">2.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 断网小蜥蜴"><b>☆</b><span data-count="save">488</span></button>
+            <a class="action-button" href="dino-fake.html" aria-label="打开 断网小蜥蜴"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 断网小蜥蜴"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#6aa84f; --n:9;" data-instance-id="garden-idle-0" data-src="garden-idle.html">
+          <section class="live-card is-playing" aria-label="摸鱼花园 HTML 预览">
+            <iframe class="html-frame" title="摸鱼花园" src="about:blank" data-src="garden-idle.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>摸鱼花园</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 摸鱼花园"><b>♡</b><span data-count="like">2.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 摸鱼花园"><b>☆</b><span data-count="save">519</span></button>
+            <a class="action-button" href="garden-idle.html" aria-label="打开 摸鱼花园"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 摸鱼花园"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#4285f4; --n:10;" data-instance-id="agar-fake-0" data-src="agar-fake.html">
+          <section class="live-card is-playing" aria-label="圆点吞吞.io HTML 预览">
+            <iframe class="html-frame" title="圆点吞吞.io" src="about:blank" data-src="agar-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>圆点吞吞.io</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 圆点吞吞.io"><b>♡</b><span data-count="like">2.6k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 圆点吞吞.io"><b>☆</b><span data-count="save">550</span></button>
+            <a class="action-button" href="agar-fake.html" aria-label="打开 圆点吞吞.io"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 圆点吞吞.io"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#22f4ee; --n:11;" data-instance-id="io-arena-template-0" data-src="io-arena-template.html">
+          <section class="live-card is-playing" aria-label="空投乱斗.io 模板 HTML 预览">
+            <iframe class="html-frame" title="空投乱斗.io 模板" src="about:blank" data-src="io-arena-template.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>空投乱斗.io 模板</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 空投乱斗.io 模板"><b>♡</b><span data-count="like">2.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 空投乱斗.io 模板"><b>☆</b><span data-count="save">581</span></button>
+            <a class="action-button" href="io-arena-template.html" aria-label="打开 空投乱斗.io 模板"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 空投乱斗.io 模板"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#9b59b6; --n:12;" data-instance-id="mystic-score-0" data-src="mystic-score.html">
+          <section class="live-card is-playing" aria-label="赛博玄学评分器 HTML 预览">
+            <iframe class="html-frame" title="赛博玄学评分器" src="about:blank" data-src="mystic-score.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>赛博玄学评分器</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 赛博玄学评分器"><b>♡</b><span data-count="like">2.8k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 赛博玄学评分器"><b>☆</b><span data-count="save">612</span></button>
+            <a class="action-button" href="mystic-score.html" aria-label="打开 赛博玄学评分器"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 赛博玄学评分器"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#c45cff; --n:13;" data-instance-id="tarot-daily-0" data-src="tarot-daily.html">
+          <section class="live-card is-playing" aria-label="打工塔罗三连 HTML 预览">
+            <iframe class="html-frame" title="打工塔罗三连" src="about:blank" data-src="tarot-daily.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>打工塔罗三连</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 打工塔罗三连"><b>♡</b><span data-count="like">3.0k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 打工塔罗三连"><b>☆</b><span data-count="save">643</span></button>
+            <a class="action-button" href="tarot-daily.html" aria-label="打开 打工塔罗三连"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 打工塔罗三连"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#e4a63b; --n:14;" data-instance-id="bazi-lite-0" data-src="bazi-lite.html">
+          <section class="live-card is-playing" aria-label="八字偏科生成器 HTML 预览">
+            <iframe class="html-frame" title="八字偏科生成器" src="about:blank" data-src="bazi-lite.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>八字偏科生成器</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 八字偏科生成器"><b>♡</b><span data-count="like">3.1k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 八字偏科生成器"><b>☆</b><span data-count="save">674</span></button>
+            <a class="action-button" href="bazi-lite.html" aria-label="打开 八字偏科生成器"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 八字偏科生成器"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#5bbcff; --n:15;" data-instance-id="astro-wheel-0" data-src="astro-wheel.html">
+          <section class="live-card is-playing" aria-label="星盘甩锅轮 HTML 预览">
+            <iframe class="html-frame" title="星盘甩锅轮" src="about:blank" data-src="astro-wheel.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>星盘甩锅轮</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 星盘甩锅轮"><b>♡</b><span data-count="like">3.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 星盘甩锅轮"><b>☆</b><span data-count="save">705</span></button>
+            <a class="action-button" href="astro-wheel.html" aria-label="打开 星盘甩锅轮"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 星盘甩锅轮"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#d6b45f; --n:16;" data-instance-id="yijing-coins-0" data-src="yijing-coins.html">
+          <section class="live-card is-playing" aria-label="六爻离谱铜钱 HTML 预览">
+            <iframe class="html-frame" title="六爻离谱铜钱" src="about:blank" data-src="yijing-coins.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>六爻离谱铜钱</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 六爻离谱铜钱"><b>♡</b><span data-count="like">3.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 六爻离谱铜钱"><b>☆</b><span data-count="save">736</span></button>
+            <a class="action-button" href="yijing-coins.html" aria-label="打开 六爻离谱铜钱"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 六爻离谱铜钱"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+      </section>
+    </main>
+  </div>
+  <section class="remix-modal" id="remixModal" aria-hidden="true">
+    <div class="remix-panel" role="dialog" aria-modal="true" aria-labelledby="remixTitle">
+      <header class="remix-head">
+        <div>
+          <p class="kicker">REMIX HARNESS</p>
+          <h2 id="remixTitle">Remix</h2>
+        </div>
+        <button class="remix-close" type="button" id="remixClose" aria-label="关闭">×</button>
+      </header>
+      <label class="remix-field">想怎么调整<textarea class="remix-textarea" id="remixPrompt" placeholder="比如：改成霓虹夜市版，加入连击、倒计时和截图结果卡。"></textarea></label>
+      <button class="primary" type="button" id="draftBtn">生成调整</button>
+      <div class="remix-progress" id="remixProgress" hidden><i id="remixProgressBar"></i></div>
+      <iframe class="remix-preview" id="draftPreview" title="Remix 草稿预览"></iframe>
+      <section class="remix-step" id="publishStep" data-remix-stage="name" hidden>
+        <label class="remix-field">名字<input class="remix-input" id="remixName" placeholder="给这个调整后的游戏取名"></label>
+        <div class="remix-actions-row">
+          <button class="remix-secondary" type="button" id="deleteDraftBtn">重新调整</button>
+          <button class="primary" type="button" id="publishBtn" disabled>发布</button>
+        </div>
+      </section>
+      <p class="remix-status" id="remixStatus">启动 tools/remix_harness_server.py 后可用真实生成。</p>
+    </div>
+  </section>
+  <script src="remix_manifest.js"></script>
+  <script>
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T08:22:27.084Z","intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":78,"components":24,"interactions":26,"pages":17,"data_flow":20}};
+    (() => {
+      const feed = document.getElementById('feed');
+      const homeScreen = document.getElementById('homeScreen');
+      const waterfall = document.getElementById('waterfall');
+      const feedScreen = document.getElementById('feedScreen');
+      const feedBack = document.getElementById('feedBack');
+      const baseItems = [{"id":"sbti-fake","instanceId":"sbti-fake-0","file":"sbti-fake.html","title":"伪 SBTI 崩溃人格测评","sourceTitle":"伪 SBTI 崩溃人格测评","kind":"测评","sourceGame":"SBTI / MBTI 式社交测评","summary":"八题生成荒诞人格结果卡，适合截图分享。","accent":"#ff4f87","glyph":"SBTI","cover":"covers/sbti-fake.png","author":"@赝品库","likes":1200,"saves":240,"baseIndex":0,"loop":0,"remixed":false},{"id":"sheep-stack","instanceId":"sheep-stack-0","file":"sheep-stack.html","title":"羊块堆堆消","sourceTitle":"羊块堆堆消","kind":"消除","sourceGame":"羊了个羊式堆叠三消","summary":"只点亮牌，三张同图标入槽即消，槽满失败。","accent":"#30b36b","glyph":"羊","cover":"covers/sheep-stack.png","author":"@赝品库","likes":1337,"saves":271,"baseIndex":1,"loop":0,"remixed":false},{"id":"brainrot-clicker","instanceId":"brainrot-clicker-0","file":"brainrot-clicker.html","title":"脑腐咔嗒工厂","sourceTitle":"脑腐咔嗒工厂","kind":"点击","sourceGame":"Italian Brainrot / 增量点击器","summary":"点出伪意大利动物，升级后 canvas 弹幕越来越吵。","accent":"#f1b900","glyph":"脑","cover":"covers/brainrot-clicker.png","author":"@赝品库","likes":1474,"saves":302,"baseIndex":2,"loop":0,"remixed":false},{"id":"stimulation-fake","instanceId":"stimulation-fake-0","file":"stimulation-fake.html","title":"刺激值按钮","sourceTitle":"刺激值按钮","kind":"点击","sourceGame":"Stimulation Clicker 式过载点击器","summary":"每个升级都让手机屏幕更像失控的信息流。","accent":"#7c5cff","glyph":"刺","cover":"covers/stimulation-fake.png","author":"@赝品库","likes":1611,"saves":333,"baseIndex":3,"loop":0,"remixed":false},{"id":"cattle-bump","instanceId":"cattle-bump-0","file":"cattle-bump.html","title":"疯羊碰碰场","sourceTitle":"疯羊碰碰场","kind":"动作","sourceGame":"Crazy Cattle 3D 的 2D 撞飞版","summary":"触摸方向推动主羊，撞飞编号羊，留在圆圈里。","accent":"#ff7a2f","glyph":"撞","cover":"covers/cattle-bump.png","author":"@赝品库","likes":1748,"saves":364,"baseIndex":4,"loop":0,"remixed":false},{"id":"password-hell","instanceId":"password-hell-0","file":"password-hell.html","title":"密码地狱试炼","sourceTitle":"密码地狱试炼","kind":"解谜","sourceGame":"The Password Game 式规则升级","summary":"移动端输入框挑战，规则一条比一条难受。","accent":"#00a6d6","glyph":"密","cover":"covers/password-hell.png","author":"@赝品库","likes":1885,"saves":395,"baseIndex":5,"loop":0,"remixed":false},{"id":"infinite-craft-fake","instanceId":"infinite-craft-fake-0","file":"infinite-craft-fake.html","title":"无限乱炖实验室","sourceTitle":"无限乱炖实验室","kind":"合成","sourceGame":"Infinite Craft 式元素合成","summary":"两个词一碰，互联网又多一个概念。","accent":"#34a853","glyph":"合","cover":"covers/infinite-craft-fake.png","author":"@赝品库","likes":2022,"saves":426,"baseIndex":6,"loop":0,"remixed":false},{"id":"million-checkboxes-fake","instanceId":"million-checkboxes-fake-0","file":"million-checkboxes-fake.html","title":"四百个勾选框","sourceTitle":"四百个勾选框","kind":"协作幻觉","sourceGame":"One Million Checkboxes 式集体勾选","summary":"假装全网在线，其实是本地小宇宙。","accent":"#111111","glyph":"☑","cover":"covers/million-checkboxes-fake.png","author":"@赝品库","likes":2159,"saves":457,"baseIndex":7,"loop":0,"remixed":false},{"id":"dino-fake","instanceId":"dino-fake-0","file":"dino-fake.html","title":"断网小蜥蜴","sourceTitle":"断网小蜥蜴","kind":"跑酷","sourceGame":"Google Dino 式离线跑酷","summary":"点击跳跃，越过会议、需求和锅。","accent":"#5f6368","glyph":"跑","cover":"covers/dino-fake.png","author":"@赝品库","likes":2296,"saves":488,"baseIndex":8,"loop":0,"remixed":false},{"id":"garden-idle","instanceId":"garden-idle-0","file":"garden-idle.html","title":"摸鱼花园","sourceTitle":"摸鱼花园","kind":"放置","sourceGame":"Grow a Garden 式轻放置","summary":"种、等、收，库存刷新让你再来一次。","accent":"#6aa84f","glyph":"种","cover":"covers/garden-idle.png","author":"@赝品库","likes":2433,"saves":519,"baseIndex":9,"loop":0,"remixed":false},{"id":"agar-fake","instanceId":"agar-fake-0","file":"agar-fake.html","title":"圆点吞吞.io","sourceTitle":"圆点吞吞.io","kind":".io","sourceGame":"Agar.io 式吞噬成长","summary":"拖动移动，吃小点长大，别被大圆点吃掉。","accent":"#4285f4","glyph":"io","cover":"covers/agar-fake.png","author":"@赝品库","likes":2570,"saves":550,"baseIndex":10,"loop":0,"remixed":false},{"id":"io-arena-template","instanceId":"io-arena-template-0","file":"io-arena-template.html","title":"空投乱斗.io 模板","sourceTitle":"空投乱斗.io 模板","kind":"模板","sourceGame":"Wings.io / Starblast.io / 俯视 .io 射击母版","summary":"双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。","accent":"#22f4ee","glyph":"战","cover":"covers/io-arena-template.png","author":"@赝品库","likes":2707,"saves":581,"baseIndex":11,"loop":0,"remixed":false},{"id":"mystic-score","instanceId":"mystic-score-0","file":"mystic-score.html","title":"赛博玄学评分器","sourceTitle":"赛博玄学评分器","kind":"玄学","sourceGame":"玄学运势 / 分享卡测评","summary":"输入名字，生成今日抽象运势卡。","accent":"#9b59b6","glyph":"玄","cover":"covers/mystic-score.png","author":"@赝品库","likes":2844,"saves":612,"baseIndex":12,"loop":0,"remixed":false},{"id":"tarot-daily","instanceId":"tarot-daily-0","file":"tarot-daily.html","title":"打工塔罗三连","sourceTitle":"打工塔罗三连","kind":"塔罗","sourceGame":"Tarot.js / TarotSchema 式三牌阵","summary":"输入代号抽三张赛博塔罗，给出今日抽象建议。","accent":"#c45cff","glyph":"塔","cover":"covers/tarot-daily.png","author":"@赝品库","likes":2981,"saves":643,"baseIndex":13,"loop":0,"remixed":false},{"id":"bazi-lite","instanceId":"bazi-lite-0","file":"bazi-lite.html","title":"八字偏科生成器","sourceTitle":"八字偏科生成器","kind":"算命","sourceGame":"Gmuli-Bazi-Calc 式四柱输入","summary":"生日时辰生成假认真四柱，重点看五行哪里离谱。","accent":"#e4a63b","glyph":"命","cover":"covers/bazi-lite.png","author":"@赝品库","likes":3118,"saves":674,"baseIndex":14,"loop":0,"remixed":false},{"id":"astro-wheel","instanceId":"astro-wheel-0","file":"astro-wheel.html","title":"星盘甩锅轮","sourceTitle":"星盘甩锅轮","kind":"看盘","sourceGame":"CircularNatalHoroscopeJS / AstroChart 式圆盘","summary":"一键画出可分享星盘，把今天的问题甩给相位。","accent":"#5bbcff","glyph":"星","cover":"covers/astro-wheel.png","author":"@赝品库","likes":3255,"saves":705,"baseIndex":15,"loop":0,"remixed":false},{"id":"yijing-coins","instanceId":"yijing-coins-0","file":"yijing-coins.html","title":"六爻离谱铜钱","sourceTitle":"六爻离谱铜钱","kind":"易经","sourceGame":"I Ching coin divination flow","summary":"点六次摇铜钱，得到一卦适合转发的离谱签文。","accent":"#d6b45f","glyph":"卦","cover":"covers/yijing-coins.png","author":"@赝品库","likes":3392,"saves":736,"baseIndex":16,"loop":0,"remixed":false}];
+      const remixTwists = [{"label":"夜市版","glyph":"夜","accent":"#00c2ff","summary":"把节奏压进霓虹夜场，反馈更密、奖励更亮。","prompt":"霓虹夜市、快反馈、强分享截图"},{"label":"地铁版","glyph":"站","accent":"#ffcf33","summary":"改成单手通勤节奏，十秒内给出一次明确变化。","prompt":"地铁通勤、单手操作、十秒循环"},{"label":"反转版","glyph":"反","accent":"#ff5a3d","summary":"保留核心玩法，但把目标和失败条件倒过来。","prompt":"目标反转、失败变奖励、规则逐步变形"},{"label":"抽卡版","glyph":"抽","accent":"#9b7cff","summary":"每次操作都掉落一个新词条，适合继续二创。","prompt":"词条掉落、稀有度、可截图收集"},{"label":"双人版","glyph":"双","accent":"#31d07f","summary":"把单人循环变成互相干扰的同屏挑战。","prompt":"双人同屏、轻对抗、短局结算"}];
+      const publishedRemixes = (window.__PRINTER_REMIX_MANIFEST__ && Array.isArray(window.__PRINTER_REMIX_MANIFEST__.remixes)) ? window.__PRINTER_REMIX_MANIFEST__.remixes : [];
+      function itemFromManifest(entry, offset = 0) {
+        return {
+          id: entry.slug || entry.id || ('remix-' + offset),
+          instanceId: (entry.slug || entry.id || ('remix-' + offset)) + '-published-0',
+          file: entry.file,
+          title: entry.title || entry.slug || 'Remix',
+          sourceTitle: entry.title || entry.slug || 'Remix',
+          kind: entry.kind || 'Remix',
+          sourceGame: entry.source_file || entry.parent_slug || 'Remix Harness',
+          summary: entry.summary || (entry.agent_description && entry.agent_description.one_liner) || '本地发布的 Remix。',
+          accent: entry.accent || '#22f4ee',
+          glyph: entry.glyph || '改',
+          cover: entry.cover || ('covers/' + String(entry.file || entry.slug || 'remix').replace(/.html$/, '') + '.png'),
+          author: '@Remix',
+          likes: 400 + offset * 37,
+          saves: 120 + offset * 17,
+          baseIndex: baseItems.length + offset,
+          loop: 0,
+          remixed: true,
+          remixPrompt: entry.prompt && entry.prompt.text ? entry.prompt.text : '',
+        };
+      }
+      const manifestItems = publishedRemixes.map(itemFromManifest).filter((item) => item.file);
+      let feedItems = baseItems.concat(manifestItems).map((item) => ({ ...item }));
+      let nextAppend = feedItems.length;
+      let activeIndex = 0;
+      let remixCount = 0;
+      let scrollFrame = 0;
+      let dockTimer = 0;
+      let harnessAvailable = false;
+      let currentDraft = null;
+      let currentRemixArticle = null;
+      let currentRemixPromptKey = '';
+      const remixPromptByFile = new Map();
+      const social = new Map(feedItems.map((item) => [item.instanceId, { liked: false, saved: false, likes: item.likes, saves: item.saves }]));
+      const escapeHtml = (value) => {
+        const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return String(value).replace(/[&<>"']/g, (char) => entities[char]);
+      };
+      const formatCount = (value) => value >= 10000 ? (value / 10000).toFixed(1) + 'w' : value >= 1000 ? (value / 1000).toFixed(1) + 'k' : String(value);
+      const embedSrc = (value) => escapeHtml(value) + '?embed=1';
+      function waterCardMarkup(item, index) {
+        const coverHeight = 132 + (index % 5) * 18 + (index % 2) * 12;
+        const coverImage = item.cover ? '<img class="water-cover-image" src="' + escapeHtml(item.cover) + '" alt="" loading="lazy" onload="this.closest(\'.water-cover\').classList.add(\'has-render\')" onerror="this.remove()">' : '';
+        return '<button class="water-card" type="button" data-open-feed="' + index + '" data-instance-id="' + escapeHtml(item.instanceId) + '" style="--game-accent:' + escapeHtml(item.accent) + '; --cover-h:' + coverHeight + 'px;">' +
+          '<span class="water-cover">' + coverImage + '<b>' + escapeHtml(item.glyph) + '</b><i>' + escapeHtml(item.kind) + '</i></span>' +
+          '<span class="water-title">' + escapeHtml(item.title) + '</span>' +
+          '<span class="water-summary">' + escapeHtml(item.summary) + '</span>' +
+          '<span class="water-meta"><span>' + escapeHtml(item.author) + '</span><span>♡ ' + formatCount(item.likes) + '</span></span>' +
+        '</button>';
+      }
+      function syncWaterfallIndices() {
+        if (!waterfall) return;
+        waterfall.querySelectorAll('.water-card[data-instance-id]').forEach((card) => {
+          const index = feedItems.findIndex((item) => item.instanceId === card.dataset.instanceId);
+          if (index >= 0) card.dataset.openFeed = String(index);
+        });
+      }
+      function appendWaterfallCard(item, index) {
+        if (!waterfall || !item || !item.file) return;
+        waterfall.insertAdjacentHTML('beforeend', waterCardMarkup(item, index));
+      }
+      function markupFor(item, index) {
+        const eager = index < 2 || item.remixed;
+        const frameSrc = embedSrc(item.file);
+        if (!social.has(item.instanceId)) social.set(item.instanceId, { liked: false, saved: false, likes: item.likes, saves: item.saves });
+        const state = social.get(item.instanceId);
+        return '<article class="feed-item" style="--game-accent:' + escapeHtml(item.accent) + '; --n:' + (index % baseItems.length) + ';" data-instance-id="' + escapeHtml(item.instanceId) + '" data-src="' + escapeHtml(item.file) + '">' +
+          '<section class="live-card is-playing" aria-label="' + escapeHtml(item.title) + ' HTML 预览">' +
+            '<iframe class="html-frame" title="' + escapeHtml(item.title) + '" src="' + (eager ? frameSrc : 'about:blank') + '" data-src="' + frameSrc + '" data-loaded="' + (eager ? 'true' : 'false') + '" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>' +
+          '</section>' +
+          '<footer class="feed-caption"><span class="avatar" aria-hidden="true"></span><h2>' + escapeHtml(item.title) + '</h2></footer>' +
+          '<aside class="feed-actions">' +
+            '<button class="action-button" type="button" data-like aria-label="点赞 ' + escapeHtml(item.title) + '"><b>' + (state.liked ? '♥' : '♡') + '</b><span data-count="like">' + formatCount(state.likes) + '</span></button>' +
+            '<button class="action-button" type="button" data-save aria-label="收藏 ' + escapeHtml(item.title) + '"><b>' + (state.saved ? '★' : '☆') + '</b><span data-count="save">' + formatCount(state.saves) + '</span></button>' +
+            '<a class="action-button" href="' + escapeHtml(item.file) + '" aria-label="打开 ' + escapeHtml(item.title) + '"><b>▶</b></a>' +
+            '<button class="action-button remix-action" type="button" data-remix aria-label="Remix ' + escapeHtml(item.title) + '"><b>↻</b></button>' +
+            '<button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>' +
+          '</aside>' +
+        '</article>';
+      }
+      if (manifestItems.length) {
+        feed.insertAdjacentHTML('beforeend', manifestItems.map((item, index) => markupFor(item, baseItems.length + index)).join(''));
+      }
+      manifestItems.forEach((item, index) => appendWaterfallCard(item, baseItems.length + index));
+      function articleList() {
+        return Array.from(feed.querySelectorAll('.feed-item'));
+      }
+      function currentIndex() {
+        const articles = articleList();
+        const rootBox = feed.getBoundingClientRect();
+        const target = rootBox.top + rootBox.height / 2;
+        let bestIndex = 0;
+        let bestDelta = Infinity;
+        articles.forEach((article, index) => {
+          const box = article.getBoundingClientRect();
+          const delta = Math.abs(box.top + box.height / 2 - target);
+          if (delta < bestDelta) {
+            bestDelta = delta;
+            bestIndex = index;
+          }
+        });
+        return bestIndex;
+      }
+      function loadFrame(article) {
+        const frame = article && article.querySelector('.html-frame');
+        if (!frame) return;
+        if (frame.dataset.loaded !== 'true') {
+          frame.src = frame.dataset.src;
+          frame.dataset.loaded = 'true';
+        }
+        bridgeFrameGestures(frame);
+      }
+      function bridgeFrameGestures(frame) {
+        if (!frame || frame.dataset.gestureBridge === 'true') return;
+        const attach = () => {
+          let doc = null;
+          try {
+            doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+          } catch (error) {
+            return;
+          }
+          if (!doc || doc.__PRINTER_FEED_GESTURE_BRIDGED__) return;
+          doc.__PRINTER_FEED_GESTURE_BRIDGED__ = true;
+          let lastX = 0;
+          let lastY = 0;
+          doc.addEventListener('wheel', (event) => {
+            if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+            event.preventDefault();
+            feed.scrollTop += event.deltaY;
+          }, { passive: false });
+          doc.addEventListener('touchstart', (event) => {
+            const touch = event.touches && event.touches[0];
+            if (!touch) return;
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+          }, { passive: true });
+          doc.addEventListener('touchmove', (event) => {
+            const touch = event.touches && event.touches[0];
+            if (!touch) return;
+            const dx = touch.clientX - lastX;
+            const dy = touch.clientY - lastY;
+            if (Math.abs(dy) <= Math.abs(dx) + 8) return;
+            event.preventDefault();
+            feed.scrollTop -= dy;
+            lastX = touch.clientX;
+            lastY = touch.clientY;
+          }, { passive: false });
+        };
+        frame.dataset.gestureBridge = 'true';
+        frame.addEventListener('load', attach);
+        attach();
+      }
+      function loadAround(index) {
+        const articles = articleList();
+        for (let i = Math.max(0, index - 1); i <= Math.min(articles.length - 1, index + 1); i += 1) {
+          loadFrame(articles[i]);
+        }
+      }
+      function openFeedAt(index = 0) {
+        homeScreen.hidden = true;
+        feedScreen.hidden = false;
+        const articles = articleList();
+        const safeIndex = Math.max(0, Math.min(index, articles.length - 1));
+        window.requestAnimationFrame(() => {
+          if (articles[safeIndex]) feed.scrollTop = articles[safeIndex].offsetTop;
+          loadAround(safeIndex);
+          updateActive();
+        });
+      }
+      function showHome() {
+        feedScreen.hidden = true;
+        homeScreen.hidden = false;
+      }
+      function updateActive() {
+        activeIndex = currentIndex();
+        articleList().forEach((article, index) => article.classList.toggle('is-active', index === activeIndex));
+        loadAround(activeIndex);
+        ensureTail();
+      }
+      function loopItem(position) {
+        const base = baseItems[position % baseItems.length];
+        const loop = Math.floor(position / baseItems.length);
+        return {
+          ...base,
+          instanceId: base.id + '-loop-' + loop,
+          loop,
+          summary: loop > 0 ? base.summary + ' 第 ' + (loop + 1) + ' 次刷到，仍然可以继续 Remix。' : base.summary,
+        };
+      }
+      function appendMore(count = 8) {
+        const start = feedItems.length;
+        const html = [];
+        for (let offset = 0; offset < count; offset += 1) {
+          const item = loopItem(nextAppend);
+          nextAppend += 1;
+          feedItems.push(item);
+          html.push(markupFor(item, start + offset));
+        }
+        feed.insertAdjacentHTML('beforeend', html.join(''));
+      }
+      function ensureTail() {
+        if (feedItems.length - activeIndex < 5) appendMore();
+      }
+      function makeRemix(item) {
+        const twist = remixTwists[remixCount % remixTwists.length];
+        remixCount += 1;
+        const sourceTitle = item.sourceTitle || item.title.replace(/ · .*/, '');
+        return {
+          ...item,
+          id: item.id + '-remix-' + remixCount,
+          instanceId: item.id + '-remix-' + remixCount,
+          title: sourceTitle + ' · ' + twist.label,
+          sourceTitle,
+          kind: 'Remix',
+          summary: twist.summary,
+          accent: twist.accent,
+          glyph: twist.glyph,
+          remixed: true,
+          remixPrompt: '把《' + sourceTitle + '》改造成：' + twist.prompt,
+        };
+      }
+      function showRemixDock(item) {
+        window.clearTimeout(dockTimer);
+        dockTimer = window.setTimeout(() => {}, 240);
+      }
+      const remixModal = document.getElementById('remixModal');
+      const remixTitle = document.getElementById('remixTitle');
+      const remixPrompt = document.getElementById('remixPrompt');
+      const remixStatus = document.getElementById('remixStatus');
+      const remixProgress = document.getElementById('remixProgress');
+      const remixProgressBar = document.getElementById('remixProgressBar');
+      const draftPreview = document.getElementById('draftPreview');
+      const publishStep = document.getElementById('publishStep');
+      const remixName = document.getElementById('remixName');
+      const publishBtn = document.getElementById('publishBtn');
+      const draftBtn = document.getElementById('draftBtn');
+      const deleteDraftBtn = document.getElementById('deleteDraftBtn');
+      const remixClose = document.getElementById('remixClose');
+      let progressTimer = 0;
+      let progressStartedAt = 0;
+      function localSlug(value) {
+        return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'remix';
+      }
+      function slugForCurrentDraft(name) {
+        const derived = localSlug(name);
+        if (derived === 'remix' && currentDraft && currentDraft.slug_suggestion) return currentDraft.slug_suggestion;
+        return derived;
+      }
+      function remixPromptKeyFor(item, article) {
+        return item.file || article?.dataset?.src || item.instanceId || item.title || 'current';
+      }
+      function isTextEntryTarget(target) {
+        return Boolean(target && target.closest && target.closest('input, textarea, select, [contenteditable="true"], [contenteditable="plaintext-only"]'));
+      }
+      function setRemixStatus(text) {
+        if (remixStatus) remixStatus.textContent = text;
+      }
+      function setRemixProgress(percent, message) {
+        const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+        if (remixProgress) remixProgress.hidden = safePercent <= 0;
+        if (remixProgressBar) remixProgressBar.style.width = safePercent + '%';
+        if (message) setRemixStatus(message);
+      }
+      function stopProgressTicker() {
+        if (progressTimer) window.clearInterval(progressTimer);
+        progressTimer = 0;
+      }
+      function startProgressTicker() {
+        stopProgressTicker();
+        progressStartedAt = Date.now();
+        progressTimer = window.setInterval(() => {
+          const elapsed = Math.max(1, Math.round((Date.now() - progressStartedAt) / 1000));
+          const currentWidth = remixProgressBar ? parseFloat(remixProgressBar.style.width || '0') : 0;
+          if (currentWidth >= 42 && currentWidth < 92) {
+            setRemixStatus('模型生成中... ' + elapsed + 's，通常 20-60s。');
+          }
+        }, 1000);
+      }
+      function formatRemixError(error) {
+        let message = error && error.message ? error.message : String(error || '');
+        try {
+          const parsed = JSON.parse(message);
+          if (parsed && parsed.detail) message = String(parsed.detail);
+        } catch (parseError) {}
+        if (message === 'Failed to fetch' || /NetworkError|Load failed|fetch/i.test(message)) {
+          harnessAvailable = false;
+          return 'Harness 服务未连接。请先运行 python tools/remix_harness_server.py --port 8787，然后刷新页面。';
+        }
+        if (/model response JSON was incomplete|JSON was incomplete/i.test(message)) {
+          return '模型输出被截断。现在已改为更稳的 raw HTML 生成格式；请再点一次生成。';
+        }
+        return message;
+      }
+      const sleep = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
+      async function parseJsonResponse(response) {
+        const text = await response.text();
+        if (!response.ok) throw new Error(text);
+        return text ? JSON.parse(text) : {};
+      }
+      async function pollDraftJob(jobId, initialJob) {
+        let job = initialJob;
+        while (true) {
+          if (job) {
+            setRemixProgress(job.percent || 8, job.message || '正在生成...');
+            if (job.status === 'done') return job.draft;
+            if (job.status === 'error') throw new Error(job.error || job.message || '生成失败');
+          }
+          await sleep(850);
+          const response = await fetch('/api/remix/draft-jobs/' + encodeURIComponent(jobId), { cache: 'no-store' });
+          job = await parseJsonResponse(response);
+        }
+      }
+      async function createDraftWithProgress(payload) {
+        setRemixProgress(5, '提交生成任务...');
+        const response = await fetch('/api/remix/draft-jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (response.status === 404) {
+          setRemixProgress(36, '旧版 Harness 生成中...');
+          const fallback = await fetch('/api/remix/draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return parseJsonResponse(fallback);
+        }
+        const job = await parseJsonResponse(response);
+        return pollDraftJob(job.job_id, job);
+      }
+      function openRemixPanel(article) {
+        const item = feedItems[articleList().indexOf(article)] || { file: article.dataset.src, title: article.querySelector('h2')?.textContent || 'Remix' };
+        currentRemixArticle = article;
+        currentRemixPromptKey = remixPromptKeyFor(item, article);
+        currentDraft = null;
+        remixTitle.textContent = 'Remix ' + item.title;
+        remixPrompt.value = remixPromptByFile.get(currentRemixPromptKey) || '';
+        remixName.value = '';
+        draftPreview.removeAttribute('src');
+        draftPreview.classList.remove('is-visible');
+        setRemixProgress(0, '');
+        publishStep.hidden = true;
+        publishBtn.disabled = true;
+        remixModal.classList.add('is-visible');
+        remixModal.setAttribute('aria-hidden', 'false');
+        setRemixStatus(harnessAvailable ? '输入一句调整，然后生成。' : 'Harness 服务未连接，当前会回退成本地假 Remix。');
+      }
+      function closeRemixPanel() {
+        remixModal.classList.remove('is-visible');
+        remixModal.setAttribute('aria-hidden', 'true');
+      }
+      async function createHarnessDraft() {
+        if (!currentRemixArticle) return;
+        const item = feedItems[articleList().indexOf(currentRemixArticle)] || { file: currentRemixArticle.dataset.src };
+        const promptText = remixPrompt.value.trim();
+        if (currentRemixPromptKey) remixPromptByFile.set(currentRemixPromptKey, remixPrompt.value);
+        if (!promptText) {
+          setRemixStatus('先写一句想怎么调整。');
+          remixPrompt.focus();
+          return;
+        }
+        draftBtn.disabled = true;
+        publishBtn.disabled = true;
+        publishStep.hidden = true;
+        setRemixProgress(12, '准备生成调整...');
+        startProgressTicker();
+        try {
+          currentDraft = await createDraftWithProgress({
+            source_file: item.file,
+            prompt_text: promptText,
+            voice_transcript: ''
+          });
+          draftPreview.src = currentDraft.preview_url;
+          draftPreview.classList.add('is-visible');
+          remixName.value = currentDraft.title || item.title + ' Remix';
+          publishStep.hidden = false;
+          publishBtn.disabled = false;
+          setRemixProgress(100, '调整完成，取个名字后发布。');
+        } catch (error) {
+          setRemixStatus('生成失败：' + formatRemixError(error));
+        } finally {
+          stopProgressTicker();
+          draftBtn.disabled = false;
+        }
+      }
+      async function publishHarnessDraft() {
+        if (!currentDraft || !currentRemixArticle) return;
+        publishBtn.disabled = true;
+        setRemixStatus('正在发布到 output...');
+        try {
+          const title = (remixName.value || currentDraft.title || 'Remix').trim();
+          const response = await fetch('/api/remix/publish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              draft_id: currentDraft.draft_id,
+              slug: slugForCurrentDraft(title),
+              title,
+              agent_description: currentDraft.agent_description || {}
+            })
+          });
+          if (!response.ok) throw new Error(await response.text());
+          const result = await response.json();
+          const newItem = itemFromManifest(result.manifest_entry || {}, feedItems.length);
+          const index = articleList().indexOf(currentRemixArticle);
+          feedItems.splice(index + 1, 0, newItem);
+          currentRemixArticle.insertAdjacentHTML('afterend', markupFor(newItem, index + 1));
+          appendWaterfallCard(newItem, index + 1);
+          syncWaterfallIndices();
+          const inserted = currentRemixArticle.nextElementSibling;
+          window.requestAnimationFrame(() => {
+            inserted.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            loadFrame(inserted);
+            updateActive();
+          });
+          setRemixStatus('已发布：' + result.file);
+          currentDraft = null;
+        } catch (error) {
+          publishBtn.disabled = false;
+          setRemixStatus('发布失败：' + formatRemixError(error));
+        }
+      }
+      async function deleteHarnessDraft() {
+        if (!currentDraft) {
+          closeRemixPanel();
+          return;
+        }
+        const draftId = currentDraft.draft_id;
+        currentDraft = null;
+        try {
+          await fetch('/api/remix/draft/' + encodeURIComponent(draftId), { method: 'DELETE' });
+        } catch (error) {}
+        draftPreview.removeAttribute('src');
+        draftPreview.classList.remove('is-visible');
+        publishStep.hidden = true;
+        publishBtn.disabled = true;
+        setRemixStatus('已丢弃草稿，可以继续改文本再生成。');
+      }
+      fetch('/api/remix/sources', { cache: 'no-store' })
+        .then((response) => {
+          harnessAvailable = response.ok;
+          setRemixStatus(harnessAvailable ? 'Harness 服务已连接。' : '启动 tools/remix_harness_server.py 后可用真实生成。');
+        })
+        .catch(() => {
+          harnessAvailable = false;
+          setRemixStatus('启动 tools/remix_harness_server.py 后可用真实生成。');
+        });
+      remixClose.addEventListener('click', closeRemixPanel);
+      remixPrompt.addEventListener('input', () => {
+        if (currentRemixPromptKey) remixPromptByFile.set(currentRemixPromptKey, remixPrompt.value);
+      });
+      draftBtn.addEventListener('click', createHarnessDraft);
+      publishBtn.addEventListener('click', publishHarnessDraft);
+      deleteDraftBtn.addEventListener('click', deleteHarnessDraft);
+      homeScreen.addEventListener('click', (event) => {
+        const start = event.target.closest('[data-start-feed]');
+        const card = event.target.closest('[data-open-feed]');
+        if (start) {
+          openFeedAt(0);
+        } else if (card) {
+          openFeedAt(Number(card.dataset.openFeed || 0));
+        }
+      });
+      feedBack.addEventListener('click', showHome);
+      function syncArticleSocial(article) {
+        const item = feedItems[articleList().indexOf(article)];
+        if (!item) return;
+        const state = social.get(item.instanceId);
+        if (!state) return;
+        article.classList.toggle('is-liked', state.liked);
+        article.classList.toggle('is-saved', state.saved);
+        const likeButton = article.querySelector('[data-like] b');
+        const saveButton = article.querySelector('[data-save] b');
+        if (likeButton) likeButton.textContent = state.liked ? '♥' : '♡';
+        if (saveButton) saveButton.textContent = state.saved ? '★' : '☆';
+        const likeCount = article.querySelector('[data-count="like"]');
+        const saveCount = article.querySelector('[data-count="save"]');
+        if (likeCount) likeCount.textContent = formatCount(state.likes);
+        if (saveCount) saveCount.textContent = formatCount(state.saves);
+      }
+      function insertRemix(article) {
+        const index = articleList().indexOf(article);
+        const source = feedItems[index] || feedItems[activeIndex] || baseItems[0];
+        const remix = makeRemix(source);
+        remix.likes = Math.max(1, Math.floor((source.likes || 1) * .42));
+        remix.saves = Math.max(1, Math.floor((source.saves || 1) * .48));
+        feedItems.splice(index + 1, 0, remix);
+        article.insertAdjacentHTML('afterend', markupFor(remix, index + 1));
+        showRemixDock(remix);
+        const inserted = article.nextElementSibling;
+        window.requestAnimationFrame(() => {
+          inserted.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          loadFrame(inserted);
+          updateActive();
+        });
+      }
+      feed.addEventListener('click', (event) => {
+        const action = event.target.closest('[data-jump], [data-remix], [data-like], [data-save]');
+        if (!action) return;
+        const article = action.closest('.feed-item');
+        if (action.matches('[data-like], [data-save]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          const item = feedItems[articleList().indexOf(article)];
+          const state = item && social.get(item.instanceId);
+          if (!state) return;
+          if (action.matches('[data-like]')) {
+            state.liked = !state.liked;
+            state.likes += state.liked ? 1 : -1;
+          } else {
+            state.saved = !state.saved;
+            state.saves += state.saved ? 1 : -1;
+          }
+          syncArticleSocial(article);
+        } else if (action.matches('[data-jump]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          ensureTail();
+          const next = Math.min(articleList().length - 1, currentIndex() + 1);
+          articleList()[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (action.matches('[data-remix]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (harnessAvailable) {
+            openRemixPanel(article);
+          } else {
+            insertRemix(article);
+          }
+        }
+      });
+      feed.addEventListener('scroll', () => {
+        if (scrollFrame) return;
+        scrollFrame = window.requestAnimationFrame(() => {
+          scrollFrame = 0;
+          updateActive();
+        });
+      }, { passive: true });
+      window.addEventListener('keydown', (event) => {
+        if (isTextEntryTarget(event.target)) return;
+        if (remixModal.classList.contains('is-visible')) {
+          if (event.key === 'Escape') closeRemixPanel();
+          return;
+        }
+        if (feedScreen.hidden) {
+          if (event.key === 'Enter') openFeedAt(0);
+          return;
+        }
+        const articles = articleList();
+        const current = currentIndex();
+        if (event.key === 'ArrowDown') {
+          ensureTail();
+          articles[Math.min(articles.length - 1, current + 1)].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (event.key === 'ArrowUp') articles[Math.max(0, current - 1)].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (event.key.toLowerCase() === 'r') {
+          if (harnessAvailable) openRemixPanel(articles[current]);
+          else insertRemix(articles[current]);
+        }
+      });
+      loadAround(0);
+      window.remixCurrent = () => {
+        const article = articleList()[currentIndex()];
+        if (feedScreen.hidden) openFeedAt(currentIndex());
+        if (harnessAvailable) openRemixPanel(article);
+        else insertRemix(article);
+      };
+      window.render_home_to_text = () => JSON.stringify({
+        coordinate_system: 'vertical infinite html feed',
+        baseItems: baseItems.length,
+        items: feedItems.length,
+        visibleIndex: activeIndex,
+        visibleTitle: feedItems[activeIndex] ? feedItems[activeIndex].title : null,
+        remixes: remixCount,
+        publishedRemixes: publishedRemixes.length,
+        harnessAvailable,
+        supportsRemix: true,
+      });
+    })();
+  </script>
+</body>
+</html>
