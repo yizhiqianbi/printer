@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="icon" href="data:,">
+  <title>Arcade Atelier | Playable Game Remix Studio</title>
+  <style>
+    :root {
+      --paper: #070707;
+      --paper-2: #11100e;
+      --ink: #f7f2e8;
+      --muted: rgba(247, 242, 232, .68);
+      --soft: rgba(247, 242, 232, .12);
+      --line: rgba(247, 242, 232, .18);
+      --hot: #ff4b64;
+      --mint: #38f2c2;
+      --sun: #f7c948;
+      --blue: #59b7ff;
+      --max: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        linear-gradient(90deg, rgba(247, 201, 72, .08) 1px, transparent 1px) 0 0 / 44px 44px,
+        linear-gradient(180deg, #070707 0%, #11100e 44%, #070707 100%);
+      color: var(--ink);
+      font-family: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 14% 8%, rgba(255, 75, 100, .23), transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(56, 242, 194, .15), transparent 34%),
+        linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.48) 100%);
+      z-index: -1;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .scroll-meter {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 20;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,.08);
+    }
+
+    .scroll-meter i {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--hot), var(--sun), var(--mint));
+      transition: width .08s linear;
+    }
+
+    .nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 4px;
+      z-index: 18;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .nav-inner {
+      width: min(calc(100% - 28px), var(--max));
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-bottom: 1px solid rgba(247,242,232,.12);
+      pointer-events: auto;
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .brand b {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--hot), var(--sun));
+      color: #130606;
+      box-shadow: 0 10px 28px rgba(255,75,100,.28);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      color: rgba(247,242,232,.72);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .nav-links a {
+      min-height: 38px;
+      display: inline-grid;
+      place-items: center;
+    }
+
+    .nav-links .launch {
+      padding: 0 16px;
+      border: 1px solid rgba(247,242,232,.24);
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(247,242,232,.08);
+    }
+
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 94px 20px 56px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .cover-wall {
+      position: absolute;
+      inset: -8vh -8vw;
+      z-index: -2;
+      display: grid;
+      grid-template-columns: repeat(8, minmax(120px, 1fr));
+      gap: 16px;
+      opacity: .38;
+      transform: rotate(-7deg) scale(1.08);
+      filter: saturate(1.16) contrast(1.08);
+      animation: drift 34s linear infinite;
+    }
+
+    .cover-wall img {
+      width: 100%;
+      aspect-ratio: 10 / 15;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 18px 50px rgba(0,0,0,.42);
+    }
+
+    .cover-wall img:nth-child(2n) {
+      transform: translateY(42px);
+    }
+
+    .cover-wall img:nth-child(3n) {
+      transform: translateY(-28px);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(90deg, rgba(7,7,7,.97) 0%, rgba(7,7,7,.76) 45%, rgba(7,7,7,.42) 100%),
+        linear-gradient(180deg, rgba(7,7,7,.12) 0%, #070707 96%);
+    }
+
+    .hero-inner {
+      width: min(100%, var(--max));
+      display: grid;
+      grid-template-columns: minmax(0, 1.04fr) minmax(320px, .72fr);
+      align-items: end;
+      gap: 42px;
+    }
+
+    .eyebrow {
+      margin: 0 0 16px;
+      color: var(--mint);
+      font-size: 12px;
+      font-weight: 1000;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      color: #fff;
+      font-size: clamp(56px, 8vw, 118px);
+      line-height: .88;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 620px;
+      margin: 24px 0 0;
+      color: rgba(247,242,232,.78);
+      font-size: clamp(18px, 2vw, 24px);
+      line-height: 1.48;
+      font-weight: 600;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .action {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(247,242,232,.22);
+      border-radius: 999px;
+      padding: 0 18px;
+      color: #fff;
+      font-weight: 900;
+      background: rgba(247,242,232,.08);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .action.primary {
+      border: 0;
+      background: linear-gradient(135deg, var(--hot), var(--sun));
+      color: #160606;
+      box-shadow: 0 20px 58px rgba(255,75,100,.28);
+    }
+
+    .action:hover {
+      transform: translateY(-2px);
+      border-color: rgba(247,242,232,.42);
+      background: rgba(247,242,232,.13);
+    }
+
+    .action.primary:hover {
+      background: linear-gradient(135deg, #ff6678, #ffd56a);
+    }
+
+    .hero-proof {
+      align-self: stretch;
+      display: grid;
+      align-content: end;
+      gap: 18px;
+      padding-bottom: 10px;
+    }
+
+    .signal {
+      border-left: 1px solid rgba(247,242,232,.24);
+      padding-left: 22px;
+    }
+
+    .signal strong {
+      display: block;
+      color: #fff;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: .9;
+    }
+
+    .signal span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .ticker {
+      width: 100%;
+      overflow: hidden;
+      border-block: 1px solid rgba(247,242,232,.14);
+      background: rgba(7,7,7,.72);
+    }
+
+    .ticker-track {
+      width: max-content;
+      display: flex;
+      gap: 28px;
+      padding: 13px 0;
+      animation: marquee 28s linear infinite;
+    }
+
+    .ticker span {
+      color: rgba(247,242,232,.78);
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    main {
+      display: grid;
+      gap: 0;
+    }
+
+    section {
+      padding: 94px 20px;
+    }
+
+    .section-inner {
+      width: min(100%, var(--max));
+      margin: 0 auto;
+    }
+
+    .section-title {
+      display: grid;
+      grid-template-columns: minmax(0, .8fr) minmax(280px, .55fr);
+      align-items: end;
+      gap: 34px;
+      margin-bottom: 42px;
+    }
+
+    h2 {
+      margin: 0;
+      color: #fff;
+      font-size: clamp(36px, 5vw, 72px);
+      line-height: .96;
+      letter-spacing: 0;
+    }
+
+    .section-title p,
+    .copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.62;
+      font-weight: 650;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .flow-step {
+      min-height: 240px;
+      display: grid;
+      align-content: space-between;
+      gap: 28px;
+      padding: 24px 22px;
+      border-right: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(247,242,232,.04), rgba(247,242,232,0));
+    }
+
+    .flow-step:last-child {
+      border-right: 0;
+    }
+
+    .flow-step b {
+      color: var(--mint);
+      font-size: 13px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .flow-step strong {
+      display: block;
+      color: #fff;
+      font-size: 22px;
+      line-height: 1.05;
+    }
+
+    .flow-step span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 650;
+    }
+
+    .feature-band {
+      background: #f6efe2;
+      color: #11100e;
+    }
+
+    .feature-band h2,
+    .feature-band .eyebrow {
+      color: #11100e;
+    }
+
+    .feature-band .section-title p {
+      color: rgba(17,16,14,.64);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-top: 1px solid rgba(17,16,14,.18);
+    }
+
+    .feature {
+      min-height: 248px;
+      display: grid;
+      align-content: space-between;
+      gap: 26px;
+      padding: 28px 22px;
+      border-right: 1px solid rgba(17,16,14,.18);
+      border-bottom: 1px solid rgba(17,16,14,.18);
+    }
+
+    .feature:nth-child(3n) {
+      border-right: 0;
+    }
+
+    .feature i {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #11100e;
+      color: #f6efe2;
+      font-style: normal;
+      font-weight: 1000;
+    }
+
+    .feature strong {
+      display: block;
+      max-width: 300px;
+      font-size: 24px;
+      line-height: 1.08;
+    }
+
+    .feature span {
+      color: rgba(17,16,14,.68);
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
+    .case-layout {
+      display: grid;
+      grid-template-columns: minmax(300px, .78fr) minmax(0, 1fr);
+      gap: 36px;
+      align-items: start;
+    }
+
+    .case-tabs {
+      display: grid;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    .case-tabs button {
+      min-height: 74px;
+      border: 1px solid rgba(247,242,232,.12);
+      border-radius: 0;
+      padding: 14px 0;
+      background: transparent;
+      color: rgba(247,242,232,.58);
+      text-align: left;
+      cursor: pointer;
+      transition: color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .case-tabs button:hover,
+    .case-tabs button.is-active {
+      color: #fff;
+      border-color: rgba(247,242,232,.34);
+      transform: translateX(6px);
+    }
+
+    .case-tabs b {
+      display: block;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .case-tabs span {
+      display: block;
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .case-stage {
+      min-height: 540px;
+      display: grid;
+      grid-template-columns: minmax(0, .86fr) minmax(260px, .56fr);
+      align-items: stretch;
+      gap: 18px;
+    }
+
+    .phone-preview {
+      position: relative;
+      min-height: 540px;
+      overflow: hidden;
+      border: 1px solid rgba(247,242,232,.18);
+      background: #050505;
+    }
+
+    .phone-preview img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      filter: saturate(1.12) contrast(1.04);
+    }
+
+    .phone-preview::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 46%, rgba(0,0,0,.76) 100%);
+    }
+
+    .case-copy {
+      display: grid;
+      align-content: end;
+      gap: 16px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 22px 0;
+    }
+
+    .case-copy h3 {
+      margin: 0;
+      color: #fff;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: .98;
+    }
+
+    .case-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.58;
+      font-weight: 650;
+    }
+
+    .case-copy code {
+      display: block;
+      border-left: 3px solid var(--mint);
+      padding: 10px 0 10px 14px;
+      color: rgba(247,242,232,.82);
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    .api-strip {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(280px, .65fr);
+      gap: 38px;
+      align-items: stretch;
+    }
+
+    .api-copy {
+      display: grid;
+      align-content: center;
+      gap: 20px;
+      border-block: 1px solid var(--line);
+      padding: 34px 0;
+    }
+
+    .api-copy h2 {
+      max-width: 680px;
+    }
+
+    .endpoint-list {
+      display: grid;
+      gap: 12px;
+      border-block: 1px solid var(--line);
+      padding: 18px 0;
+    }
+
+    .endpoint {
+      display: grid;
+      grid-template-columns: 94px minmax(0, 1fr);
+      gap: 14px;
+      align-items: baseline;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(247,242,232,.12);
+    }
+
+    .endpoint:last-child {
+      border-bottom: 0;
+    }
+
+    .endpoint b {
+      color: var(--sun);
+      font-size: 12px;
+      letter-spacing: .14em;
+    }
+
+    .endpoint code {
+      color: #fff;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .final {
+      min-height: 68svh;
+      display: grid;
+      place-items: center;
+      padding-bottom: 80px;
+      background:
+        linear-gradient(180deg, rgba(7,7,7,.1), #070707 74%),
+        url("covers/traffic-bolt-jam.png") center / cover;
+      isolation: isolate;
+      position: relative;
+    }
+
+    .final::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: rgba(0,0,0,.78);
+    }
+
+    .final-copy {
+      width: min(100%, 860px);
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .final-copy h2 {
+      margin-bottom: 20px;
+    }
+
+    .final-copy p {
+      margin: 0 auto 28px;
+      max-width: 640px;
+      color: rgba(247,242,232,.76);
+      font-size: 18px;
+      line-height: 1.58;
+      font-weight: 650;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .72s ease, transform .72s ease;
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes drift {
+      0% { transform: rotate(-7deg) translate3d(0, 0, 0) scale(1.08); }
+      100% { transform: rotate(-7deg) translate3d(-120px, -80px, 0) scale(1.08); }
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    @media (max-width: 920px) {
+      .nav-links a:not(.launch) {
+        display: none;
+      }
+
+      .hero-inner,
+      .section-title,
+      .case-layout,
+      .api-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-proof {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .signal {
+        padding-left: 12px;
+      }
+
+      .flow,
+      .feature-grid,
+      .case-stage {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-step,
+      .feature {
+        min-height: auto;
+        border-right: 0;
+      }
+
+      .feature:nth-child(3n) {
+        border-right: 0;
+      }
+
+      .phone-preview {
+        min-height: 420px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .nav-inner {
+        min-height: 54px;
+      }
+
+      .brand span {
+        display: none;
+      }
+
+      .hero {
+        min-height: 94svh;
+        padding-top: 86px;
+      }
+
+      .hero-inner {
+        gap: 34px;
+      }
+
+      .lead {
+        font-size: 17px;
+      }
+
+      .hero-proof {
+        grid-template-columns: 1fr;
+      }
+
+      section {
+        padding: 72px 18px;
+      }
+
+      .cover-wall {
+        grid-template-columns: repeat(4, minmax(110px, 1fr));
+        gap: 12px;
+        opacity: .3;
+      }
+
+      .endpoint {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body data-printer-artifact="product-showcase">
+  <div class="scroll-meter" aria-hidden="true"><i id="scrollMeter"></i></div>
+  <nav class="nav" aria-label="页面导航">
+    <div class="nav-inner">
+      <a class="brand" href="product-showcase.html" aria-label="Arcade Atelier 产品介绍">
+        <b>A</b>
+        <span>Arcade Atelier</span>
+      </a>
+      <div class="nav-links">
+        <a href="#flow">流程</a>
+        <a href="#features">亮点</a>
+        <a href="#cases">案例</a>
+        <a class="launch" href="index.html">打开作品集</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="cover-wall" aria-hidden="true">
+      <img src="covers/screw-sorter.png" alt="">
+      <img src="covers/traffic-bolt-jam.png" alt="">
+      <img src="covers/hexa-away-fake.png" alt="">
+      <img src="covers/loop-sort-fake.png" alt="">
+      <img src="covers/triple-match-fake.png" alt="">
+      <img src="covers/brainrot-merge-pot.png" alt="">
+      <img src="covers/parking-jam-fake.png" alt="">
+      <img src="covers/wool-sort-fake.png" alt="">
+      <img src="covers/infinite-craft-fake.png" alt="">
+      <img src="covers/office-stamp-away.png" alt="">
+      <img src="covers/factory-bolt-jam.png" alt="">
+      <img src="covers/goods-sort-fake.png" alt="">
+      <img src="covers/color-block-jam-fake.png" alt="">
+      <img src="covers/office-loop-sort.png" alt="">
+      <img src="covers/sbti-fake.png" alt="">
+      <img src="covers/emoji-gator-hop.png" alt="">
+    </div>
+    <div class="hero-inner reveal">
+      <div>
+        <p class="eyebrow">AI Game Remix API</p>
+        <h1>把一句创意变成可玩的小游戏二创。</h1>
+        <p class="lead">Arcade Atelier 把热点小游戏拆成可复用的玩法母版，再通过 API 把 prompt、语音和主题设定生成可试玩、可发布、可继续 remix 的网页作品。</p>
+        <div class="hero-actions">
+          <a class="action primary" href="index.html">进入 Remix Gallery</a>
+          <a class="action" href="#cases">查看作品案例</a>
+        </div>
+      </div>
+      <aside class="hero-proof" aria-label="产品指标">
+        <div class="signal">
+          <strong>68</strong>
+          <span>当前作品集里的可玩游戏与二创版本</span>
+        </div>
+        <div class="signal">
+          <strong>3</strong>
+          <span>从草稿、预览到发布的 API 阶段</span>
+        </div>
+        <div class="signal">
+          <strong>0</strong>
+          <span>生成页默认无外链依赖，方便本地和活动分发</span>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>SBTI 测评</span><span>螺丝排序</span><span>Parking Jam</span><span>Hexa Away</span><span>Loop Sort</span><span>Triple Match</span><span>Infinite Craft</span><span>Google Dino</span>
+      <span>SBTI 测评</span><span>螺丝排序</span><span>Parking Jam</span><span>Hexa Away</span><span>Loop Sort</span><span>Triple Match</span><span>Infinite Craft</span><span>Google Dino</span>
+    </div>
+  </div>
+
+  <main>
+    <section id="flow">
+      <div class="section-inner reveal">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Product Flow</p>
+            <h2>从热点捕捉到作品发布，压成一条 remix 流水线。</h2>
+          </div>
+          <p>用户不需要从空白项目开始。选择一个已有玩法，描述想要的主题和包装，系统会保留关键机制，生成一个新的可玩版本。</p>
+        </div>
+        <div class="flow">
+          <div class="flow-step">
+            <b>01</b>
+            <strong>选择玩法母版</strong>
+            <span>从 Playable Catalog 挑选一个已经可玩的小游戏，比如停车解堵、六角弹出、三连清或测评卡。</span>
+          </div>
+          <div class="flow-step">
+            <b>02</b>
+            <strong>输入 prompt 或语音</strong>
+            <span>描述主题、场景、角色和传播梗。API 会把输入转成结构化生成意图。</span>
+          </div>
+          <div class="flow-step">
+            <b>03</b>
+            <strong>生成草稿</strong>
+            <span>保留原玩法爽点，同时改写文案、视觉包装、关卡设定和 agent description。</span>
+          </div>
+          <div class="flow-step">
+            <b>04</b>
+            <strong>即时预览</strong>
+            <span>在浏览器里试玩新版本，检查节奏、触控、状态反馈和移动端展示。</span>
+          </div>
+          <div class="flow-step">
+            <b>05</b>
+            <strong>发布为作品</strong>
+            <span>发布为新的可玩网页，写入 remix manifest，继续进入 Catalog 被浏览和再二创。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="feature-band">
+      <div class="section-inner reveal">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Highlights</p>
+            <h2>它更像创意验证台，不是普通 H5 模板集合。</h2>
+          </div>
+          <p>重点不是把页面做得像，而是把玩法、节奏、传播点和二创链路一起沉淀下来。</p>
+        </div>
+        <div class="feature-grid">
+          <div class="feature">
+            <i>玩</i>
+            <strong>输出可试玩作品，不停在概念稿。</strong>
+            <span>每个结果都能直接打开、点击、失败、重开和分享，适合快速评审和投放前测试。</span>
+          </div>
+          <div class="feature">
+            <i>接</i>
+            <strong>API 串起草稿、任务和发布。</strong>
+            <span>Remix 按钮连接真实生成流程，支持同步草稿、异步任务和作品发布。</span>
+          </div>
+          <div class="feature">
+            <i>记</i>
+            <strong>Agent description 让二创可延续。</strong>
+            <span>发布时沉淀玩法说明、状态模型和演化方向，下一次 remix 可以继承上下文。</span>
+          </div>
+          <div class="feature">
+            <i>热</i>
+            <strong>热点玩法持续扩展。</strong>
+            <span>螺丝、挪车、排序、三消、测评、.io 和玄学卡等机制可以被快速复刻成素材池。</span>
+          </div>
+          <div class="feature">
+            <i>轻</i>
+            <strong>单文件优先，方便分发。</strong>
+            <span>大多数产物是离线网页作品，没有复杂运行环境，适合内部演示、活动页和内容实验。</span>
+          </div>
+          <div class="feature">
+            <i>改</i>
+            <strong>换主题不丢核心手感。</strong>
+            <span>系统关注机制骨架，比如“只能点前排”“三件即清”“顺箭头出块”，避免只做表面换皮。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cases">
+      <div class="section-inner reveal">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Remix Cases</p>
+            <h2>同一个玩法，可以长出不同的内容包装。</h2>
+          </div>
+          <p>这些案例都来自当前 Remix Gallery。左侧切换玩法，右侧呈现母版、二创方向和对应 prompt。</p>
+        </div>
+        <div class="case-layout">
+          <div class="case-tabs" role="tablist" aria-label="Remix 案例">
+            <button class="is-active" type="button" data-case="0" role="tab" aria-selected="true">
+              <b>挪车打螺丝 -> 夜班进厂通车</b>
+              <span>热点词面 + 停车解堵玩法</span>
+            </button>
+            <button type="button" data-case="1" role="tab" aria-selected="false">
+              <b>Hexa Away -> 工单盖章弹出</b>
+              <span>六角弹出 + 办公室审批梗</span>
+            </button>
+            <button type="button" data-case="2" role="tab" aria-selected="false">
+              <b>Loop Sort -> 夜班传单回路</b>
+              <span>传送带分拣 + 夜班单据</span>
+            </button>
+          </div>
+          <div class="case-stage" aria-live="polite">
+            <a class="phone-preview" id="caseLink" href="factory-bolt-jam.html">
+              <img id="caseImage" src="covers/factory-bolt-jam.png" alt="夜班进厂通车封面">
+            </a>
+            <div class="case-copy">
+              <h3 id="caseTitle">夜班进厂通车</h3>
+              <p id="caseText">把当前热词“挪车打螺丝”包装成夜班厂门场景，保留点车顺车头滑动、先清门口短车、再放后排长车的节奏。</p>
+              <code id="casePrompt">Prompt: 把今天热门“挪车打螺丝”盘改成夜班进厂通车主题，保留点车顺车头挪位、先清门口短车再放后排长车。</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-inner reveal">
+        <div class="api-strip">
+          <div class="api-copy">
+            <p class="eyebrow">API Surface</p>
+            <h2>前台是 Feed，后台是一套可编排的 remix 生成接口。</h2>
+            <p class="copy">Remix Harness 把页面按钮接到本地生成服务。生成草稿后可以预览、编辑 agent description，再发布为新的 HTML 和 manifest 记录。</p>
+          </div>
+          <div class="endpoint-list" aria-label="API 端点">
+            <div class="endpoint">
+              <b>DRAFT</b>
+              <code>/api/remix/draft</code>
+            </div>
+            <div class="endpoint">
+              <b>JOBS</b>
+              <code>/api/remix/draft-jobs</code>
+            </div>
+            <div class="endpoint">
+              <b>PUBLISH</b>
+              <code>/api/remix/publish</code>
+            </div>
+            <div class="endpoint">
+              <b>OUTPUT</b>
+              <code>output/&lt;slug&gt;.html + remix_manifest.json</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final">
+      <div class="section-inner reveal">
+        <div class="final-copy">
+          <p class="eyebrow">For Demo</p>
+          <h2>用它展示一种新的小游戏生产方式。</h2>
+          <p>先刷到一个玩法，再给它一句主题，最后得到一个能玩的版本。创意、复刻、包装、发布和再创作都留在同一条链路里。</p>
+          <a class="action primary" href="index.html">打开当前作品集</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const meter = document.getElementById('scrollMeter');
+    const updateMeter = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+      meter.style.width = pct.toFixed(2) + '%';
+    };
+    updateMeter();
+    window.addEventListener('scroll', updateMeter, { passive: true });
+
+    const reveals = [...document.querySelectorAll('.reveal')];
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add('is-visible');
+      });
+    }, { threshold: .16 });
+    reveals.forEach((item) => observer.observe(item));
+
+    const cases = [
+      {
+        title: '夜班进厂通车',
+        text: '把当前热词“挪车打螺丝”包装成夜班厂门场景，保留点车顺车头滑动、先清门口短车、再放后排长车的节奏。',
+        prompt: 'Prompt: 把今天热门“挪车打螺丝”盘改成夜班进厂通车主题，保留点车顺车头挪位、先清门口短车再放后排长车。',
+        image: 'covers/factory-bolt-jam.png',
+        alt: '夜班进厂通车封面',
+        link: 'factory-bolt-jam.html'
+      },
+      {
+        title: '工单盖章弹出',
+        text: '把六角箭头弹出盘改成办公室审批主题，点击能顺箭头流转出去的工单，转盘寻找新的空边。',
+        prompt: 'Prompt: 把 Hexa Away 式六角箭头弹出盘改成办公室审批主题，保留只能顺箭头流转和转盘换角度。',
+        image: 'covers/office-stamp-away.png',
+        alt: '工单盖章弹出封面',
+        link: 'office-stamp-away.html'
+      },
+      {
+        title: '夜班传单回路',
+        text: '把 Loop Sort 的四侧投递和环带三连清改成夜班传单回路，同类单据沿环带贴到一起后整批处理。',
+        prompt: 'Prompt: 把 Loop Sort 式卡车放货环带三连清改成办公室夜班传单主题，保留四侧投放、环带前进和三件即清。',
+        image: 'covers/office-loop-sort.png',
+        alt: '夜班传单回路封面',
+        link: 'office-loop-sort.html'
+      }
+    ];
+
+    const buttons = [...document.querySelectorAll('[data-case]')];
+    const caseImage = document.getElementById('caseImage');
+    const caseTitle = document.getElementById('caseTitle');
+    const caseText = document.getElementById('caseText');
+    const casePrompt = document.getElementById('casePrompt');
+    const caseLink = document.getElementById('caseLink');
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const data = cases[Number(button.dataset.case)];
+        buttons.forEach((item) => {
+          item.classList.toggle('is-active', item === button);
+          item.setAttribute('aria-selected', item === button ? 'true' : 'false');
+        });
+        caseImage.src = data.image;
+        caseImage.alt = data.alt;
+        caseTitle.textContent = data.title;
+        caseText.textContent = data.text;
+        casePrompt.textContent = data.prompt;
+        caseLink.href = data.link;
+      });
+    });
+  </script>
+</body>
+</html>

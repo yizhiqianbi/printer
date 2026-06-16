@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-overtime-carpool-jam",
+  "slug": "overtime-carpool-jam",
+  "title": "下班拼车出库",
+  "source_file": "parking-jam-fake.html",
+  "parent_slug": "parking-jam-fake",
+  "lineage": [
+    "parking-jam-fake",
+    "overtime-carpool-jam"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把 Parking Jam 式停车解堵改成办公室下班拼车主题，保留点车顺着车头滑出、先清门口短车再放后排长车的节奏。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室主题的 Parking Jam 二创：先疏通门口短车，再把下班拼车一台台放出园区。",
+    "core_loop": "玩家面对一层被晚班拼车塞满的园区车位，每台车都只会顺着自己的车头方向往前开；如果前方车道完全打通，它就会直接出库，否则会先往前蹭到最近空位，继续给后排班车让路；只有先放掉出口边的小车，后排长车和竖停班车才会逐步得到通道，直到整层全部清空。",
+    "controls": "单指点击任意拼车，车辆会立刻沿车头方向滑到尽头或直接出库；点击“重开这一层”恢复固定盘面。",
+    "mechanics": [
+      "车头朝向约束：每台车只能顺着自己的朝向前进，保留 Parking Jam 最核心的堵点判断",
+      "先滑再出：前方没完全打通时，车辆会先占住最近空位，为下一辆腾出链式通道",
+      "长短车混排：两格与三格车辆同时出现，必须先处理占位最恶心的长车或门口短车",
+      "多出口压力：盘边不只一个闸口，需要读懂每辆车更接近哪一侧才能快速放行",
+      "固定短局：单盘十辆车、几十秒到一两分钟即可通掉，天然适合碎片时间反复试顺序"
+    ],
+    "visual_language": "冷色夜班园区配色，普通车辆换成不同部门的拼车标签，出口做成发光闸口，保持单文件竖屏和纯画布停车场表现。",
+    "state_model": "state.cars 记录每台车的行列、长度、朝向、颜色和是否仍在场内；state.selectedId 记录最近一次点中的车辆；state.moves 统计放车次数；state.escaped 统计已出库车辆；state.mode 在 playing/won 间切换。",
+    "share_hook": "“终于把这层下班拼车都放出去了”很像打工人段子，也方便继续往园区、仓储、校车等题材扩。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更多固定停车盘面",
+      "加入按出口分类的放行统计",
+      "加入更长的三格班车组合"
+    ]
+  },
+  "files": {
+    "html": "overtime-carpool-jam.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-night-shift-screws",
+  "slug": "night-shift-screws",
+  "title": "夜班拆钉台",
+  "source_file": "screw-sorter.html",
+  "parent_slug": "screw-sorter",
+  "lineage": [
+    "screw-sorter",
+    "night-shift-screws"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "改成夜班工位主题，板材换成工牌和键帽，反馈更冷更硬。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "夜班工位主题的拧钉排序局：拆挡板、收同色、避免夜班盒爆仓。",
+    "core_loop": "玩家先拆最上层可点击的彩钉，让被工牌和键帽压住的下层螺丝逐步露出；每拆下一枚都会进入下方六格夜班盒，凑满三枚同类自动归档清除；如果盒子被不同颜色塞满则失败，拆空全部层板即通关。",
+    "controls": "触摸点击高亮可拆的螺丝；不可点击被上层挡住的螺丝；点击“重开这一板”重置关卡。",
+    "mechanics": [
+      "层叠遮挡：只有不被更高层板件覆盖的螺丝可以拆除",
+      "三枚归档：同类螺丝进入六格盒后，累计三枚自动清空",
+      "有限槽位：不同类颜色混装会快速占满盒子，迫使玩家规划顺序",
+      "板件剥离：拆空某层板件上的螺丝后，该板件视觉上退出场景，露出更深层",
+      "短局复玩：单局目标明确，适合十几秒到几十秒反复尝试"
+    ],
+    "visual_language": "冷色夜班工位风，深蓝背景加霓虹冷光，板件替换成工牌压板、键帽挡片与主控底板，收纳盒字符也改成工位符号。",
+    "state_model": "state.screws 记录每枚螺丝的层级、颜色、位置与激活状态；state.tray 为六格夜班盒；state.mode 为 playing/won/lost；state.removed 记录已归档数量。",
+    "share_hook": "结果文案天然适合截图分享，比如“我把夜班拆钉台一板清空了”或“夜班盒又爆仓了”。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保留 printer artifact 元数据与页面契约"
+    ],
+    "next_evolution_hooks": [
+      "加入限时夜班倒计时",
+      "加入特殊锁钉与万能空槽",
+      "加入每日板面 seed 与排行榜文案"
+    ]
+  },
+  "files": {
+    "html": "night-shift-screws.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

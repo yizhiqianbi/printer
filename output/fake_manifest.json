@@ -1,7 +1,227 @@
 {
-  "intent": "建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。",
-  "generated_at": "2026-04-25T12:29:44.239Z",
+  "intent": "建立移动端竖屏 Playable Catalog：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。",
+  "generated_at": "2026-06-16T01:38:56.108Z",
   "games": [
+    {
+      "id": "screw-sorter",
+      "file": "screw-sorter.html",
+      "cover": "covers/screw-sorter.png",
+      "title": "打个螺丝局",
+      "kind": "拧螺丝",
+      "source_game": "打个螺丝 / 一起拧螺丝式层叠拆卸排序",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "screw-box-blitz",
+      "file": "screw-box-blitz.html",
+      "cover": "covers/screw-box-blitz.png",
+      "title": "彩盒拧钉局",
+      "kind": "彩盒拆钉",
+      "source_game": "一起拧螺丝 / 无敌螺丝王式同色彩盒拆钉",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "screwdom-fake",
+      "file": "screwdom-fake.html",
+      "cover": "covers/screwdom-fake.png",
+      "title": "钉柱归箱局",
+      "kind": "针位拆钉",
+      "source_game": "Screwdom 式针位堆叠拆钉",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "brainrot-merge-pot",
+      "file": "brainrot-merge-pot.html",
+      "cover": "covers/brainrot-merge-pot.png",
+      "title": "脑腐合成锅",
+      "kind": "合成",
+      "source_game": "Brainrot Merge / 合成大西瓜式掉落合成",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "brainrot-raider-yard",
+      "file": "brainrot-raider-yard.html",
+      "cover": "covers/brainrot-raider-yard.png",
+      "title": "脑腐偷家场",
+      "kind": "养成合成",
+      "source_game": "Merge & Steal Brainrot / Italian Brainrot Merge",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "brainrot-egg-run",
+      "file": "brainrot-egg-run.html",
+      "cover": "covers/brainrot-egg-run.png",
+      "title": "脑腐抢蛋线",
+      "kind": "收集养成",
+      "source_game": "Collect Brainrot Egg",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "arrow-escape-fake",
+      "file": "arrow-escape-fake.html",
+      "cover": "covers/arrow-escape-fake.png",
+      "title": "拔箭逃生局",
+      "kind": "解谜",
+      "source_game": "Arrows - Puzzle Escape",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "emoji-gator-hop",
+      "file": "emoji-gator-hop.html",
+      "cover": "covers/emoji-gator-hop.png",
+      "title": "表情踩鳄梯",
+      "kind": "跳跃",
+      "source_game": "TikTok hidden emoji DM game",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "zen-logic-fake",
+      "file": "zen-logic-fake.html",
+      "cover": "covers/zen-logic-fake.png",
+      "title": "佛系排排坐",
+      "kind": "逻辑",
+      "source_game": "佛系消消消式数独 / Queens 混合逻辑盘",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "marble-sort-fake",
+      "file": "marble-sort-fake.html",
+      "cover": "covers/marble-sort-fake.png",
+      "title": "弹珠分色瓶",
+      "kind": "分拣",
+      "source_game": "Marble Sort! / Water Sort Puzzle 式单指分拣",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "wool-sort-fake",
+      "file": "wool-sort-fake.html",
+      "cover": "covers/wool-sort-fake.png",
+      "title": "线团绣图局",
+      "kind": "绕线",
+      "source_game": "Wool Sort 式绕线分拣 + 像素绣图显现",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "pixel-loop-fake",
+      "file": "pixel-loop-fake.html",
+      "cover": "covers/pixel-loop-fake.png",
+      "title": "像素环流局",
+      "kind": "环流",
+      "source_game": "Pixel Flow 式实时环带清色",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "bus-jam-fake",
+      "file": "bus-jam-fake.html",
+      "cover": "covers/bus-jam-fake.png",
+      "title": "巴士分流站",
+      "kind": "分流",
+      "source_game": "Bus Escape: Traffic Jam / Bus Jam 式乘客分流",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "seat-away-fake",
+      "file": "seat-away-fake.html",
+      "cover": "covers/seat-away-fake.png",
+      "title": "挪座离场局",
+      "kind": "挪座",
+      "source_game": "Seat Away 式箭头挪座解谜",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "parking-jam-fake",
+      "file": "parking-jam-fake.html",
+      "cover": "covers/parking-jam-fake.png",
+      "title": "停车场解堵局",
+      "kind": "停车解堵",
+      "source_game": "Parking Jam 3D 式停车场解堵",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "traffic-bolt-jam",
+      "file": "traffic-bolt-jam.html",
+      "cover": "covers/traffic-bolt-jam.png",
+      "title": "挪车打螺丝",
+      "kind": "停车解堵",
+      "source_game": "挪车打螺丝 / Parking Jam 式停车解堵",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "color-block-jam-fake",
+      "file": "color-block-jam-fake.html",
+      "cover": "covers/color-block-jam-fake.png",
+      "title": "彩块出门局",
+      "kind": "彩块出门",
+      "source_game": "Color Block Jam 式同色出口滑块解谜",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "tap-away-fake",
+      "file": "tap-away-fake.html",
+      "cover": "covers/tap-away-fake.png",
+      "title": "立体箭块局",
+      "kind": "立体解块",
+      "source_game": "Tap Away / Block Out - Tap Away 式 3D 箭头出块",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "loop-sort-fake",
+      "file": "loop-sort-fake.html",
+      "cover": "covers/loop-sort-fake.png",
+      "title": "环带理货局",
+      "kind": "环带分拣",
+      "source_game": "Loop Sort 式卡车放货环带三连清",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "hexa-away-fake",
+      "file": "hexa-away-fake.html",
+      "cover": "covers/hexa-away-fake.png",
+      "title": "六角弹出盘",
+      "kind": "六角弹出",
+      "source_game": "Hexa Away 式六边形箭头弹出解块",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "hexa-sort-fake",
+      "file": "hexa-sort-fake.html",
+      "cover": "covers/hexa-sort-fake.png",
+      "title": "六角叠色局",
+      "kind": "六角分拣",
+      "source_game": "Hexa Sort 式六角堆叠分色消层",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "triple-match-fake",
+      "file": "triple-match-fake.html",
+      "cover": "covers/triple-match-fake.png",
+      "title": "杂物三连清",
+      "kind": "三连清堆物",
+      "source_game": "Triple Match 3D / Match Factory 式堆物三连消",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
     {
       "id": "sbti-fake",
       "file": "sbti-fake.html",
@@ -19,6 +239,56 @@
       "title": "羊块堆堆消",
       "kind": "消除",
       "source_game": "羊了个羊式堆叠三消",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "goose-ladle",
+      "file": "goose-ladle.html",
+      "cover": "covers/goose-ladle.png",
+      "title": "摸鱼捞大鸽",
+      "kind": "堆叠",
+      "source_game": "抓大鹅式锅底寻物三消",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "nostalgia-spotter",
+      "file": "nostalgia-spotter.html",
+      "cover": "covers/nostalgia-spotter.png",
+      "title": "怀旧穿帮找茬",
+      "kind": "找茬",
+      "source_game": "找茬大湿怀旧版式年代场景找不合理",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "overtime-blocks",
+      "file": "overtime-blocks.html",
+      "cover": "covers/overtime-blocks.png",
+      "title": "加班方块清仓",
+      "kind": "拼盘",
+      "source_game": "Block Blast 式 8x8 方块拼盘",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "clock-out-jam",
+      "file": "clock-out-jam.html",
+      "cover": "covers/clock-out-jam.png",
+      "title": "下班工牌突围",
+      "kind": "挪块",
+      "source_game": "Color Block Jam / Block Jam 式单屏堵塞解谜",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
+      "id": "meeting-pinball",
+      "file": "meeting-pinball.html",
+      "cover": "covers/meeting-pinball.png",
+      "title": "开会见缝插话",
+      "kind": "反应",
+      "source_game": "见缝插针 / aa 式旋转插针",
       "mobile_portrait": true,
       "canvas_playfield": true
     },
@@ -113,6 +383,16 @@
       "canvas_playfield": true
     },
     {
+      "id": "snake-battle-fake",
+      "file": "snake-battle-fake.html",
+      "cover": "covers/snake-battle-fake.png",
+      "title": "贪吃蛇冲榜局",
+      "kind": "竞技",
+      "source_game": "贪吃蛇大作战式单指冲榜",
+      "mobile_portrait": true,
+      "canvas_playfield": true
+    },
+    {
       "id": "qingjiao-sim",
       "file": "qingjiao-sim.html",
       "cover": "covers/qingjiao-sim.png",
@@ -199,6 +479,16 @@
       "title": "六爻离谱铜钱",
       "kind": "易经",
       "source_game": "I Ching coin divination flow",
+      "mobile_portrait": true,
+      "canvas_playfield": false
+    },
+    {
+      "id": "goods-sort-fake",
+      "file": "goods-sort-fake.html",
+      "cover": "covers/goods-sort-fake.png",
+      "title": "货架清货局",
+      "kind": "货架三连",
+      "source_game": "Goods Sort / 货架理货式前排取货三连清",
       "mobile_portrait": true,
       "canvas_playfield": false
     }

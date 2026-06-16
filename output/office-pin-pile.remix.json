@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-pin-pile",
+  "slug": "office-pin-pile",
+  "title": "工位夹签归档",
+  "source_file": "screwdom-fake.html",
+  "parent_slug": "screwdom-fake",
+  "lineage": [
+    "screwdom-fake",
+    "office-pin-pile"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把 Screwdom 式针位堆叠拆钉改成办公室归档主题，钉帽换成部门夹签，底部箱位换成归档框。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室主题的针位拆钉二创：只处理每根柱子的顶层夹签，三张同部门立刻整框归档。",
+    "core_loop": "玩家面对五根竖向夹签柱，只能处理每根柱子最上层那张部门夹签；第一次点击用于锁定当前顶层颜色，第二次点击同一根柱子就把它送进底部对应部门归档框；只要某个部门累计到三张就会立刻整框归档清空，而如果四个框位累计待处理量涨到六张则失败。",
+    "controls": "单指点击任意夹签柱最上层标签进行“选中 -> 拆下”两段操作；点到空白区域会取消选中；点击“重开这一盘”恢复固定牌面。",
+    "mechanics": [
+      "只拆顶层：任何时候都只能操作每根柱子最上面露出的那张夹签，保留 Screwdom 最核心的顺序压力",
+      "同色整框：底部每个部门框最多先暂存两张，第三张入框时立即整框清空，形成明确节奏点",
+      "有限待处理：四个部门框的待清总量达到六张就失败，迫使玩家提前规划颜色顺序",
+      "纯针位堆叠：没有额外道具、移动或 meta，只靠竖向堆叠和底部箱位制造短线策略",
+      "固定短局：五根柱、十七张夹签的固定牌面几十秒内即可复盘一轮"
+    ],
+    "visual_language": "深蓝办公室夜班底色，竖向针柱和部门夹签取代工业螺丝模型，底部四个归档框保持纯色和大字标签，继续遵守单文件竖屏契约。",
+    "state_model": "state.pins 保存五根夹签柱当前的颜色栈；state.selected 记录是否已锁定某根柱子的顶层；state.bins 保存四个部门框当前待清数量；state.removed 记录已归档总数；state.mode 为 playing/won/lost。",
+    "share_hook": "“这盘归档又被客服签卡死了”这种结果文案很像办公室段子，适合继续往工位主题扩。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入第二块更深的夹签柱牌面",
+      "加入一步撤销",
+      "加入每日固定 seed 与最优步数文案"
+    ]
+  },
+  "files": {
+    "html": "office-pin-pile.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

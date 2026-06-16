@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "remix-courier-arrow-rush",
+  "slug": "courier-arrow-rush",
+  "title": "快递箭阵",
+  "source_file": "arrow-escape-fake.html",
+  "parent_slug": "arrow-escape-fake",
+  "lineage": [
+    "arrow-escape-fake",
+    "courier-arrow-rush"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把拔箭逃生改成快递分拣主题，保留从外层剥到内层的单指解谜节奏。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "快递分拣主题的箭块解谜：外层先出站，给中间箭道腾路线。",
+    "core_loop": "玩家点击一枚朝出口方向没有阻挡的箭块，它会立刻从站台飞出；外层箭先清走后，中层与内层才会逐步露出通路；误点被挡住的箭会消耗一次容错，三次用完即失败。",
+    "controls": "单指点击箭块尝试出站；按钮“重开这一局”重置固定棋盘。",
+    "mechanics": [
+      "单向出站：箭块只能沿自己的朝向笔直离场，不允许转弯",
+      "外层剥离：外缘可行动作会逐步打开内层路径，形成连续爽点",
+      "有限容错：错误点击会立刻消耗机会，逼玩家先看后点",
+      "固定短局：同一面板十几秒到几十秒就能跑完一局，很适合连刷"
+    ],
+    "visual_language": "分拣站台主题，蜂蜜黄与深棕色面板，箭块像站内分流牌，整体保留单屏轻量气质。",
+    "state_model": "state.tiles 保存每枚箭块的网格坐标、朝向与激活状态；state.hearts 记录剩余容错；state.cleared 记录已出站数量；state.mode 为 playing/won/lost。",
+    "share_hook": "“我一把没压单清完快递箭阵”这种结果很适合截图。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入每日面板 seed",
+      "加入传送带障碍",
+      "加入连清评级文案"
+    ]
+  },
+  "files": {
+    "html": "courier-arrow-rush.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-midnight-goose-rush",
+  "slug": "midnight-goose-rush",
+  "title": "夜宵颠锅抓鸽王",
+  "source_file": "goose-ladle.html",
+  "parent_slug": "goose-ladle",
+  "lineage": [
+    "goose-ladle",
+    "midnight-goose-rush"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把锅底三消做得更贴近抓大鹅的节奏：第一锅热身，第二锅立刻上强度，再把颠锅和露鹅做得更显眼。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "夜宵锅主题的抓鹅二创版：先过热身锅，再进高压第二锅把鸽王抓出来。",
+    "core_loop": "玩家先在第一锅里快速理解“三个相同即消除”的规则，捞出第一只鸽子后立刻进入第二锅，物件数量和遮挡层级同步上升，必须靠更谨慎的点选和有限次数的颠锅把锅底鸽王翻出来。",
+    "controls": "触摸点击最上层食材；当锅底露出鸽子时直接点它过关；点击“颠锅”打乱食材并压低部分遮挡层；第一锅结束后继续点同一按钮进入第二锅。",
+    "mechanics": [
+      "两段式难度：第一锅是十几件食材的热身局，第二锅直接切到满盘高遮挡局",
+      "七格暂存栏：点到的食材先进入下方格子，凑满三个同类立刻消除",
+      "锅底目标：并非必须清空所有物件，只要让底部鸽子暴露并被点击就算过锅",
+      "有限颠锅：每锅可用次数固定，颠锅会重排可见物并下压几件上层食材",
+      "倒计时压迫：热身锅和第二锅各自独立计时，第二锅在更短容错里放大失误感"
+    ],
+    "visual_language": "夜宵摊锅底气质，暖橙锅面配深棕背景，食材图标都压成简化单色图形，保持离线单文件的轻量感，同时把露鹅提示做成更醒目的锅底字幕。",
+    "state_model": "state.levelIndex 标记当前是第几锅；state.tiles 记录现存食材的图标、坐标、层级和激活状态；state.tray 为七格暂存栏；state.timeLeft 与 state.shakes 管理每锅的高压资源；state.mode 在 playing/between/won/lost 间切换。",
+    "share_hook": "“第一锅随便过，第二锅卡成狗”是这个类型天然的传播点，这版结果文案就围绕两锅反差来写。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入每日锅面 seed",
+      "加入省份/好友对战文案",
+      "加入锅内食材轻微物理滚动以更贴近原作颠锅感"
+    ]
+  },
+  "files": {
+    "html": "midnight-goose-rush.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

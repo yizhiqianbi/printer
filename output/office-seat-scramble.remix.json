@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-seat-scramble",
+  "slug": "office-seat-scramble",
+  "title": "工位让一让",
+  "source_file": "seat-away-fake.html",
+  "parent_slug": "seat-away-fake",
+  "lineage": [
+    "seat-away-fake",
+    "office-seat-scramble"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把 Seat Away 式挪座局改成办公室散场主题，乘客换成工牌，座椅换成工位椅，保留只沿箭头滑出通道的短线决策。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室主题的挪座二创：顺着箭头推开工椅，让整片工位区快速散场。",
+    "core_loop": "玩家面对一块 5x5 的拥挤工位盘，每张工牌工椅都只允许沿箭头方向直线滑动；如果前方一路通到边缘，工位就会直接撤出场外，否则只能先滑到最近空位，为别的工位腾出通道；把整盘工位全部送出走道就算过关。",
+    "controls": "单指点击任意工位椅触发滑动；能直通边缘的会直接离场，被堵住但前方有空位的会先滑到空位；点击“重开这一层”恢复固定牌面。",
+    "mechanics": [
+      "单向滑动：每张工椅都绑定一个固定箭头，只能沿这一方向直线移动",
+      "直通即离场：如果从当前位置到边缘没有阻挡，这张椅子会直接滑出工位区",
+      "先挪后通：被其他椅子挡住时，只能先滑到最近空位，慢慢给后排让道",
+      "固定短局：固定八张椅子的牌面几十秒内就能反复尝试，天然适合碎片复玩",
+      "清盘收尾：全部工椅离场后立刻出现散场提示，形成明确截图点"
+    ],
+    "visual_language": "把原型里的乘客座位换成冷色办公室工位：深蓝地板、发光走道、彩色工牌椅背与极简箭头，整体更像夜班散场前的办公层。",
+    "state_model": "state.seats 记录每张工椅的行列位置、箭头方向、标签与是否仍在场内；state.moves 统计推椅次数；state.mode 在 playing/won 间切换；render_game_to_text 会同时给出每张椅子下一步是 blocked/slide/exit。",
+    "share_hook": "“终于把这一层工位全清空了”天然是打工人梗图文案，也方便继续往更多办公室谜题扩。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更多固定工位 seed",
+      "加入一步撤回",
+      "加入连续离场的散场连击文案"
+    ]
+  },
+  "files": {
+    "html": "office-seat-scramble.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

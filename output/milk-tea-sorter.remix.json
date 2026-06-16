@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-milk-tea-sorter",
+  "slug": "milk-tea-sorter",
+  "title": "奶茶封杯局",
+  "source_file": "marble-sort-fake.html",
+  "parent_slug": "marble-sort-fake",
+  "lineage": [
+    "marble-sort-fake",
+    "milk-tea-sorter"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把 Marble Sort 式分色瓶改成奶茶备料台，保留选杯换杯的单指 sorting 节奏。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "奶茶备料主题的换杯分拣局：把同料倒进空杯或同料顶层，直到每杯单色。",
+    "core_loop": "玩家先点选一个顶部有配料的杯子，再点目标空杯或同色顶层杯，把顶部连续同类一次性倒过去；随着杯中层次逐步变纯，每个杯子最终只保留一种配料并装满四层即可过关。",
+    "controls": "单指点击杯子进行“选源杯 -> 选目标杯”；再次点击源杯可取消；点击“重开这一局”恢复固定牌面。",
+    "mechanics": [
+      "单指换杯：一来一回只有两次点击，门槛极低",
+      "连续倒料：源杯顶部连续同色会被成组移动，保留 Marble Sort 的真实手感",
+      "目标约束：只能倒进空杯，或倒到同色顶层且有剩余容量的杯子",
+      "固定短局：一面固定牌几十步内即可解完，天然适合碎片时间反复开局",
+      "完成判定：所有非空杯都变成满四层单色后立刻通关"
+    ],
+    "visual_language": "暖色奶茶门店备料台，玻璃试管替成封杯杯体，配料只用单字与纯色圆点表示，不使用任何外部素材。",
+    "state_model": "state.tubes 是每个杯子的颜色栈；state.selected 记录当前源杯；state.moves 记录完成的倒料手数；state.mode 为 playing/won。",
+    "share_hook": "“今天把奶茶备料一把理顺了”这种结果很适合做短视频封面或截图。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更多关卡 seed",
+      "加入撤回一步",
+      "加入封杯连击评级"
+    ]
+  },
+  "files": {
+    "html": "milk-tea-sorter.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

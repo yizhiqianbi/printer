@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <link rel="icon" href="data:,">
-  <title>HTML 刷刷 - 赝品库 Remix Feed</title>
+  <title>Arcade Atelier - Playable Remix Catalog</title>
   <style>
     
     :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #111; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
@@ -47,6 +47,8 @@
     html.embed-mode .play-canvas { max-height: calc(100svh - 116px); object-fit: contain; }
     html.embed-mode .panel { box-shadow: none; }
     .stack { display: grid; gap: 10px; }
+    .stat-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: rgba(255,255,255,.84); font-size: 13px; font-weight: 900; }
+    .button-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-bottom: 10px; }
     .choice, .shop-row, .chip, .plot { border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; min-height: 58px; padding: 12px 14px; text-align: left; font-weight: 850; cursor: pointer; }
     .choice:active, .chip:active, .plot:active, .big-tap:active { transform: scale(.98); }
     .meter { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
@@ -57,6 +59,44 @@
     .bars i { display: block; height: 9px; border-radius: 999px; background: var(--accent); }
     .tray { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
     .tray span { aspect-ratio: 1; border: 1px dashed rgba(255,255,255,.24); border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.09); font-weight: 900; }
+    .triple-playfield { gap: 10px; }
+    .triple-targets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .triple-chip { min-height: 56px; border: 1px solid var(--chip-edge, rgba(255,255,255,.14)); border-radius: 14px; padding: 8px 9px; background: color-mix(in srgb, var(--chip-fill, rgba(255,255,255,.14)), rgba(255,255,255,.08) 76%); color: var(--chip-ink, #fff); display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 6px; }
+    .triple-chip b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 9px; background: rgba(255,255,255,.3); font-size: 13px; }
+    .triple-chip i, .triple-chip u { font-style: normal; text-decoration: none; font-weight: 900; }
+    .triple-chip i { font-size: 11px; }
+    .triple-chip u { font-size: 15px; }
+    .triple-board { position: relative; min-height: 346px; border: 1px solid rgba(255,255,255,.16); border-radius: 20px; background: radial-gradient(circle at 50% 16%, var(--pile-glow, rgba(125,214,255,.18)), transparent 34%), linear-gradient(180deg, var(--board-top, #08131f), var(--board-bottom, #050a12)); overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 20px 50px rgba(0,0,0,.28); }
+    .triple-board::after { content: ""; position: absolute; left: 18px; right: 18px; bottom: 18px; height: 46px; border-radius: 50%; background: rgba(0,0,0,.22); filter: blur(12px); pointer-events: none; }
+    .triple-item { position: absolute; width: 68px; height: 76px; margin-left: -34px; margin-top: -38px; border: 0; background: transparent; padding: 0; display: grid; place-items: center; cursor: pointer; }
+    .triple-item-glyph { width: 64px; height: 64px; border: 2px solid rgba(255,255,255,.22); border-radius: 18px; display: grid; place-items: center; font-size: 27px; font-weight: 1000; box-shadow: 0 14px 24px rgba(0,0,0,.22); }
+    .triple-item-tag { margin-top: -10px; min-width: 42px; border-radius: 999px; padding: 3px 8px; background: rgba(0,0,0,.48); color: rgba(255,255,255,.88); font-size: 10px; font-weight: 900; }
+    .triple-item.top .triple-item-glyph { transform: translateY(-4px); box-shadow: 0 18px 28px rgba(0,0,0,.32); }
+    .triple-item.locked { cursor: not-allowed; }
+    .triple-item.locked .triple-item-glyph { filter: saturate(.55) brightness(.82); opacity: .72; }
+    .triple-tray-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin: 10px 0 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .triple-tray { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; background: color-mix(in srgb, var(--tray-glow, rgba(255,255,255,.08)), rgba(255,255,255,.05) 62%); }
+    .triple-slot { min-height: 38px; border-radius: 12px; border: 1px dashed rgba(255,255,255,.2); display: grid; place-items: center; font-size: 18px; font-weight: 1000; }
+    .triple-slot.empty { background: rgba(255,255,255,.04); }
+    .triple-slot.filled { border-style: solid; box-shadow: inset 0 -6px 10px rgba(0,0,0,.12); }
+    .goods-targets { margin-bottom: 10px; }
+    .goods-shelves { display: grid; gap: 10px; }
+    .goods-shelf { border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 10px; background: rgba(255,255,255,.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .goods-shelf-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .goods-lane-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .goods-lane { position: relative; min-height: 108px; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 10px 8px 8px; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); color: #fff; display: grid; align-content: space-between; justify-items: center; gap: 8px; overflow: hidden; cursor: pointer; }
+    .goods-lane::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 10px; height: 9px; border-radius: 999px; background: rgba(0,0,0,.22); filter: blur(7px); }
+    .goods-lane.empty { opacity: .56; cursor: default; }
+    .goods-backdrop { position: absolute; inset: 0; background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--lane-glow), white 18%), transparent 34%); opacity: .8; pointer-events: none; }
+    .goods-item { position: relative; z-index: 1; width: 70px; min-height: 72px; border: 2px solid rgba(255,255,255,.18); border-radius: 18px; display: grid; place-items: center; gap: 3px; padding: 8px 6px; box-shadow: 0 16px 24px rgba(0,0,0,.22); }
+    .goods-item b { font-size: 26px; line-height: 1; }
+    .goods-item i { font-style: normal; font-size: 11px; font-weight: 900; }
+    .goods-lane u, .goods-empty-copy { position: relative; z-index: 1; text-decoration: none; font-size: 11px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .box-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .color-box { min-height: 78px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 10px; background: color-mix(in srgb, var(--box-fill), rgba(255,255,255,.08) 76%); display: grid; gap: 8px; }
+    .color-box b { font-size: 13px; }
+    .color-box span { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .color-box i { min-height: 28px; border-radius: 10px; display: grid; place-items: center; font-style: normal; font-weight: 1000; background: rgba(0,0,0,.22); color: #fff; }
     .big-tap { min-height: 118px; border: 0; border-radius: 28px; background: linear-gradient(145deg, var(--accent), #ff8ab9); color: #fff; display: grid; place-items: center; gap: 4px; font-weight: 1000; box-shadow: inset 0 -16px 30px rgba(0,0,0,.18), 0 20px 60px rgba(255,59,134,.32); }
     .big-tap.dark { background: linear-gradient(145deg, #151018, #31112a 54%, var(--accent)); color: #fff; }
     .big-tap b { font-size: 32px; }
@@ -201,7 +241,7 @@
     .home-screen::-webkit-scrollbar { display: none; }
     .home-head { position: sticky; top: calc(-12px - env(safe-area-inset-top)); z-index: 10; display: grid; gap: 10px; padding: 12px 0 10px; background: linear-gradient(#050505 72%, rgba(5,5,5,0)); }
     .home-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .home-brand { margin: 0; font-size: 22px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
+    .home-brand { margin: 0; font-size: 20px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
     .home-brand span { color: #ff375f; }
     .start-feed { min-height: 36px; border: 0; border-radius: 999px; padding: 0 14px; background: #fff; color: #050505; font-weight: 1000; }
     .home-search { display: flex; align-items: center; gap: 8px; min-height: 38px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 0 13px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.72); font-size: 13px; font-weight: 750; }
@@ -273,8 +313,8 @@
     <main class="screen home-screen" id="homeScreen">
       <header class="home-head">
         <div class="home-bar">
-          <h1 class="home-brand">HTML<span>刷刷</span></h1>
-          <button class="start-feed" type="button" data-start-feed>开始刷刷</button>
+          <h1 class="home-brand">Arcade<span> Atelier</span></h1>
+          <button class="start-feed" type="button" data-start-feed>开始浏览</button>
         </div>
         <div class="home-search"><span>⌕</span><span>搜索游戏、玩法、Remix</span></div>
         <nav class="home-tags" aria-label="分类">
@@ -282,164 +322,770 @@
         </nav>
       </header>
       <section class="waterfall" id="waterfall" aria-label="游戏瀑布流">
-      <button class="water-card" type="button" data-open-feed="0" data-instance-id="sbti-fake-0" style="--game-accent:#ff4f87; --cover-h:132px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/sbti-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>SBTI</b><i>测评</i></span>
+      <button class="water-card" type="button" data-open-feed="0" data-instance-id="screw-sorter-0" style="--game-accent:#ffb11c; --cover-h:132px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/screw-sorter.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>钉</b><i>拧螺丝</i></span>
+        <span class="water-title">打个螺丝局</span>
+        <span class="water-summary">先拆上层彩钉，再把同色螺丝凑进盒里，盒满就卡关。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 1.2k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="1" data-instance-id="screw-box-blitz-0" style="--game-accent:#65d2ff; --cover-h:162px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/screw-box-blitz.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>箱</b><i>彩盒拆钉</i></span>
+        <span class="water-title">彩盒拧钉局</span>
+        <span class="water-summary">先拆上层，再把同色螺丝塞进对应彩盒，三枚凑满立刻清盒。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 1.3k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="2" data-instance-id="screwdom-fake-0" style="--game-accent:#86f2ff; --cover-h:168px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/screwdom-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>柱</b><i>针位拆钉</i></span>
+        <span class="water-title">钉柱归箱局</span>
+        <span class="water-summary">盯住每根钉柱的顶层颜色，按顺序拆下并送进同色箱，三枚同色立刻清箱。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 1.5k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="3" data-instance-id="brainrot-merge-pot-0" style="--game-accent:#ff7a59; --cover-h:198px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/brainrot-merge-pot.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>锅</b><i>合成</i></span>
+        <span class="water-title">脑腐合成锅</span>
+        <span class="water-summary">沿着顶线丢进怪物丸子，同类碰撞升级，别让锅口堆爆。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 1.6k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="4" data-instance-id="brainrot-raider-yard-0" style="--game-accent:#7c5cff; --cover-h:204px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/brainrot-raider-yard.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>夺</b><i>养成合成</i></span>
+        <span class="water-title">脑腐偷家场</span>
+        <span class="water-summary">招募低级梗怪、拖拽同类合成、自动产币，还得随时拦截来偷家的巡逻贼。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 1.7k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="5" data-instance-id="brainrot-egg-run-0" style="--game-accent:#f59e0b; --cover-h:144px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/brainrot-egg-run.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>箭</b><i>收集养成</i></span>
+        <span class="water-title">脑腐抢蛋线</span>
+        <span class="water-summary">买蛋上带、拖回工位孵化、自动产币，再抓偷蛋窗口白嫖高阶蛋。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 1.9k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="6" data-instance-id="arrow-escape-fake-0" style="--game-accent:#86efac; --cover-h:150px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/arrow-escape-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>鳄</b><i>解谜</i></span>
+        <span class="water-title">拔箭逃生局</span>
+        <span class="water-summary">只能拔出朝出口方向一路通畅的箭块，误点三次就翻车。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 2.0k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="7" data-instance-id="emoji-gator-hop-0" style="--game-accent:#74f4b4; --cover-h:180px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/emoji-gator-hop.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>珠</b><i>跳跃</i></span>
+        <span class="water-title">表情踩鳄梯</span>
+        <span class="water-summary">左右挪动表情往上蹦，踩断裂鳄梯会塌，碰上表情加速泡能一口气冲高。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 2.2k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="8" data-instance-id="zen-logic-fake-0" style="--game-accent:#7ad79d; --cover-h:186px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/zen-logic-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>逻</b><i>逻辑</i></span>
+        <span class="water-title">佛系排排坐</span>
+        <span class="water-summary">看行列和色块把 6 只羊摆开，谁都不能挨着谁。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 2.3k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="9" data-instance-id="marble-sort-fake-0" style="--game-accent:#67e8f9; --cover-h:216px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/marble-sort-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>SBTI</b><i>分拣</i></span>
+        <span class="water-title">弹珠分色瓶</span>
+        <span class="water-summary">选一瓶，把顶层连续同色弹珠倒进空瓶或同色瓶，直到每瓶只剩一种颜色。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 2.4k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="10" data-instance-id="wool-sort-fake-0" style="--game-accent:#f472b6; --cover-h:132px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/wool-sort-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>羊</b><i>绕线</i></span>
+        <span class="water-title">线团绣图局</span>
+        <span class="water-summary">按同色把线团倒进空卷轴或同色卷轴，四卷归齐后整张绣图才会完整显出来。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 2.6k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="11" data-instance-id="pixel-loop-fake-0" style="--game-accent:#ff8a4c; --cover-h:162px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/pixel-loop-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>鸽</b><i>环流</i></span>
+        <span class="water-title">像素环流局</span>
+        <span class="water-summary">彩块沿环带绕图跑，点空槽部署同色清扫头，五格废槽全堵就崩盘。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 2.7k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="12" data-instance-id="bus-jam-fake-0" style="--game-accent:#58c7ff; --cover-h:168px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/bus-jam-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>茬</b><i>分流</i></span>
+        <span class="water-title">巴士分流站</span>
+        <span class="water-summary">点发同色巴士，让站台前排乘客一车车离开，后排才会继续露出来。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 2.8k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="13" data-instance-id="seat-away-fake-0" style="--game-accent:#62d8ff; --cover-h:198px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/seat-away-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>块</b><i>挪座</i></span>
+        <span class="water-title">挪座离场局</span>
+        <span class="water-summary">点一张座椅就沿箭头滑走，能直冲出口的会直接离场，清空整盘即过关。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 3.0k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="14" data-instance-id="parking-jam-fake-0" style="--game-accent:#7edcff; --cover-h:204px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/parking-jam-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>堵</b><i>停车解堵</i></span>
+        <span class="water-title">停车场解堵局</span>
+        <span class="water-summary">点车让它沿车头方向滑到尽头或直接出库，先清挡路车，再把整面停车场慢慢疏通。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 3.1k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="15" data-instance-id="traffic-bolt-jam-0" style="--game-accent:#8be7ff; --cover-h:144px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/traffic-bolt-jam.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>针</b><i>停车解堵</i></span>
+        <span class="water-title">挪车打螺丝</span>
+        <span class="water-summary">沿着车头方向一点点挪开堵路车，把卡在厂区出钉通道里的车队整层疏通。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 3.3k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="16" data-instance-id="color-block-jam-fake-0" style="--game-accent:#62d8ff; --cover-h:150px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/color-block-jam-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>脑</b><i>彩块出门</i></span>
+        <span class="water-title">彩块出门局</span>
+        <span class="water-summary">选中彩块后朝任意方向一划，让它一路滑到同色出口，清空整盘即过关。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 3.4k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="17" data-instance-id="tap-away-fake-0" style="--game-accent:#74ddff; --cover-h:180px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/tap-away-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>刺</b><i>立体解块</i></span>
+        <span class="water-title">立体箭块局</span>
+        <span class="water-summary">点能顺着箭头飞出去的方块，不通就旋转整团找新角度，把 3D 团块拆空。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 3.5k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="18" data-instance-id="loop-sort-fake-0" style="--game-accent:#86efff; --cover-h:186px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/loop-sort-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>撞</b><i>环带分拣</i></span>
+        <span class="water-title">环带理货局</span>
+        <span class="water-summary">点四侧卡车把色块送上环形传送带，沿带转一圈后凑成三连立刻清空，别让整圈堵死。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 3.7k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="19" data-instance-id="hexa-away-fake-0" style="--game-accent:#7cf0ff; --cover-h:216px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/hexa-away-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>密</b><i>六角弹出</i></span>
+        <span class="water-title">六角弹出盘</span>
+        <span class="water-summary">点能顺着箭头直接飞出边界的六角块，不通就转盘换角度，把整团六角块弹空。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 3.8k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="20" data-instance-id="hexa-sort-fake-0" style="--game-accent:#7cf0ff; --cover-h:132px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/hexa-sort-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>合</b><i>六角分拣</i></span>
+        <span class="water-title">六角叠色局</span>
+        <span class="water-summary">点列子把顶层同色六角块倒去空列或同色列，凑满整列就整柱清空。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 3.9k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="21" data-instance-id="triple-match-fake-0" style="--game-accent:#7dd6ff; --cover-h:162px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/triple-match-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>☑</b><i>三连清堆物</i></span>
+        <span class="water-title">杂物三连清</span>
+        <span class="water-summary">从杂乱堆物里只点最上层可见物，送进七格托盘，凑成三件同类立刻清走。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 4.1k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="22" data-instance-id="sbti-fake-0" style="--game-accent:#ff4f87; --cover-h:168px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/sbti-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>跑</b><i>测评</i></span>
         <span class="water-title">伪 SBTI 崩溃人格测评</span>
         <span class="water-summary">八题生成荒诞人格结果卡，适合截图分享。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 1.2k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 4.2k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="1" data-instance-id="sheep-stack-0" style="--game-accent:#30b36b; --cover-h:162px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/sheep-stack.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>羊</b><i>消除</i></span>
+      <button class="water-card" type="button" data-open-feed="23" data-instance-id="sheep-stack-0" style="--game-accent:#30b36b; --cover-h:198px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/sheep-stack.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>种</b><i>消除</i></span>
         <span class="water-title">羊块堆堆消</span>
         <span class="water-summary">只点亮牌，三张同图标入槽即消，槽满失败。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 1.3k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 4.4k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="2" data-instance-id="brainrot-clicker-0" style="--game-accent:#f1b900; --cover-h:168px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/brainrot-clicker.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>脑</b><i>点击</i></span>
+      <button class="water-card" type="button" data-open-feed="24" data-instance-id="goose-ladle-0" style="--game-accent:#ff8a3d; --cover-h:204px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/goose-ladle.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>io</b><i>堆叠</i></span>
+        <span class="water-title">摸鱼捞大鸽</span>
+        <span class="water-summary">先三消清锅面，再把藏在工位火锅底的鸽子捞出来。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 4.5k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="25" data-instance-id="nostalgia-spotter-0" style="--game-accent:#86f77b; --cover-h:144px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/nostalgia-spotter.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>蛇</b><i>找茬</i></span>
+        <span class="water-title">怀旧穿帮找茬</span>
+        <span class="water-summary">在老教室里点出 7 个现代穿帮物件，点错会扣时间。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 4.6k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="26" data-instance-id="overtime-blocks-0" style="--game-accent:#ff9a3d; --cover-h:150px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/overtime-blocks.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>青</b><i>拼盘</i></span>
+        <span class="water-title">加班方块清仓</span>
+        <span class="water-summary">三选一摆入 8x8 工位，清行清列打连击，放不下就下班。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 4.8k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="27" data-instance-id="clock-out-jam-0" style="--game-accent:#55d6ff; --cover-h:180px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/clock-out-jam.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>重</b><i>挪块</i></span>
+        <span class="water-title">下班工牌突围</span>
+        <span class="water-summary">拖开会议和审批，把主工牌一路挪到出口，步数越少越像真会下班。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 4.9k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="28" data-instance-id="meeting-pinball-0" style="--game-accent:#6f55ff; --cover-h:186px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/meeting-pinball.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>推</b><i>反应</i></span>
+        <span class="water-title">开会见缝插话</span>
+        <span class="water-summary">把发言条插进旋转会议盘，不撞车，打完一轮直接升压。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 5.0k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="29" data-instance-id="brainrot-clicker-0" style="--game-accent:#f1b900; --cover-h:216px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/brainrot-clicker.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>战</b><i>点击</i></span>
         <span class="water-title">脑腐咔嗒工厂</span>
         <span class="water-summary">点出伪意大利动物，升级后 canvas 弹幕越来越吵。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 1.5k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 5.2k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="3" data-instance-id="stimulation-fake-0" style="--game-accent:#7c5cff; --cover-h:198px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/stimulation-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>刺</b><i>点击</i></span>
+      <button class="water-card" type="button" data-open-feed="30" data-instance-id="stimulation-fake-0" style="--game-accent:#7c5cff; --cover-h:132px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/stimulation-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>玄</b><i>点击</i></span>
         <span class="water-title">刺激值按钮</span>
         <span class="water-summary">每个升级都让手机屏幕更像失控的信息流。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 1.6k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 5.3k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="4" data-instance-id="cattle-bump-0" style="--game-accent:#ff7a2f; --cover-h:204px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/cattle-bump.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>撞</b><i>动作</i></span>
+      <button class="water-card" type="button" data-open-feed="31" data-instance-id="cattle-bump-0" style="--game-accent:#ff7a2f; --cover-h:162px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/cattle-bump.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>塔</b><i>动作</i></span>
         <span class="water-title">疯羊碰碰场</span>
         <span class="water-summary">触摸方向推动主羊，撞飞编号羊，留在圆圈里。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 1.7k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 5.4k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="5" data-instance-id="password-hell-0" style="--game-accent:#00a6d6; --cover-h:144px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/password-hell.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>密</b><i>解谜</i></span>
+      <button class="water-card" type="button" data-open-feed="32" data-instance-id="password-hell-0" style="--game-accent:#00a6d6; --cover-h:168px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/password-hell.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>命</b><i>解谜</i></span>
         <span class="water-title">密码地狱试炼</span>
         <span class="water-summary">移动端输入框挑战，规则一条比一条难受。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 1.9k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 5.6k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="6" data-instance-id="infinite-craft-fake-0" style="--game-accent:#34a853; --cover-h:150px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/infinite-craft-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>合</b><i>合成</i></span>
+      <button class="water-card" type="button" data-open-feed="33" data-instance-id="infinite-craft-fake-0" style="--game-accent:#34a853; --cover-h:198px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/infinite-craft-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>星</b><i>合成</i></span>
         <span class="water-title">无限乱炖实验室</span>
         <span class="water-summary">两个词一碰，互联网又多一个概念。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.0k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 5.7k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="7" data-instance-id="million-checkboxes-fake-0" style="--game-accent:#111111; --cover-h:180px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/million-checkboxes-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>☑</b><i>协作幻觉</i></span>
+      <button class="water-card" type="button" data-open-feed="34" data-instance-id="million-checkboxes-fake-0" style="--game-accent:#111111; --cover-h:204px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/million-checkboxes-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>卦</b><i>协作幻觉</i></span>
         <span class="water-title">四百个勾选框</span>
         <span class="water-summary">假装全网在线，其实是本地小宇宙。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.2k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 5.9k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="8" data-instance-id="dino-fake-0" style="--game-accent:#5f6368; --cover-h:186px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/dino-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>跑</b><i>跑酷</i></span>
+      <button class="water-card" type="button" data-open-feed="35" data-instance-id="dino-fake-0" style="--game-accent:#5f6368; --cover-h:144px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/dino-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>柜</b><i>跑酷</i></span>
         <span class="water-title">断网小蜥蜴</span>
         <span class="water-summary">点击跳跃，越过会议、需求和锅。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.3k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 6.0k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="9" data-instance-id="garden-idle-0" style="--game-accent:#6aa84f; --cover-h:216px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/garden-idle.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>种</b><i>放置</i></span>
+      <button class="water-card" type="button" data-open-feed="36" data-instance-id="garden-idle-0" style="--game-accent:#6aa84f; --cover-h:150px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/garden-idle.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>放置</i></span>
         <span class="water-title">摸鱼花园</span>
         <span class="water-summary">种、等、收，库存刷新让你再来一次。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.4k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 6.1k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="10" data-instance-id="agar-fake-0" style="--game-accent:#4285f4; --cover-h:132px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/agar-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>io</b><i>.io</i></span>
+      <button class="water-card" type="button" data-open-feed="37" data-instance-id="agar-fake-0" style="--game-accent:#4285f4; --cover-h:180px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/agar-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>.io</i></span>
         <span class="water-title">圆点吞吞.io</span>
         <span class="water-summary">拖动移动，吃小点长大，别被大圆点吃掉。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.6k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 6.3k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="11" data-instance-id="qingjiao-sim-0" style="--game-accent:#21c26b; --cover-h:162px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/qingjiao-sim.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>青</b><i>经营</i></span>
+      <button class="water-card" type="button" data-open-feed="38" data-instance-id="snake-battle-fake-0" style="--game-accent:#58d26a; --cover-h:186px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/snake-battle-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>竞技</i></span>
+        <span class="water-title">贪吃蛇冲榜局</span>
+        <span class="water-summary">单指转向，按住加速甩尾，蹭豆把长度冲到 40。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 6.4k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="39" data-instance-id="qingjiao-sim-0" style="--game-accent:#21c26b; --cover-h:216px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/qingjiao-sim.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>经营</i></span>
         <span class="water-title">青椒模拟器</span>
         <span class="water-summary">申请教职、招学生、投基金、发论文，在非升即走里保住心态。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.7k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 6.5k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="12" data-instance-id="life-restart-fake-0" style="--game-accent:#ffcf33; --cover-h:168px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/life-restart-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>重</b><i>重开</i></span>
+      <button class="water-card" type="button" data-open-feed="40" data-instance-id="life-restart-fake-0" style="--game-accent:#ffcf33; --cover-h:132px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/life-restart-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>重开</i></span>
         <span class="water-title">人生重开模拟器</span>
         <span class="water-summary">抽天赋、分配属性、逐岁推进，看这一局人生如何离谱收束。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 2.8k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 6.7k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="13" data-instance-id="twitter-governance-0" style="--game-accent:#2aa3ff; --cover-h:198px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/twitter-governance.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>推</b><i>模拟</i></span>
+      <button class="water-card" type="button" data-open-feed="41" data-instance-id="twitter-governance-0" style="--game-accent:#2aa3ff; --cover-h:162px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/twitter-governance.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>模拟</i></span>
         <span class="water-title">推特治国</span>
         <span class="water-summary">刷新闻、语音/文本发帖、给幕僚下命令，用一条条动态维持混乱热度。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.0k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 6.8k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="14" data-instance-id="io-arena-template-0" style="--game-accent:#22f4ee; --cover-h:204px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/io-arena-template.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>战</b><i>模板</i></span>
+      <button class="water-card" type="button" data-open-feed="42" data-instance-id="io-arena-template-0" style="--game-accent:#22f4ee; --cover-h:168px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/io-arena-template.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>模板</i></span>
         <span class="water-title">空投乱斗.io 模板</span>
         <span class="water-summary">双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.1k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 7.0k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="15" data-instance-id="mystic-score-0" style="--game-accent:#9b59b6; --cover-h:144px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/mystic-score.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>玄</b><i>玄学</i></span>
+      <button class="water-card" type="button" data-open-feed="43" data-instance-id="mystic-score-0" style="--game-accent:#9b59b6; --cover-h:198px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/mystic-score.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>玄学</i></span>
         <span class="water-title">赛博玄学评分器</span>
         <span class="water-summary">输入名字，生成今日抽象运势卡。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.3k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 7.1k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="16" data-instance-id="tarot-daily-0" style="--game-accent:#c45cff; --cover-h:150px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/tarot-daily.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>塔</b><i>塔罗</i></span>
+      <button class="water-card" type="button" data-open-feed="44" data-instance-id="tarot-daily-0" style="--game-accent:#c45cff; --cover-h:204px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/tarot-daily.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>塔罗</i></span>
         <span class="water-title">打工塔罗三连</span>
         <span class="water-summary">输入代号抽三张赛博塔罗，给出今日抽象建议。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.4k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 7.2k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="17" data-instance-id="bazi-lite-0" style="--game-accent:#e4a63b; --cover-h:180px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/bazi-lite.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>命</b><i>算命</i></span>
+      <button class="water-card" type="button" data-open-feed="45" data-instance-id="bazi-lite-0" style="--game-accent:#e4a63b; --cover-h:144px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/bazi-lite.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>算命</i></span>
         <span class="water-title">八字偏科生成器</span>
         <span class="water-summary">生日时辰生成假认真四柱，重点看五行哪里离谱。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.5k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 7.4k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="18" data-instance-id="astro-wheel-0" style="--game-accent:#5bbcff; --cover-h:186px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/astro-wheel.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>星</b><i>看盘</i></span>
+      <button class="water-card" type="button" data-open-feed="46" data-instance-id="astro-wheel-0" style="--game-accent:#5bbcff; --cover-h:150px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/astro-wheel.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>看盘</i></span>
         <span class="water-title">星盘甩锅轮</span>
         <span class="water-summary">一键画出可分享星盘，把今天的问题甩给相位。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.7k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 7.5k</span></span>
       </button>
-      <button class="water-card" type="button" data-open-feed="19" data-instance-id="yijing-coins-0" style="--game-accent:#d6b45f; --cover-h:216px;">
-        <span class="water-cover"><img class="water-cover-image" src="covers/yijing-coins.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>卦</b><i>易经</i></span>
+      <button class="water-card" type="button" data-open-feed="47" data-instance-id="yijing-coins-0" style="--game-accent:#d6b45f; --cover-h:180px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/yijing-coins.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>易经</i></span>
         <span class="water-title">六爻离谱铜钱</span>
         <span class="water-summary">点六次摇铜钱，得到一卦适合转发的离谱签文。</span>
-        <span class="water-meta"><span>@赝品库</span><span>♡ 3.8k</span></span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 7.6k</span></span>
+      </button>
+      <button class="water-card" type="button" data-open-feed="48" data-instance-id="goods-sort-fake-0" style="--game-accent:#78e9ff; --cover-h:186px;">
+        <span class="water-cover"><img class="water-cover-image" src="covers/goods-sort-fake.png" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()"><b>游</b><i>货架三连</i></span>
+        <span class="water-title">货架清货局</span>
+        <span class="water-summary">只点每条货道最前排的商品送进七格暂存，三件同类立刻清货，后排商品会往前露出。</span>
+        <span class="water-meta"><span>@Atelier</span><span>♡ 7.8k</span></span>
       </button>
       </section>
     </main>
     <main class="screen feed-screen" id="feedScreen" hidden>
       <button class="feed-back" type="button" id="feedBack" aria-label="返回首页">‹</button>
       <section class="feed" id="feed">
-        <article class="feed-item" style="--game-accent:#ff4f87; --n:0;" data-instance-id="sbti-fake-0" data-src="sbti-fake.html">
+        <article class="feed-item" style="--game-accent:#ffb11c; --n:0;" data-instance-id="screw-sorter-0" data-src="screw-sorter.html">
+          <section class="live-card is-playing" aria-label="打个螺丝局 HTML 预览">
+            <iframe class="html-frame" title="打个螺丝局" src="screw-sorter.html?embed=1" data-src="screw-sorter.html?embed=1" data-loaded="true" loading="eager" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>打个螺丝局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 打个螺丝局"><b>♡</b><span data-count="like">1.2k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 打个螺丝局"><b>☆</b><span data-count="save">240</span></button>
+            <a class="action-button" href="screw-sorter.html" aria-label="打开 打个螺丝局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 打个螺丝局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#65d2ff; --n:1;" data-instance-id="screw-box-blitz-0" data-src="screw-box-blitz.html">
+          <section class="live-card is-playing" aria-label="彩盒拧钉局 HTML 预览">
+            <iframe class="html-frame" title="彩盒拧钉局" src="screw-box-blitz.html?embed=1" data-src="screw-box-blitz.html?embed=1" data-loaded="true" loading="eager" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>彩盒拧钉局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 彩盒拧钉局"><b>♡</b><span data-count="like">1.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 彩盒拧钉局"><b>☆</b><span data-count="save">271</span></button>
+            <a class="action-button" href="screw-box-blitz.html" aria-label="打开 彩盒拧钉局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 彩盒拧钉局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#86f2ff; --n:2;" data-instance-id="screwdom-fake-0" data-src="screwdom-fake.html">
+          <section class="live-card is-playing" aria-label="钉柱归箱局 HTML 预览">
+            <iframe class="html-frame" title="钉柱归箱局" src="about:blank" data-src="screwdom-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>钉柱归箱局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 钉柱归箱局"><b>♡</b><span data-count="like">1.5k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 钉柱归箱局"><b>☆</b><span data-count="save">302</span></button>
+            <a class="action-button" href="screwdom-fake.html" aria-label="打开 钉柱归箱局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 钉柱归箱局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#ff7a59; --n:3;" data-instance-id="brainrot-merge-pot-0" data-src="brainrot-merge-pot.html">
+          <section class="live-card is-playing" aria-label="脑腐合成锅 HTML 预览">
+            <iframe class="html-frame" title="脑腐合成锅" src="about:blank" data-src="brainrot-merge-pot.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>脑腐合成锅</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 脑腐合成锅"><b>♡</b><span data-count="like">1.6k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 脑腐合成锅"><b>☆</b><span data-count="save">333</span></button>
+            <a class="action-button" href="brainrot-merge-pot.html" aria-label="打开 脑腐合成锅"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 脑腐合成锅"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#7c5cff; --n:4;" data-instance-id="brainrot-raider-yard-0" data-src="brainrot-raider-yard.html">
+          <section class="live-card is-playing" aria-label="脑腐偷家场 HTML 预览">
+            <iframe class="html-frame" title="脑腐偷家场" src="about:blank" data-src="brainrot-raider-yard.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>脑腐偷家场</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 脑腐偷家场"><b>♡</b><span data-count="like">1.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 脑腐偷家场"><b>☆</b><span data-count="save">364</span></button>
+            <a class="action-button" href="brainrot-raider-yard.html" aria-label="打开 脑腐偷家场"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 脑腐偷家场"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#f59e0b; --n:5;" data-instance-id="brainrot-egg-run-0" data-src="brainrot-egg-run.html">
+          <section class="live-card is-playing" aria-label="脑腐抢蛋线 HTML 预览">
+            <iframe class="html-frame" title="脑腐抢蛋线" src="about:blank" data-src="brainrot-egg-run.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>脑腐抢蛋线</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 脑腐抢蛋线"><b>♡</b><span data-count="like">1.9k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 脑腐抢蛋线"><b>☆</b><span data-count="save">395</span></button>
+            <a class="action-button" href="brainrot-egg-run.html" aria-label="打开 脑腐抢蛋线"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 脑腐抢蛋线"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#86efac; --n:6;" data-instance-id="arrow-escape-fake-0" data-src="arrow-escape-fake.html">
+          <section class="live-card is-playing" aria-label="拔箭逃生局 HTML 预览">
+            <iframe class="html-frame" title="拔箭逃生局" src="about:blank" data-src="arrow-escape-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>拔箭逃生局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 拔箭逃生局"><b>♡</b><span data-count="like">2.0k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 拔箭逃生局"><b>☆</b><span data-count="save">426</span></button>
+            <a class="action-button" href="arrow-escape-fake.html" aria-label="打开 拔箭逃生局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 拔箭逃生局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#74f4b4; --n:7;" data-instance-id="emoji-gator-hop-0" data-src="emoji-gator-hop.html">
+          <section class="live-card is-playing" aria-label="表情踩鳄梯 HTML 预览">
+            <iframe class="html-frame" title="表情踩鳄梯" src="about:blank" data-src="emoji-gator-hop.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>表情踩鳄梯</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 表情踩鳄梯"><b>♡</b><span data-count="like">2.2k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 表情踩鳄梯"><b>☆</b><span data-count="save">457</span></button>
+            <a class="action-button" href="emoji-gator-hop.html" aria-label="打开 表情踩鳄梯"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 表情踩鳄梯"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#7ad79d; --n:8;" data-instance-id="zen-logic-fake-0" data-src="zen-logic-fake.html">
+          <section class="live-card is-playing" aria-label="佛系排排坐 HTML 预览">
+            <iframe class="html-frame" title="佛系排排坐" src="about:blank" data-src="zen-logic-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>佛系排排坐</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 佛系排排坐"><b>♡</b><span data-count="like">2.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 佛系排排坐"><b>☆</b><span data-count="save">488</span></button>
+            <a class="action-button" href="zen-logic-fake.html" aria-label="打开 佛系排排坐"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 佛系排排坐"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#67e8f9; --n:9;" data-instance-id="marble-sort-fake-0" data-src="marble-sort-fake.html">
+          <section class="live-card is-playing" aria-label="弹珠分色瓶 HTML 预览">
+            <iframe class="html-frame" title="弹珠分色瓶" src="about:blank" data-src="marble-sort-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>弹珠分色瓶</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 弹珠分色瓶"><b>♡</b><span data-count="like">2.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 弹珠分色瓶"><b>☆</b><span data-count="save">519</span></button>
+            <a class="action-button" href="marble-sort-fake.html" aria-label="打开 弹珠分色瓶"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 弹珠分色瓶"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#f472b6; --n:10;" data-instance-id="wool-sort-fake-0" data-src="wool-sort-fake.html">
+          <section class="live-card is-playing" aria-label="线团绣图局 HTML 预览">
+            <iframe class="html-frame" title="线团绣图局" src="about:blank" data-src="wool-sort-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>线团绣图局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 线团绣图局"><b>♡</b><span data-count="like">2.6k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 线团绣图局"><b>☆</b><span data-count="save">550</span></button>
+            <a class="action-button" href="wool-sort-fake.html" aria-label="打开 线团绣图局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 线团绣图局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#ff8a4c; --n:11;" data-instance-id="pixel-loop-fake-0" data-src="pixel-loop-fake.html">
+          <section class="live-card is-playing" aria-label="像素环流局 HTML 预览">
+            <iframe class="html-frame" title="像素环流局" src="about:blank" data-src="pixel-loop-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>像素环流局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 像素环流局"><b>♡</b><span data-count="like">2.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 像素环流局"><b>☆</b><span data-count="save">581</span></button>
+            <a class="action-button" href="pixel-loop-fake.html" aria-label="打开 像素环流局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 像素环流局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#58c7ff; --n:12;" data-instance-id="bus-jam-fake-0" data-src="bus-jam-fake.html">
+          <section class="live-card is-playing" aria-label="巴士分流站 HTML 预览">
+            <iframe class="html-frame" title="巴士分流站" src="about:blank" data-src="bus-jam-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>巴士分流站</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 巴士分流站"><b>♡</b><span data-count="like">2.8k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 巴士分流站"><b>☆</b><span data-count="save">612</span></button>
+            <a class="action-button" href="bus-jam-fake.html" aria-label="打开 巴士分流站"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 巴士分流站"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#62d8ff; --n:13;" data-instance-id="seat-away-fake-0" data-src="seat-away-fake.html">
+          <section class="live-card is-playing" aria-label="挪座离场局 HTML 预览">
+            <iframe class="html-frame" title="挪座离场局" src="about:blank" data-src="seat-away-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>挪座离场局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 挪座离场局"><b>♡</b><span data-count="like">3.0k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 挪座离场局"><b>☆</b><span data-count="save">643</span></button>
+            <a class="action-button" href="seat-away-fake.html" aria-label="打开 挪座离场局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 挪座离场局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#7edcff; --n:14;" data-instance-id="parking-jam-fake-0" data-src="parking-jam-fake.html">
+          <section class="live-card is-playing" aria-label="停车场解堵局 HTML 预览">
+            <iframe class="html-frame" title="停车场解堵局" src="about:blank" data-src="parking-jam-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>停车场解堵局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 停车场解堵局"><b>♡</b><span data-count="like">3.1k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 停车场解堵局"><b>☆</b><span data-count="save">674</span></button>
+            <a class="action-button" href="parking-jam-fake.html" aria-label="打开 停车场解堵局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 停车场解堵局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#8be7ff; --n:15;" data-instance-id="traffic-bolt-jam-0" data-src="traffic-bolt-jam.html">
+          <section class="live-card is-playing" aria-label="挪车打螺丝 HTML 预览">
+            <iframe class="html-frame" title="挪车打螺丝" src="about:blank" data-src="traffic-bolt-jam.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>挪车打螺丝</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 挪车打螺丝"><b>♡</b><span data-count="like">3.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 挪车打螺丝"><b>☆</b><span data-count="save">705</span></button>
+            <a class="action-button" href="traffic-bolt-jam.html" aria-label="打开 挪车打螺丝"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 挪车打螺丝"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#62d8ff; --n:16;" data-instance-id="color-block-jam-fake-0" data-src="color-block-jam-fake.html">
+          <section class="live-card is-playing" aria-label="彩块出门局 HTML 预览">
+            <iframe class="html-frame" title="彩块出门局" src="about:blank" data-src="color-block-jam-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>彩块出门局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 彩块出门局"><b>♡</b><span data-count="like">3.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 彩块出门局"><b>☆</b><span data-count="save">736</span></button>
+            <a class="action-button" href="color-block-jam-fake.html" aria-label="打开 彩块出门局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 彩块出门局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#74ddff; --n:17;" data-instance-id="tap-away-fake-0" data-src="tap-away-fake.html">
+          <section class="live-card is-playing" aria-label="立体箭块局 HTML 预览">
+            <iframe class="html-frame" title="立体箭块局" src="about:blank" data-src="tap-away-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>立体箭块局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 立体箭块局"><b>♡</b><span data-count="like">3.5k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 立体箭块局"><b>☆</b><span data-count="save">767</span></button>
+            <a class="action-button" href="tap-away-fake.html" aria-label="打开 立体箭块局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 立体箭块局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#86efff; --n:18;" data-instance-id="loop-sort-fake-0" data-src="loop-sort-fake.html">
+          <section class="live-card is-playing" aria-label="环带理货局 HTML 预览">
+            <iframe class="html-frame" title="环带理货局" src="about:blank" data-src="loop-sort-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>环带理货局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 环带理货局"><b>♡</b><span data-count="like">3.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 环带理货局"><b>☆</b><span data-count="save">798</span></button>
+            <a class="action-button" href="loop-sort-fake.html" aria-label="打开 环带理货局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 环带理货局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#7cf0ff; --n:19;" data-instance-id="hexa-away-fake-0" data-src="hexa-away-fake.html">
+          <section class="live-card is-playing" aria-label="六角弹出盘 HTML 预览">
+            <iframe class="html-frame" title="六角弹出盘" src="about:blank" data-src="hexa-away-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>六角弹出盘</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 六角弹出盘"><b>♡</b><span data-count="like">3.8k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 六角弹出盘"><b>☆</b><span data-count="save">829</span></button>
+            <a class="action-button" href="hexa-away-fake.html" aria-label="打开 六角弹出盘"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 六角弹出盘"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#7cf0ff; --n:20;" data-instance-id="hexa-sort-fake-0" data-src="hexa-sort-fake.html">
+          <section class="live-card is-playing" aria-label="六角叠色局 HTML 预览">
+            <iframe class="html-frame" title="六角叠色局" src="about:blank" data-src="hexa-sort-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>六角叠色局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 六角叠色局"><b>♡</b><span data-count="like">3.9k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 六角叠色局"><b>☆</b><span data-count="save">860</span></button>
+            <a class="action-button" href="hexa-sort-fake.html" aria-label="打开 六角叠色局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 六角叠色局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#7dd6ff; --n:21;" data-instance-id="triple-match-fake-0" data-src="triple-match-fake.html">
+          <section class="live-card is-playing" aria-label="杂物三连清 HTML 预览">
+            <iframe class="html-frame" title="杂物三连清" src="about:blank" data-src="triple-match-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>杂物三连清</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 杂物三连清"><b>♡</b><span data-count="like">4.1k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 杂物三连清"><b>☆</b><span data-count="save">891</span></button>
+            <a class="action-button" href="triple-match-fake.html" aria-label="打开 杂物三连清"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 杂物三连清"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#ff4f87; --n:22;" data-instance-id="sbti-fake-0" data-src="sbti-fake.html">
           <section class="live-card is-playing" aria-label="伪 SBTI 崩溃人格测评 HTML 预览">
-            <iframe class="html-frame" title="伪 SBTI 崩溃人格测评" src="sbti-fake.html?embed=1" data-src="sbti-fake.html?embed=1" data-loaded="true" loading="eager" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+            <iframe class="html-frame" title="伪 SBTI 崩溃人格测评" src="about:blank" data-src="sbti-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
           <footer class="feed-caption">
             <span class="avatar" aria-hidden="true"></span>
             <h2>伪 SBTI 崩溃人格测评</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 伪 SBTI 崩溃人格测评"><b>♡</b><span data-count="like">1.2k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 伪 SBTI 崩溃人格测评"><b>☆</b><span data-count="save">240</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 伪 SBTI 崩溃人格测评"><b>♡</b><span data-count="like">4.2k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 伪 SBTI 崩溃人格测评"><b>☆</b><span data-count="save">922</span></button>
             <a class="action-button" href="sbti-fake.html" aria-label="打开 伪 SBTI 崩溃人格测评"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 伪 SBTI 崩溃人格测评"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#30b36b; --n:1;" data-instance-id="sheep-stack-0" data-src="sheep-stack.html">
+        <article class="feed-item" style="--game-accent:#30b36b; --n:23;" data-instance-id="sheep-stack-0" data-src="sheep-stack.html">
           <section class="live-card is-playing" aria-label="羊块堆堆消 HTML 预览">
-            <iframe class="html-frame" title="羊块堆堆消" src="sheep-stack.html?embed=1" data-src="sheep-stack.html?embed=1" data-loaded="true" loading="eager" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+            <iframe class="html-frame" title="羊块堆堆消" src="about:blank" data-src="sheep-stack.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
           <footer class="feed-caption">
             <span class="avatar" aria-hidden="true"></span>
             <h2>羊块堆堆消</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 羊块堆堆消"><b>♡</b><span data-count="like">1.3k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 羊块堆堆消"><b>☆</b><span data-count="save">271</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 羊块堆堆消"><b>♡</b><span data-count="like">4.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 羊块堆堆消"><b>☆</b><span data-count="save">953</span></button>
             <a class="action-button" href="sheep-stack.html" aria-label="打开 羊块堆堆消"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 羊块堆堆消"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#f1b900; --n:2;" data-instance-id="brainrot-clicker-0" data-src="brainrot-clicker.html">
+        <article class="feed-item" style="--game-accent:#ff8a3d; --n:24;" data-instance-id="goose-ladle-0" data-src="goose-ladle.html">
+          <section class="live-card is-playing" aria-label="摸鱼捞大鸽 HTML 预览">
+            <iframe class="html-frame" title="摸鱼捞大鸽" src="about:blank" data-src="goose-ladle.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>摸鱼捞大鸽</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 摸鱼捞大鸽"><b>♡</b><span data-count="like">4.5k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 摸鱼捞大鸽"><b>☆</b><span data-count="save">984</span></button>
+            <a class="action-button" href="goose-ladle.html" aria-label="打开 摸鱼捞大鸽"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 摸鱼捞大鸽"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#86f77b; --n:25;" data-instance-id="nostalgia-spotter-0" data-src="nostalgia-spotter.html">
+          <section class="live-card is-playing" aria-label="怀旧穿帮找茬 HTML 预览">
+            <iframe class="html-frame" title="怀旧穿帮找茬" src="about:blank" data-src="nostalgia-spotter.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>怀旧穿帮找茬</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 怀旧穿帮找茬"><b>♡</b><span data-count="like">4.6k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 怀旧穿帮找茬"><b>☆</b><span data-count="save">1.0k</span></button>
+            <a class="action-button" href="nostalgia-spotter.html" aria-label="打开 怀旧穿帮找茬"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 怀旧穿帮找茬"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#ff9a3d; --n:26;" data-instance-id="overtime-blocks-0" data-src="overtime-blocks.html">
+          <section class="live-card is-playing" aria-label="加班方块清仓 HTML 预览">
+            <iframe class="html-frame" title="加班方块清仓" src="about:blank" data-src="overtime-blocks.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>加班方块清仓</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 加班方块清仓"><b>♡</b><span data-count="like">4.8k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 加班方块清仓"><b>☆</b><span data-count="save">1.0k</span></button>
+            <a class="action-button" href="overtime-blocks.html" aria-label="打开 加班方块清仓"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 加班方块清仓"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#55d6ff; --n:27;" data-instance-id="clock-out-jam-0" data-src="clock-out-jam.html">
+          <section class="live-card is-playing" aria-label="下班工牌突围 HTML 预览">
+            <iframe class="html-frame" title="下班工牌突围" src="about:blank" data-src="clock-out-jam.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>下班工牌突围</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 下班工牌突围"><b>♡</b><span data-count="like">4.9k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 下班工牌突围"><b>☆</b><span data-count="save">1.1k</span></button>
+            <a class="action-button" href="clock-out-jam.html" aria-label="打开 下班工牌突围"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 下班工牌突围"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#6f55ff; --n:28;" data-instance-id="meeting-pinball-0" data-src="meeting-pinball.html">
+          <section class="live-card is-playing" aria-label="开会见缝插话 HTML 预览">
+            <iframe class="html-frame" title="开会见缝插话" src="about:blank" data-src="meeting-pinball.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>开会见缝插话</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 开会见缝插话"><b>♡</b><span data-count="like">5.0k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 开会见缝插话"><b>☆</b><span data-count="save">1.1k</span></button>
+            <a class="action-button" href="meeting-pinball.html" aria-label="打开 开会见缝插话"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 开会见缝插话"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#f1b900; --n:29;" data-instance-id="brainrot-clicker-0" data-src="brainrot-clicker.html">
           <section class="live-card is-playing" aria-label="脑腐咔嗒工厂 HTML 预览">
             <iframe class="html-frame" title="脑腐咔嗒工厂" src="about:blank" data-src="brainrot-clicker.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -448,14 +1094,14 @@
             <h2>脑腐咔嗒工厂</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 脑腐咔嗒工厂"><b>♡</b><span data-count="like">1.5k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 脑腐咔嗒工厂"><b>☆</b><span data-count="save">302</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 脑腐咔嗒工厂"><b>♡</b><span data-count="like">5.2k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 脑腐咔嗒工厂"><b>☆</b><span data-count="save">1.1k</span></button>
             <a class="action-button" href="brainrot-clicker.html" aria-label="打开 脑腐咔嗒工厂"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 脑腐咔嗒工厂"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#7c5cff; --n:3;" data-instance-id="stimulation-fake-0" data-src="stimulation-fake.html">
+        <article class="feed-item" style="--game-accent:#7c5cff; --n:30;" data-instance-id="stimulation-fake-0" data-src="stimulation-fake.html">
           <section class="live-card is-playing" aria-label="刺激值按钮 HTML 预览">
             <iframe class="html-frame" title="刺激值按钮" src="about:blank" data-src="stimulation-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -464,14 +1110,14 @@
             <h2>刺激值按钮</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 刺激值按钮"><b>♡</b><span data-count="like">1.6k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 刺激值按钮"><b>☆</b><span data-count="save">333</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 刺激值按钮"><b>♡</b><span data-count="like">5.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 刺激值按钮"><b>☆</b><span data-count="save">1.2k</span></button>
             <a class="action-button" href="stimulation-fake.html" aria-label="打开 刺激值按钮"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 刺激值按钮"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#ff7a2f; --n:4;" data-instance-id="cattle-bump-0" data-src="cattle-bump.html">
+        <article class="feed-item" style="--game-accent:#ff7a2f; --n:31;" data-instance-id="cattle-bump-0" data-src="cattle-bump.html">
           <section class="live-card is-playing" aria-label="疯羊碰碰场 HTML 预览">
             <iframe class="html-frame" title="疯羊碰碰场" src="about:blank" data-src="cattle-bump.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -480,14 +1126,14 @@
             <h2>疯羊碰碰场</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 疯羊碰碰场"><b>♡</b><span data-count="like">1.7k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 疯羊碰碰场"><b>☆</b><span data-count="save">364</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 疯羊碰碰场"><b>♡</b><span data-count="like">5.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 疯羊碰碰场"><b>☆</b><span data-count="save">1.2k</span></button>
             <a class="action-button" href="cattle-bump.html" aria-label="打开 疯羊碰碰场"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 疯羊碰碰场"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#00a6d6; --n:5;" data-instance-id="password-hell-0" data-src="password-hell.html">
+        <article class="feed-item" style="--game-accent:#00a6d6; --n:32;" data-instance-id="password-hell-0" data-src="password-hell.html">
           <section class="live-card is-playing" aria-label="密码地狱试炼 HTML 预览">
             <iframe class="html-frame" title="密码地狱试炼" src="about:blank" data-src="password-hell.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -496,14 +1142,14 @@
             <h2>密码地狱试炼</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 密码地狱试炼"><b>♡</b><span data-count="like">1.9k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 密码地狱试炼"><b>☆</b><span data-count="save">395</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 密码地狱试炼"><b>♡</b><span data-count="like">5.6k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 密码地狱试炼"><b>☆</b><span data-count="save">1.2k</span></button>
             <a class="action-button" href="password-hell.html" aria-label="打开 密码地狱试炼"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 密码地狱试炼"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#34a853; --n:6;" data-instance-id="infinite-craft-fake-0" data-src="infinite-craft-fake.html">
+        <article class="feed-item" style="--game-accent:#34a853; --n:33;" data-instance-id="infinite-craft-fake-0" data-src="infinite-craft-fake.html">
           <section class="live-card is-playing" aria-label="无限乱炖实验室 HTML 预览">
             <iframe class="html-frame" title="无限乱炖实验室" src="about:blank" data-src="infinite-craft-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -512,14 +1158,14 @@
             <h2>无限乱炖实验室</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 无限乱炖实验室"><b>♡</b><span data-count="like">2.0k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 无限乱炖实验室"><b>☆</b><span data-count="save">426</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 无限乱炖实验室"><b>♡</b><span data-count="like">5.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 无限乱炖实验室"><b>☆</b><span data-count="save">1.3k</span></button>
             <a class="action-button" href="infinite-craft-fake.html" aria-label="打开 无限乱炖实验室"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 无限乱炖实验室"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#111111; --n:7;" data-instance-id="million-checkboxes-fake-0" data-src="million-checkboxes-fake.html">
+        <article class="feed-item" style="--game-accent:#111111; --n:34;" data-instance-id="million-checkboxes-fake-0" data-src="million-checkboxes-fake.html">
           <section class="live-card is-playing" aria-label="四百个勾选框 HTML 预览">
             <iframe class="html-frame" title="四百个勾选框" src="about:blank" data-src="million-checkboxes-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -528,14 +1174,14 @@
             <h2>四百个勾选框</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 四百个勾选框"><b>♡</b><span data-count="like">2.2k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 四百个勾选框"><b>☆</b><span data-count="save">457</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 四百个勾选框"><b>♡</b><span data-count="like">5.9k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 四百个勾选框"><b>☆</b><span data-count="save">1.3k</span></button>
             <a class="action-button" href="million-checkboxes-fake.html" aria-label="打开 四百个勾选框"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 四百个勾选框"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#5f6368; --n:8;" data-instance-id="dino-fake-0" data-src="dino-fake.html">
+        <article class="feed-item" style="--game-accent:#5f6368; --n:35;" data-instance-id="dino-fake-0" data-src="dino-fake.html">
           <section class="live-card is-playing" aria-label="断网小蜥蜴 HTML 预览">
             <iframe class="html-frame" title="断网小蜥蜴" src="about:blank" data-src="dino-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -544,14 +1190,14 @@
             <h2>断网小蜥蜴</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 断网小蜥蜴"><b>♡</b><span data-count="like">2.3k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 断网小蜥蜴"><b>☆</b><span data-count="save">488</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 断网小蜥蜴"><b>♡</b><span data-count="like">6.0k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 断网小蜥蜴"><b>☆</b><span data-count="save">1.3k</span></button>
             <a class="action-button" href="dino-fake.html" aria-label="打开 断网小蜥蜴"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 断网小蜥蜴"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#6aa84f; --n:9;" data-instance-id="garden-idle-0" data-src="garden-idle.html">
+        <article class="feed-item" style="--game-accent:#6aa84f; --n:36;" data-instance-id="garden-idle-0" data-src="garden-idle.html">
           <section class="live-card is-playing" aria-label="摸鱼花园 HTML 预览">
             <iframe class="html-frame" title="摸鱼花园" src="about:blank" data-src="garden-idle.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -560,14 +1206,14 @@
             <h2>摸鱼花园</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 摸鱼花园"><b>♡</b><span data-count="like">2.4k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 摸鱼花园"><b>☆</b><span data-count="save">519</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 摸鱼花园"><b>♡</b><span data-count="like">6.1k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 摸鱼花园"><b>☆</b><span data-count="save">1.4k</span></button>
             <a class="action-button" href="garden-idle.html" aria-label="打开 摸鱼花园"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 摸鱼花园"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#4285f4; --n:10;" data-instance-id="agar-fake-0" data-src="agar-fake.html">
+        <article class="feed-item" style="--game-accent:#4285f4; --n:37;" data-instance-id="agar-fake-0" data-src="agar-fake.html">
           <section class="live-card is-playing" aria-label="圆点吞吞.io HTML 预览">
             <iframe class="html-frame" title="圆点吞吞.io" src="about:blank" data-src="agar-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -576,14 +1222,30 @@
             <h2>圆点吞吞.io</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 圆点吞吞.io"><b>♡</b><span data-count="like">2.6k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 圆点吞吞.io"><b>☆</b><span data-count="save">550</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 圆点吞吞.io"><b>♡</b><span data-count="like">6.3k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 圆点吞吞.io"><b>☆</b><span data-count="save">1.4k</span></button>
             <a class="action-button" href="agar-fake.html" aria-label="打开 圆点吞吞.io"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 圆点吞吞.io"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#21c26b; --n:11;" data-instance-id="qingjiao-sim-0" data-src="qingjiao-sim.html">
+        <article class="feed-item" style="--game-accent:#58d26a; --n:38;" data-instance-id="snake-battle-fake-0" data-src="snake-battle-fake.html">
+          <section class="live-card is-playing" aria-label="贪吃蛇冲榜局 HTML 预览">
+            <iframe class="html-frame" title="贪吃蛇冲榜局" src="about:blank" data-src="snake-battle-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>贪吃蛇冲榜局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 贪吃蛇冲榜局"><b>♡</b><span data-count="like">6.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 贪吃蛇冲榜局"><b>☆</b><span data-count="save">1.4k</span></button>
+            <a class="action-button" href="snake-battle-fake.html" aria-label="打开 贪吃蛇冲榜局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 贪吃蛇冲榜局"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#21c26b; --n:39;" data-instance-id="qingjiao-sim-0" data-src="qingjiao-sim.html">
           <section class="live-card is-playing" aria-label="青椒模拟器 HTML 预览">
             <iframe class="html-frame" title="青椒模拟器" src="about:blank" data-src="qingjiao-sim.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -592,14 +1254,14 @@
             <h2>青椒模拟器</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 青椒模拟器"><b>♡</b><span data-count="like">2.7k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 青椒模拟器"><b>☆</b><span data-count="save">581</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 青椒模拟器"><b>♡</b><span data-count="like">6.5k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 青椒模拟器"><b>☆</b><span data-count="save">1.4k</span></button>
             <a class="action-button" href="qingjiao-sim.html" aria-label="打开 青椒模拟器"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 青椒模拟器"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#ffcf33; --n:12;" data-instance-id="life-restart-fake-0" data-src="life-restart-fake.html">
+        <article class="feed-item" style="--game-accent:#ffcf33; --n:40;" data-instance-id="life-restart-fake-0" data-src="life-restart-fake.html">
           <section class="live-card is-playing" aria-label="人生重开模拟器 HTML 预览">
             <iframe class="html-frame" title="人生重开模拟器" src="about:blank" data-src="life-restart-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -608,14 +1270,14 @@
             <h2>人生重开模拟器</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 人生重开模拟器"><b>♡</b><span data-count="like">2.8k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 人生重开模拟器"><b>☆</b><span data-count="save">612</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 人生重开模拟器"><b>♡</b><span data-count="like">6.7k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 人生重开模拟器"><b>☆</b><span data-count="save">1.5k</span></button>
             <a class="action-button" href="life-restart-fake.html" aria-label="打开 人生重开模拟器"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 人生重开模拟器"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#2aa3ff; --n:13;" data-instance-id="twitter-governance-0" data-src="twitter-governance.html">
+        <article class="feed-item" style="--game-accent:#2aa3ff; --n:41;" data-instance-id="twitter-governance-0" data-src="twitter-governance.html">
           <section class="live-card is-playing" aria-label="推特治国 HTML 预览">
             <iframe class="html-frame" title="推特治国" src="about:blank" data-src="twitter-governance.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -624,14 +1286,14 @@
             <h2>推特治国</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 推特治国"><b>♡</b><span data-count="like">3.0k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 推特治国"><b>☆</b><span data-count="save">643</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 推特治国"><b>♡</b><span data-count="like">6.8k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 推特治国"><b>☆</b><span data-count="save">1.5k</span></button>
             <a class="action-button" href="twitter-governance.html" aria-label="打开 推特治国"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 推特治国"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#22f4ee; --n:14;" data-instance-id="io-arena-template-0" data-src="io-arena-template.html">
+        <article class="feed-item" style="--game-accent:#22f4ee; --n:42;" data-instance-id="io-arena-template-0" data-src="io-arena-template.html">
           <section class="live-card is-playing" aria-label="空投乱斗.io 模板 HTML 预览">
             <iframe class="html-frame" title="空投乱斗.io 模板" src="about:blank" data-src="io-arena-template.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -640,14 +1302,14 @@
             <h2>空投乱斗.io 模板</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 空投乱斗.io 模板"><b>♡</b><span data-count="like">3.1k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 空投乱斗.io 模板"><b>☆</b><span data-count="save">674</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 空投乱斗.io 模板"><b>♡</b><span data-count="like">7.0k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 空投乱斗.io 模板"><b>☆</b><span data-count="save">1.5k</span></button>
             <a class="action-button" href="io-arena-template.html" aria-label="打开 空投乱斗.io 模板"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 空投乱斗.io 模板"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#9b59b6; --n:15;" data-instance-id="mystic-score-0" data-src="mystic-score.html">
+        <article class="feed-item" style="--game-accent:#9b59b6; --n:43;" data-instance-id="mystic-score-0" data-src="mystic-score.html">
           <section class="live-card is-playing" aria-label="赛博玄学评分器 HTML 预览">
             <iframe class="html-frame" title="赛博玄学评分器" src="about:blank" data-src="mystic-score.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -656,14 +1318,14 @@
             <h2>赛博玄学评分器</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 赛博玄学评分器"><b>♡</b><span data-count="like">3.3k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 赛博玄学评分器"><b>☆</b><span data-count="save">705</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 赛博玄学评分器"><b>♡</b><span data-count="like">7.1k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 赛博玄学评分器"><b>☆</b><span data-count="save">1.6k</span></button>
             <a class="action-button" href="mystic-score.html" aria-label="打开 赛博玄学评分器"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 赛博玄学评分器"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#c45cff; --n:16;" data-instance-id="tarot-daily-0" data-src="tarot-daily.html">
+        <article class="feed-item" style="--game-accent:#c45cff; --n:44;" data-instance-id="tarot-daily-0" data-src="tarot-daily.html">
           <section class="live-card is-playing" aria-label="打工塔罗三连 HTML 预览">
             <iframe class="html-frame" title="打工塔罗三连" src="about:blank" data-src="tarot-daily.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -672,14 +1334,14 @@
             <h2>打工塔罗三连</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 打工塔罗三连"><b>♡</b><span data-count="like">3.4k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 打工塔罗三连"><b>☆</b><span data-count="save">736</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 打工塔罗三连"><b>♡</b><span data-count="like">7.2k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 打工塔罗三连"><b>☆</b><span data-count="save">1.6k</span></button>
             <a class="action-button" href="tarot-daily.html" aria-label="打开 打工塔罗三连"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 打工塔罗三连"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#e4a63b; --n:17;" data-instance-id="bazi-lite-0" data-src="bazi-lite.html">
+        <article class="feed-item" style="--game-accent:#e4a63b; --n:45;" data-instance-id="bazi-lite-0" data-src="bazi-lite.html">
           <section class="live-card is-playing" aria-label="八字偏科生成器 HTML 预览">
             <iframe class="html-frame" title="八字偏科生成器" src="about:blank" data-src="bazi-lite.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -688,14 +1350,14 @@
             <h2>八字偏科生成器</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 八字偏科生成器"><b>♡</b><span data-count="like">3.5k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 八字偏科生成器"><b>☆</b><span data-count="save">767</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 八字偏科生成器"><b>♡</b><span data-count="like">7.4k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 八字偏科生成器"><b>☆</b><span data-count="save">1.6k</span></button>
             <a class="action-button" href="bazi-lite.html" aria-label="打开 八字偏科生成器"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 八字偏科生成器"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#5bbcff; --n:18;" data-instance-id="astro-wheel-0" data-src="astro-wheel.html">
+        <article class="feed-item" style="--game-accent:#5bbcff; --n:46;" data-instance-id="astro-wheel-0" data-src="astro-wheel.html">
           <section class="live-card is-playing" aria-label="星盘甩锅轮 HTML 预览">
             <iframe class="html-frame" title="星盘甩锅轮" src="about:blank" data-src="astro-wheel.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -704,14 +1366,14 @@
             <h2>星盘甩锅轮</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 星盘甩锅轮"><b>♡</b><span data-count="like">3.7k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 星盘甩锅轮"><b>☆</b><span data-count="save">798</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 星盘甩锅轮"><b>♡</b><span data-count="like">7.5k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 星盘甩锅轮"><b>☆</b><span data-count="save">1.7k</span></button>
             <a class="action-button" href="astro-wheel.html" aria-label="打开 星盘甩锅轮"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 星盘甩锅轮"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
-        <article class="feed-item" style="--game-accent:#d6b45f; --n:19;" data-instance-id="yijing-coins-0" data-src="yijing-coins.html">
+        <article class="feed-item" style="--game-accent:#d6b45f; --n:47;" data-instance-id="yijing-coins-0" data-src="yijing-coins.html">
           <section class="live-card is-playing" aria-label="六爻离谱铜钱 HTML 预览">
             <iframe class="html-frame" title="六爻离谱铜钱" src="about:blank" data-src="yijing-coins.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
           </section>
@@ -720,10 +1382,26 @@
             <h2>六爻离谱铜钱</h2>
           </footer>
           <aside class="feed-actions">
-            <button class="action-button" type="button" data-like aria-label="点赞 六爻离谱铜钱"><b>♡</b><span data-count="like">3.8k</span></button>
-            <button class="action-button" type="button" data-save aria-label="收藏 六爻离谱铜钱"><b>☆</b><span data-count="save">829</span></button>
+            <button class="action-button" type="button" data-like aria-label="点赞 六爻离谱铜钱"><b>♡</b><span data-count="like">7.6k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 六爻离谱铜钱"><b>☆</b><span data-count="save">1.7k</span></button>
             <a class="action-button" href="yijing-coins.html" aria-label="打开 六爻离谱铜钱"><b>▶</b></a>
             <button class="action-button remix-action" type="button" data-remix aria-label="Remix 六爻离谱铜钱"><b>↻</b></button>
+            <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
+          </aside>
+        </article>
+        <article class="feed-item" style="--game-accent:#78e9ff; --n:48;" data-instance-id="goods-sort-fake-0" data-src="goods-sort-fake.html">
+          <section class="live-card is-playing" aria-label="货架清货局 HTML 预览">
+            <iframe class="html-frame" title="货架清货局" src="about:blank" data-src="goods-sort-fake.html?embed=1" data-loaded="false" loading="lazy" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+          </section>
+          <footer class="feed-caption">
+            <span class="avatar" aria-hidden="true"></span>
+            <h2>货架清货局</h2>
+          </footer>
+          <aside class="feed-actions">
+            <button class="action-button" type="button" data-like aria-label="点赞 货架清货局"><b>♡</b><span data-count="like">7.8k</span></button>
+            <button class="action-button" type="button" data-save aria-label="收藏 货架清货局"><b>☆</b><span data-count="save">1.7k</span></button>
+            <a class="action-button" href="goods-sort-fake.html" aria-label="打开 货架清货局"><b>▶</b></a>
+            <button class="action-button remix-action" type="button" data-remix aria-label="Remix 货架清货局"><b>↻</b></button>
             <button class="action-button" type="button" data-jump aria-label="下一个"><b>↓</b></button>
           </aside>
         </article>
@@ -755,14 +1433,14 @@
   </section>
   <script src="remix_manifest.js"></script>
   <script>
-    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-04-25T12:29:44.239Z","intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":78,"components":24,"interactions":26,"pages":20,"data_flow":20}};
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏 Playable Catalog：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-06-16T01:38:56.108Z","intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 Playable Catalog","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":78,"components":24,"interactions":26,"pages":49,"data_flow":20}};
     (() => {
       const feed = document.getElementById('feed');
       const homeScreen = document.getElementById('homeScreen');
       const waterfall = document.getElementById('waterfall');
       const feedScreen = document.getElementById('feedScreen');
       const feedBack = document.getElementById('feedBack');
-      const baseItems = [{"id":"sbti-fake","instanceId":"sbti-fake-0","file":"sbti-fake.html","title":"伪 SBTI 崩溃人格测评","sourceTitle":"伪 SBTI 崩溃人格测评","kind":"测评","sourceGame":"SBTI / MBTI 式社交测评","summary":"八题生成荒诞人格结果卡，适合截图分享。","accent":"#ff4f87","glyph":"SBTI","cover":"covers/sbti-fake.png","author":"@赝品库","likes":1200,"saves":240,"baseIndex":0,"loop":0,"remixed":false},{"id":"sheep-stack","instanceId":"sheep-stack-0","file":"sheep-stack.html","title":"羊块堆堆消","sourceTitle":"羊块堆堆消","kind":"消除","sourceGame":"羊了个羊式堆叠三消","summary":"只点亮牌，三张同图标入槽即消，槽满失败。","accent":"#30b36b","glyph":"羊","cover":"covers/sheep-stack.png","author":"@赝品库","likes":1337,"saves":271,"baseIndex":1,"loop":0,"remixed":false},{"id":"brainrot-clicker","instanceId":"brainrot-clicker-0","file":"brainrot-clicker.html","title":"脑腐咔嗒工厂","sourceTitle":"脑腐咔嗒工厂","kind":"点击","sourceGame":"Italian Brainrot / 增量点击器","summary":"点出伪意大利动物，升级后 canvas 弹幕越来越吵。","accent":"#f1b900","glyph":"脑","cover":"covers/brainrot-clicker.png","author":"@赝品库","likes":1474,"saves":302,"baseIndex":2,"loop":0,"remixed":false},{"id":"stimulation-fake","instanceId":"stimulation-fake-0","file":"stimulation-fake.html","title":"刺激值按钮","sourceTitle":"刺激值按钮","kind":"点击","sourceGame":"Stimulation Clicker 式过载点击器","summary":"每个升级都让手机屏幕更像失控的信息流。","accent":"#7c5cff","glyph":"刺","cover":"covers/stimulation-fake.png","author":"@赝品库","likes":1611,"saves":333,"baseIndex":3,"loop":0,"remixed":false},{"id":"cattle-bump","instanceId":"cattle-bump-0","file":"cattle-bump.html","title":"疯羊碰碰场","sourceTitle":"疯羊碰碰场","kind":"动作","sourceGame":"Crazy Cattle 3D 的 2D 撞飞版","summary":"触摸方向推动主羊，撞飞编号羊，留在圆圈里。","accent":"#ff7a2f","glyph":"撞","cover":"covers/cattle-bump.png","author":"@赝品库","likes":1748,"saves":364,"baseIndex":4,"loop":0,"remixed":false},{"id":"password-hell","instanceId":"password-hell-0","file":"password-hell.html","title":"密码地狱试炼","sourceTitle":"密码地狱试炼","kind":"解谜","sourceGame":"The Password Game 式规则升级","summary":"移动端输入框挑战，规则一条比一条难受。","accent":"#00a6d6","glyph":"密","cover":"covers/password-hell.png","author":"@赝品库","likes":1885,"saves":395,"baseIndex":5,"loop":0,"remixed":false},{"id":"infinite-craft-fake","instanceId":"infinite-craft-fake-0","file":"infinite-craft-fake.html","title":"无限乱炖实验室","sourceTitle":"无限乱炖实验室","kind":"合成","sourceGame":"Infinite Craft 式元素合成","summary":"两个词一碰，互联网又多一个概念。","accent":"#34a853","glyph":"合","cover":"covers/infinite-craft-fake.png","author":"@赝品库","likes":2022,"saves":426,"baseIndex":6,"loop":0,"remixed":false},{"id":"million-checkboxes-fake","instanceId":"million-checkboxes-fake-0","file":"million-checkboxes-fake.html","title":"四百个勾选框","sourceTitle":"四百个勾选框","kind":"协作幻觉","sourceGame":"One Million Checkboxes 式集体勾选","summary":"假装全网在线，其实是本地小宇宙。","accent":"#111111","glyph":"☑","cover":"covers/million-checkboxes-fake.png","author":"@赝品库","likes":2159,"saves":457,"baseIndex":7,"loop":0,"remixed":false},{"id":"dino-fake","instanceId":"dino-fake-0","file":"dino-fake.html","title":"断网小蜥蜴","sourceTitle":"断网小蜥蜴","kind":"跑酷","sourceGame":"Google Dino 式离线跑酷","summary":"点击跳跃，越过会议、需求和锅。","accent":"#5f6368","glyph":"跑","cover":"covers/dino-fake.png","author":"@赝品库","likes":2296,"saves":488,"baseIndex":8,"loop":0,"remixed":false},{"id":"garden-idle","instanceId":"garden-idle-0","file":"garden-idle.html","title":"摸鱼花园","sourceTitle":"摸鱼花园","kind":"放置","sourceGame":"Grow a Garden 式轻放置","summary":"种、等、收，库存刷新让你再来一次。","accent":"#6aa84f","glyph":"种","cover":"covers/garden-idle.png","author":"@赝品库","likes":2433,"saves":519,"baseIndex":9,"loop":0,"remixed":false},{"id":"agar-fake","instanceId":"agar-fake-0","file":"agar-fake.html","title":"圆点吞吞.io","sourceTitle":"圆点吞吞.io","kind":".io","sourceGame":"Agar.io 式吞噬成长","summary":"拖动移动，吃小点长大，别被大圆点吃掉。","accent":"#4285f4","glyph":"io","cover":"covers/agar-fake.png","author":"@赝品库","likes":2570,"saves":550,"baseIndex":10,"loop":0,"remixed":false},{"id":"qingjiao-sim","instanceId":"qingjiao-sim-0","file":"qingjiao-sim.html","title":"青椒模拟器","sourceTitle":"青椒模拟器","kind":"经营","sourceGame":"青椒模拟器式高校青年教师生存经营","summary":"申请教职、招学生、投基金、发论文，在非升即走里保住心态。","accent":"#21c26b","glyph":"青","cover":"covers/qingjiao-sim.png","author":"@赝品库","likes":2707,"saves":581,"baseIndex":11,"loop":0,"remixed":false},{"id":"life-restart-fake","instanceId":"life-restart-fake-0","file":"life-restart-fake.html","title":"人生重开模拟器","sourceTitle":"人生重开模拟器","kind":"重开","sourceGame":"LifeRestart 式天赋属性人生事件流","summary":"抽天赋、分配属性、逐岁推进，看这一局人生如何离谱收束。","accent":"#ffcf33","glyph":"重","cover":"covers/life-restart-fake.png","author":"@赝品库","likes":2844,"saves":612,"baseIndex":12,"loop":0,"remixed":false},{"id":"twitter-governance","instanceId":"twitter-governance-0","file":"twitter-governance.html","title":"推特治国","sourceTitle":"推特治国","kind":"模拟","sourceGame":"特朗普式社交媒体治国恶搞模拟","summary":"刷新闻、语音/文本发帖、给幕僚下命令，用一条条动态维持混乱热度。","accent":"#2aa3ff","glyph":"推","cover":"covers/twitter-governance.png","author":"@赝品库","likes":2981,"saves":643,"baseIndex":13,"loop":0,"remixed":false},{"id":"io-arena-template","instanceId":"io-arena-template-0","file":"io-arena-template.html","title":"空投乱斗.io 模板","sourceTitle":"空投乱斗.io 模板","kind":"模板","sourceGame":"Wings.io / Starblast.io / 俯视 .io 射击母版","summary":"双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。","accent":"#22f4ee","glyph":"战","cover":"covers/io-arena-template.png","author":"@赝品库","likes":3118,"saves":674,"baseIndex":14,"loop":0,"remixed":false},{"id":"mystic-score","instanceId":"mystic-score-0","file":"mystic-score.html","title":"赛博玄学评分器","sourceTitle":"赛博玄学评分器","kind":"玄学","sourceGame":"玄学运势 / 分享卡测评","summary":"输入名字，生成今日抽象运势卡。","accent":"#9b59b6","glyph":"玄","cover":"covers/mystic-score.png","author":"@赝品库","likes":3255,"saves":705,"baseIndex":15,"loop":0,"remixed":false},{"id":"tarot-daily","instanceId":"tarot-daily-0","file":"tarot-daily.html","title":"打工塔罗三连","sourceTitle":"打工塔罗三连","kind":"塔罗","sourceGame":"Tarot.js / TarotSchema 式三牌阵","summary":"输入代号抽三张赛博塔罗，给出今日抽象建议。","accent":"#c45cff","glyph":"塔","cover":"covers/tarot-daily.png","author":"@赝品库","likes":3392,"saves":736,"baseIndex":16,"loop":0,"remixed":false},{"id":"bazi-lite","instanceId":"bazi-lite-0","file":"bazi-lite.html","title":"八字偏科生成器","sourceTitle":"八字偏科生成器","kind":"算命","sourceGame":"Gmuli-Bazi-Calc 式四柱输入","summary":"生日时辰生成假认真四柱，重点看五行哪里离谱。","accent":"#e4a63b","glyph":"命","cover":"covers/bazi-lite.png","author":"@赝品库","likes":3529,"saves":767,"baseIndex":17,"loop":0,"remixed":false},{"id":"astro-wheel","instanceId":"astro-wheel-0","file":"astro-wheel.html","title":"星盘甩锅轮","sourceTitle":"星盘甩锅轮","kind":"看盘","sourceGame":"CircularNatalHoroscopeJS / AstroChart 式圆盘","summary":"一键画出可分享星盘，把今天的问题甩给相位。","accent":"#5bbcff","glyph":"星","cover":"covers/astro-wheel.png","author":"@赝品库","likes":3666,"saves":798,"baseIndex":18,"loop":0,"remixed":false},{"id":"yijing-coins","instanceId":"yijing-coins-0","file":"yijing-coins.html","title":"六爻离谱铜钱","sourceTitle":"六爻离谱铜钱","kind":"易经","sourceGame":"I Ching coin divination flow","summary":"点六次摇铜钱，得到一卦适合转发的离谱签文。","accent":"#d6b45f","glyph":"卦","cover":"covers/yijing-coins.png","author":"@赝品库","likes":3803,"saves":829,"baseIndex":19,"loop":0,"remixed":false}];
+      const baseItems = [{"id":"screw-sorter","instanceId":"screw-sorter-0","file":"screw-sorter.html","title":"打个螺丝局","sourceTitle":"打个螺丝局","kind":"拧螺丝","sourceGame":"打个螺丝 / 一起拧螺丝式层叠拆卸排序","summary":"先拆上层彩钉，再把同色螺丝凑进盒里，盒满就卡关。","accent":"#ffb11c","glyph":"钉","cover":"covers/screw-sorter.png","author":"@Atelier","likes":1200,"saves":240,"baseIndex":0,"loop":0,"remixed":false},{"id":"screw-box-blitz","instanceId":"screw-box-blitz-0","file":"screw-box-blitz.html","title":"彩盒拧钉局","sourceTitle":"彩盒拧钉局","kind":"彩盒拆钉","sourceGame":"一起拧螺丝 / 无敌螺丝王式同色彩盒拆钉","summary":"先拆上层，再把同色螺丝塞进对应彩盒，三枚凑满立刻清盒。","accent":"#65d2ff","glyph":"箱","cover":"covers/screw-box-blitz.png","author":"@Atelier","likes":1337,"saves":271,"baseIndex":1,"loop":0,"remixed":false},{"id":"screwdom-fake","instanceId":"screwdom-fake-0","file":"screwdom-fake.html","title":"钉柱归箱局","sourceTitle":"钉柱归箱局","kind":"针位拆钉","sourceGame":"Screwdom 式针位堆叠拆钉","summary":"盯住每根钉柱的顶层颜色，按顺序拆下并送进同色箱，三枚同色立刻清箱。","accent":"#86f2ff","glyph":"柱","cover":"covers/screwdom-fake.png","author":"@Atelier","likes":1474,"saves":302,"baseIndex":2,"loop":0,"remixed":false},{"id":"brainrot-merge-pot","instanceId":"brainrot-merge-pot-0","file":"brainrot-merge-pot.html","title":"脑腐合成锅","sourceTitle":"脑腐合成锅","kind":"合成","sourceGame":"Brainrot Merge / 合成大西瓜式掉落合成","summary":"沿着顶线丢进怪物丸子，同类碰撞升级，别让锅口堆爆。","accent":"#ff7a59","glyph":"锅","cover":"covers/brainrot-merge-pot.png","author":"@Atelier","likes":1611,"saves":333,"baseIndex":3,"loop":0,"remixed":false},{"id":"brainrot-raider-yard","instanceId":"brainrot-raider-yard-0","file":"brainrot-raider-yard.html","title":"脑腐偷家场","sourceTitle":"脑腐偷家场","kind":"养成合成","sourceGame":"Merge & Steal Brainrot / Italian Brainrot Merge","summary":"招募低级梗怪、拖拽同类合成、自动产币，还得随时拦截来偷家的巡逻贼。","accent":"#7c5cff","glyph":"夺","cover":"covers/brainrot-raider-yard.png","author":"@Atelier","likes":1748,"saves":364,"baseIndex":4,"loop":0,"remixed":false},{"id":"brainrot-egg-run","instanceId":"brainrot-egg-run-0","file":"brainrot-egg-run.html","title":"脑腐抢蛋线","sourceTitle":"脑腐抢蛋线","kind":"收集养成","sourceGame":"Collect Brainrot Egg","summary":"买蛋上带、拖回工位孵化、自动产币，再抓偷蛋窗口白嫖高阶蛋。","accent":"#f59e0b","glyph":"箭","cover":"covers/brainrot-egg-run.png","author":"@Atelier","likes":1885,"saves":395,"baseIndex":5,"loop":0,"remixed":false},{"id":"arrow-escape-fake","instanceId":"arrow-escape-fake-0","file":"arrow-escape-fake.html","title":"拔箭逃生局","sourceTitle":"拔箭逃生局","kind":"解谜","sourceGame":"Arrows - Puzzle Escape","summary":"只能拔出朝出口方向一路通畅的箭块，误点三次就翻车。","accent":"#86efac","glyph":"鳄","cover":"covers/arrow-escape-fake.png","author":"@Atelier","likes":2022,"saves":426,"baseIndex":6,"loop":0,"remixed":false},{"id":"emoji-gator-hop","instanceId":"emoji-gator-hop-0","file":"emoji-gator-hop.html","title":"表情踩鳄梯","sourceTitle":"表情踩鳄梯","kind":"跳跃","sourceGame":"TikTok hidden emoji DM game","summary":"左右挪动表情往上蹦，踩断裂鳄梯会塌，碰上表情加速泡能一口气冲高。","accent":"#74f4b4","glyph":"珠","cover":"covers/emoji-gator-hop.png","author":"@Atelier","likes":2159,"saves":457,"baseIndex":7,"loop":0,"remixed":false},{"id":"zen-logic-fake","instanceId":"zen-logic-fake-0","file":"zen-logic-fake.html","title":"佛系排排坐","sourceTitle":"佛系排排坐","kind":"逻辑","sourceGame":"佛系消消消式数独 / Queens 混合逻辑盘","summary":"看行列和色块把 6 只羊摆开，谁都不能挨着谁。","accent":"#7ad79d","glyph":"逻","cover":"covers/zen-logic-fake.png","author":"@Atelier","likes":2296,"saves":488,"baseIndex":8,"loop":0,"remixed":false},{"id":"marble-sort-fake","instanceId":"marble-sort-fake-0","file":"marble-sort-fake.html","title":"弹珠分色瓶","sourceTitle":"弹珠分色瓶","kind":"分拣","sourceGame":"Marble Sort! / Water Sort Puzzle 式单指分拣","summary":"选一瓶，把顶层连续同色弹珠倒进空瓶或同色瓶，直到每瓶只剩一种颜色。","accent":"#67e8f9","glyph":"SBTI","cover":"covers/marble-sort-fake.png","author":"@Atelier","likes":2433,"saves":519,"baseIndex":9,"loop":0,"remixed":false},{"id":"wool-sort-fake","instanceId":"wool-sort-fake-0","file":"wool-sort-fake.html","title":"线团绣图局","sourceTitle":"线团绣图局","kind":"绕线","sourceGame":"Wool Sort 式绕线分拣 + 像素绣图显现","summary":"按同色把线团倒进空卷轴或同色卷轴，四卷归齐后整张绣图才会完整显出来。","accent":"#f472b6","glyph":"羊","cover":"covers/wool-sort-fake.png","author":"@Atelier","likes":2570,"saves":550,"baseIndex":10,"loop":0,"remixed":false},{"id":"pixel-loop-fake","instanceId":"pixel-loop-fake-0","file":"pixel-loop-fake.html","title":"像素环流局","sourceTitle":"像素环流局","kind":"环流","sourceGame":"Pixel Flow 式实时环带清色","summary":"彩块沿环带绕图跑，点空槽部署同色清扫头，五格废槽全堵就崩盘。","accent":"#ff8a4c","glyph":"鸽","cover":"covers/pixel-loop-fake.png","author":"@Atelier","likes":2707,"saves":581,"baseIndex":11,"loop":0,"remixed":false},{"id":"bus-jam-fake","instanceId":"bus-jam-fake-0","file":"bus-jam-fake.html","title":"巴士分流站","sourceTitle":"巴士分流站","kind":"分流","sourceGame":"Bus Escape: Traffic Jam / Bus Jam 式乘客分流","summary":"点发同色巴士，让站台前排乘客一车车离开，后排才会继续露出来。","accent":"#58c7ff","glyph":"茬","cover":"covers/bus-jam-fake.png","author":"@Atelier","likes":2844,"saves":612,"baseIndex":12,"loop":0,"remixed":false},{"id":"seat-away-fake","instanceId":"seat-away-fake-0","file":"seat-away-fake.html","title":"挪座离场局","sourceTitle":"挪座离场局","kind":"挪座","sourceGame":"Seat Away 式箭头挪座解谜","summary":"点一张座椅就沿箭头滑走，能直冲出口的会直接离场，清空整盘即过关。","accent":"#62d8ff","glyph":"块","cover":"covers/seat-away-fake.png","author":"@Atelier","likes":2981,"saves":643,"baseIndex":13,"loop":0,"remixed":false},{"id":"parking-jam-fake","instanceId":"parking-jam-fake-0","file":"parking-jam-fake.html","title":"停车场解堵局","sourceTitle":"停车场解堵局","kind":"停车解堵","sourceGame":"Parking Jam 3D 式停车场解堵","summary":"点车让它沿车头方向滑到尽头或直接出库，先清挡路车，再把整面停车场慢慢疏通。","accent":"#7edcff","glyph":"堵","cover":"covers/parking-jam-fake.png","author":"@Atelier","likes":3118,"saves":674,"baseIndex":14,"loop":0,"remixed":false},{"id":"traffic-bolt-jam","instanceId":"traffic-bolt-jam-0","file":"traffic-bolt-jam.html","title":"挪车打螺丝","sourceTitle":"挪车打螺丝","kind":"停车解堵","sourceGame":"挪车打螺丝 / Parking Jam 式停车解堵","summary":"沿着车头方向一点点挪开堵路车，把卡在厂区出钉通道里的车队整层疏通。","accent":"#8be7ff","glyph":"针","cover":"covers/traffic-bolt-jam.png","author":"@Atelier","likes":3255,"saves":705,"baseIndex":15,"loop":0,"remixed":false},{"id":"color-block-jam-fake","instanceId":"color-block-jam-fake-0","file":"color-block-jam-fake.html","title":"彩块出门局","sourceTitle":"彩块出门局","kind":"彩块出门","sourceGame":"Color Block Jam 式同色出口滑块解谜","summary":"选中彩块后朝任意方向一划，让它一路滑到同色出口，清空整盘即过关。","accent":"#62d8ff","glyph":"脑","cover":"covers/color-block-jam-fake.png","author":"@Atelier","likes":3392,"saves":736,"baseIndex":16,"loop":0,"remixed":false},{"id":"tap-away-fake","instanceId":"tap-away-fake-0","file":"tap-away-fake.html","title":"立体箭块局","sourceTitle":"立体箭块局","kind":"立体解块","sourceGame":"Tap Away / Block Out - Tap Away 式 3D 箭头出块","summary":"点能顺着箭头飞出去的方块，不通就旋转整团找新角度，把 3D 团块拆空。","accent":"#74ddff","glyph":"刺","cover":"covers/tap-away-fake.png","author":"@Atelier","likes":3529,"saves":767,"baseIndex":17,"loop":0,"remixed":false},{"id":"loop-sort-fake","instanceId":"loop-sort-fake-0","file":"loop-sort-fake.html","title":"环带理货局","sourceTitle":"环带理货局","kind":"环带分拣","sourceGame":"Loop Sort 式卡车放货环带三连清","summary":"点四侧卡车把色块送上环形传送带，沿带转一圈后凑成三连立刻清空，别让整圈堵死。","accent":"#86efff","glyph":"撞","cover":"covers/loop-sort-fake.png","author":"@Atelier","likes":3666,"saves":798,"baseIndex":18,"loop":0,"remixed":false},{"id":"hexa-away-fake","instanceId":"hexa-away-fake-0","file":"hexa-away-fake.html","title":"六角弹出盘","sourceTitle":"六角弹出盘","kind":"六角弹出","sourceGame":"Hexa Away 式六边形箭头弹出解块","summary":"点能顺着箭头直接飞出边界的六角块，不通就转盘换角度，把整团六角块弹空。","accent":"#7cf0ff","glyph":"密","cover":"covers/hexa-away-fake.png","author":"@Atelier","likes":3803,"saves":829,"baseIndex":19,"loop":0,"remixed":false},{"id":"hexa-sort-fake","instanceId":"hexa-sort-fake-0","file":"hexa-sort-fake.html","title":"六角叠色局","sourceTitle":"六角叠色局","kind":"六角分拣","sourceGame":"Hexa Sort 式六角堆叠分色消层","summary":"点列子把顶层同色六角块倒去空列或同色列，凑满整列就整柱清空。","accent":"#7cf0ff","glyph":"合","cover":"covers/hexa-sort-fake.png","author":"@Atelier","likes":3940,"saves":860,"baseIndex":20,"loop":0,"remixed":false},{"id":"triple-match-fake","instanceId":"triple-match-fake-0","file":"triple-match-fake.html","title":"杂物三连清","sourceTitle":"杂物三连清","kind":"三连清堆物","sourceGame":"Triple Match 3D / Match Factory 式堆物三连消","summary":"从杂乱堆物里只点最上层可见物，送进七格托盘，凑成三件同类立刻清走。","accent":"#7dd6ff","glyph":"☑","cover":"covers/triple-match-fake.png","author":"@Atelier","likes":4077,"saves":891,"baseIndex":21,"loop":0,"remixed":false},{"id":"sbti-fake","instanceId":"sbti-fake-0","file":"sbti-fake.html","title":"伪 SBTI 崩溃人格测评","sourceTitle":"伪 SBTI 崩溃人格测评","kind":"测评","sourceGame":"SBTI / MBTI 式社交测评","summary":"八题生成荒诞人格结果卡，适合截图分享。","accent":"#ff4f87","glyph":"跑","cover":"covers/sbti-fake.png","author":"@Atelier","likes":4214,"saves":922,"baseIndex":22,"loop":0,"remixed":false},{"id":"sheep-stack","instanceId":"sheep-stack-0","file":"sheep-stack.html","title":"羊块堆堆消","sourceTitle":"羊块堆堆消","kind":"消除","sourceGame":"羊了个羊式堆叠三消","summary":"只点亮牌，三张同图标入槽即消，槽满失败。","accent":"#30b36b","glyph":"种","cover":"covers/sheep-stack.png","author":"@Atelier","likes":4351,"saves":953,"baseIndex":23,"loop":0,"remixed":false},{"id":"goose-ladle","instanceId":"goose-ladle-0","file":"goose-ladle.html","title":"摸鱼捞大鸽","sourceTitle":"摸鱼捞大鸽","kind":"堆叠","sourceGame":"抓大鹅式锅底寻物三消","summary":"先三消清锅面，再把藏在工位火锅底的鸽子捞出来。","accent":"#ff8a3d","glyph":"io","cover":"covers/goose-ladle.png","author":"@Atelier","likes":4488,"saves":984,"baseIndex":24,"loop":0,"remixed":false},{"id":"nostalgia-spotter","instanceId":"nostalgia-spotter-0","file":"nostalgia-spotter.html","title":"怀旧穿帮找茬","sourceTitle":"怀旧穿帮找茬","kind":"找茬","sourceGame":"找茬大湿怀旧版式年代场景找不合理","summary":"在老教室里点出 7 个现代穿帮物件，点错会扣时间。","accent":"#86f77b","glyph":"蛇","cover":"covers/nostalgia-spotter.png","author":"@Atelier","likes":4625,"saves":1015,"baseIndex":25,"loop":0,"remixed":false},{"id":"overtime-blocks","instanceId":"overtime-blocks-0","file":"overtime-blocks.html","title":"加班方块清仓","sourceTitle":"加班方块清仓","kind":"拼盘","sourceGame":"Block Blast 式 8x8 方块拼盘","summary":"三选一摆入 8x8 工位，清行清列打连击，放不下就下班。","accent":"#ff9a3d","glyph":"青","cover":"covers/overtime-blocks.png","author":"@Atelier","likes":4762,"saves":1046,"baseIndex":26,"loop":0,"remixed":false},{"id":"clock-out-jam","instanceId":"clock-out-jam-0","file":"clock-out-jam.html","title":"下班工牌突围","sourceTitle":"下班工牌突围","kind":"挪块","sourceGame":"Color Block Jam / Block Jam 式单屏堵塞解谜","summary":"拖开会议和审批，把主工牌一路挪到出口，步数越少越像真会下班。","accent":"#55d6ff","glyph":"重","cover":"covers/clock-out-jam.png","author":"@Atelier","likes":4899,"saves":1077,"baseIndex":27,"loop":0,"remixed":false},{"id":"meeting-pinball","instanceId":"meeting-pinball-0","file":"meeting-pinball.html","title":"开会见缝插话","sourceTitle":"开会见缝插话","kind":"反应","sourceGame":"见缝插针 / aa 式旋转插针","summary":"把发言条插进旋转会议盘，不撞车，打完一轮直接升压。","accent":"#6f55ff","glyph":"推","cover":"covers/meeting-pinball.png","author":"@Atelier","likes":5036,"saves":1108,"baseIndex":28,"loop":0,"remixed":false},{"id":"brainrot-clicker","instanceId":"brainrot-clicker-0","file":"brainrot-clicker.html","title":"脑腐咔嗒工厂","sourceTitle":"脑腐咔嗒工厂","kind":"点击","sourceGame":"Italian Brainrot / 增量点击器","summary":"点出伪意大利动物，升级后 canvas 弹幕越来越吵。","accent":"#f1b900","glyph":"战","cover":"covers/brainrot-clicker.png","author":"@Atelier","likes":5173,"saves":1139,"baseIndex":29,"loop":0,"remixed":false},{"id":"stimulation-fake","instanceId":"stimulation-fake-0","file":"stimulation-fake.html","title":"刺激值按钮","sourceTitle":"刺激值按钮","kind":"点击","sourceGame":"Stimulation Clicker 式过载点击器","summary":"每个升级都让手机屏幕更像失控的信息流。","accent":"#7c5cff","glyph":"玄","cover":"covers/stimulation-fake.png","author":"@Atelier","likes":5310,"saves":1170,"baseIndex":30,"loop":0,"remixed":false},{"id":"cattle-bump","instanceId":"cattle-bump-0","file":"cattle-bump.html","title":"疯羊碰碰场","sourceTitle":"疯羊碰碰场","kind":"动作","sourceGame":"Crazy Cattle 3D 的 2D 撞飞版","summary":"触摸方向推动主羊，撞飞编号羊，留在圆圈里。","accent":"#ff7a2f","glyph":"塔","cover":"covers/cattle-bump.png","author":"@Atelier","likes":5447,"saves":1201,"baseIndex":31,"loop":0,"remixed":false},{"id":"password-hell","instanceId":"password-hell-0","file":"password-hell.html","title":"密码地狱试炼","sourceTitle":"密码地狱试炼","kind":"解谜","sourceGame":"The Password Game 式规则升级","summary":"移动端输入框挑战，规则一条比一条难受。","accent":"#00a6d6","glyph":"命","cover":"covers/password-hell.png","author":"@Atelier","likes":5584,"saves":1232,"baseIndex":32,"loop":0,"remixed":false},{"id":"infinite-craft-fake","instanceId":"infinite-craft-fake-0","file":"infinite-craft-fake.html","title":"无限乱炖实验室","sourceTitle":"无限乱炖实验室","kind":"合成","sourceGame":"Infinite Craft 式元素合成","summary":"两个词一碰，互联网又多一个概念。","accent":"#34a853","glyph":"星","cover":"covers/infinite-craft-fake.png","author":"@Atelier","likes":5721,"saves":1263,"baseIndex":33,"loop":0,"remixed":false},{"id":"million-checkboxes-fake","instanceId":"million-checkboxes-fake-0","file":"million-checkboxes-fake.html","title":"四百个勾选框","sourceTitle":"四百个勾选框","kind":"协作幻觉","sourceGame":"One Million Checkboxes 式集体勾选","summary":"假装全网在线，其实是本地小宇宙。","accent":"#111111","glyph":"卦","cover":"covers/million-checkboxes-fake.png","author":"@Atelier","likes":5858,"saves":1294,"baseIndex":34,"loop":0,"remixed":false},{"id":"dino-fake","instanceId":"dino-fake-0","file":"dino-fake.html","title":"断网小蜥蜴","sourceTitle":"断网小蜥蜴","kind":"跑酷","sourceGame":"Google Dino 式离线跑酷","summary":"点击跳跃，越过会议、需求和锅。","accent":"#5f6368","glyph":"柜","cover":"covers/dino-fake.png","author":"@Atelier","likes":5995,"saves":1325,"baseIndex":35,"loop":0,"remixed":false},{"id":"garden-idle","instanceId":"garden-idle-0","file":"garden-idle.html","title":"摸鱼花园","sourceTitle":"摸鱼花园","kind":"放置","sourceGame":"Grow a Garden 式轻放置","summary":"种、等、收，库存刷新让你再来一次。","accent":"#6aa84f","glyph":"游","cover":"covers/garden-idle.png","author":"@Atelier","likes":6132,"saves":1356,"baseIndex":36,"loop":0,"remixed":false},{"id":"agar-fake","instanceId":"agar-fake-0","file":"agar-fake.html","title":"圆点吞吞.io","sourceTitle":"圆点吞吞.io","kind":".io","sourceGame":"Agar.io 式吞噬成长","summary":"拖动移动，吃小点长大，别被大圆点吃掉。","accent":"#4285f4","glyph":"游","cover":"covers/agar-fake.png","author":"@Atelier","likes":6269,"saves":1387,"baseIndex":37,"loop":0,"remixed":false},{"id":"snake-battle-fake","instanceId":"snake-battle-fake-0","file":"snake-battle-fake.html","title":"贪吃蛇冲榜局","sourceTitle":"贪吃蛇冲榜局","kind":"竞技","sourceGame":"贪吃蛇大作战式单指冲榜","summary":"单指转向，按住加速甩尾，蹭豆把长度冲到 40。","accent":"#58d26a","glyph":"游","cover":"covers/snake-battle-fake.png","author":"@Atelier","likes":6406,"saves":1418,"baseIndex":38,"loop":0,"remixed":false},{"id":"qingjiao-sim","instanceId":"qingjiao-sim-0","file":"qingjiao-sim.html","title":"青椒模拟器","sourceTitle":"青椒模拟器","kind":"经营","sourceGame":"青椒模拟器式高校青年教师生存经营","summary":"申请教职、招学生、投基金、发论文，在非升即走里保住心态。","accent":"#21c26b","glyph":"游","cover":"covers/qingjiao-sim.png","author":"@Atelier","likes":6543,"saves":1449,"baseIndex":39,"loop":0,"remixed":false},{"id":"life-restart-fake","instanceId":"life-restart-fake-0","file":"life-restart-fake.html","title":"人生重开模拟器","sourceTitle":"人生重开模拟器","kind":"重开","sourceGame":"LifeRestart 式天赋属性人生事件流","summary":"抽天赋、分配属性、逐岁推进，看这一局人生如何离谱收束。","accent":"#ffcf33","glyph":"游","cover":"covers/life-restart-fake.png","author":"@Atelier","likes":6680,"saves":1480,"baseIndex":40,"loop":0,"remixed":false},{"id":"twitter-governance","instanceId":"twitter-governance-0","file":"twitter-governance.html","title":"推特治国","sourceTitle":"推特治国","kind":"模拟","sourceGame":"特朗普式社交媒体治国恶搞模拟","summary":"刷新闻、语音/文本发帖、给幕僚下命令，用一条条动态维持混乱热度。","accent":"#2aa3ff","glyph":"游","cover":"covers/twitter-governance.png","author":"@Atelier","likes":6817,"saves":1511,"baseIndex":41,"loop":0,"remixed":false},{"id":"io-arena-template","instanceId":"io-arena-template-0","file":"io-arena-template.html","title":"空投乱斗.io 模板","sourceTitle":"空投乱斗.io 模板","kind":"模板","sourceGame":"Wings.io / Starblast.io / 俯视 .io 射击母版","summary":"双摇杆、空投武器、bot、假排行榜和换皮入口，给后续 .io 射击赝品复用。","accent":"#22f4ee","glyph":"游","cover":"covers/io-arena-template.png","author":"@Atelier","likes":6954,"saves":1542,"baseIndex":42,"loop":0,"remixed":false},{"id":"mystic-score","instanceId":"mystic-score-0","file":"mystic-score.html","title":"赛博玄学评分器","sourceTitle":"赛博玄学评分器","kind":"玄学","sourceGame":"玄学运势 / 分享卡测评","summary":"输入名字，生成今日抽象运势卡。","accent":"#9b59b6","glyph":"游","cover":"covers/mystic-score.png","author":"@Atelier","likes":7091,"saves":1573,"baseIndex":43,"loop":0,"remixed":false},{"id":"tarot-daily","instanceId":"tarot-daily-0","file":"tarot-daily.html","title":"打工塔罗三连","sourceTitle":"打工塔罗三连","kind":"塔罗","sourceGame":"Tarot.js / TarotSchema 式三牌阵","summary":"输入代号抽三张赛博塔罗，给出今日抽象建议。","accent":"#c45cff","glyph":"游","cover":"covers/tarot-daily.png","author":"@Atelier","likes":7228,"saves":1604,"baseIndex":44,"loop":0,"remixed":false},{"id":"bazi-lite","instanceId":"bazi-lite-0","file":"bazi-lite.html","title":"八字偏科生成器","sourceTitle":"八字偏科生成器","kind":"算命","sourceGame":"Gmuli-Bazi-Calc 式四柱输入","summary":"生日时辰生成假认真四柱，重点看五行哪里离谱。","accent":"#e4a63b","glyph":"游","cover":"covers/bazi-lite.png","author":"@Atelier","likes":7365,"saves":1635,"baseIndex":45,"loop":0,"remixed":false},{"id":"astro-wheel","instanceId":"astro-wheel-0","file":"astro-wheel.html","title":"星盘甩锅轮","sourceTitle":"星盘甩锅轮","kind":"看盘","sourceGame":"CircularNatalHoroscopeJS / AstroChart 式圆盘","summary":"一键画出可分享星盘，把今天的问题甩给相位。","accent":"#5bbcff","glyph":"游","cover":"covers/astro-wheel.png","author":"@Atelier","likes":7502,"saves":1666,"baseIndex":46,"loop":0,"remixed":false},{"id":"yijing-coins","instanceId":"yijing-coins-0","file":"yijing-coins.html","title":"六爻离谱铜钱","sourceTitle":"六爻离谱铜钱","kind":"易经","sourceGame":"I Ching coin divination flow","summary":"点六次摇铜钱，得到一卦适合转发的离谱签文。","accent":"#d6b45f","glyph":"游","cover":"covers/yijing-coins.png","author":"@Atelier","likes":7639,"saves":1697,"baseIndex":47,"loop":0,"remixed":false},{"id":"goods-sort-fake","instanceId":"goods-sort-fake-0","file":"goods-sort-fake.html","title":"货架清货局","sourceTitle":"货架清货局","kind":"货架三连","sourceGame":"Goods Sort / 货架理货式前排取货三连清","summary":"只点每条货道最前排的商品送进七格暂存，三件同类立刻清货，后排商品会往前露出。","accent":"#78e9ff","glyph":"游","cover":"covers/goods-sort-fake.png","author":"@Atelier","likes":7776,"saves":1728,"baseIndex":48,"loop":0,"remixed":false}];
       const remixTwists = [{"label":"夜市版","glyph":"夜","accent":"#00c2ff","summary":"把节奏压进霓虹夜场，反馈更密、奖励更亮。","prompt":"霓虹夜市、快反馈、强分享截图"},{"label":"地铁版","glyph":"站","accent":"#ffcf33","summary":"改成单手通勤节奏，十秒内给出一次明确变化。","prompt":"地铁通勤、单手操作、十秒循环"},{"label":"反转版","glyph":"反","accent":"#ff5a3d","summary":"保留核心玩法，但把目标和失败条件倒过来。","prompt":"目标反转、失败变奖励、规则逐步变形"},{"label":"抽卡版","glyph":"抽","accent":"#9b7cff","summary":"每次操作都掉落一个新词条，适合继续二创。","prompt":"词条掉落、稀有度、可截图收集"},{"label":"双人版","glyph":"双","accent":"#31d07f","summary":"把单人循环变成互相干扰的同屏挑战。","prompt":"双人同屏、轻对抗、短局结算"}];
       const publishedRemixes = (window.__PRINTER_REMIX_MANIFEST__ && Array.isArray(window.__PRINTER_REMIX_MANIFEST__.remixes)) ? window.__PRINTER_REMIX_MANIFEST__.remixes : [];
       function itemFromManifest(entry, offset = 0) {

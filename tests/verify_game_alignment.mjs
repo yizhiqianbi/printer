@@ -77,6 +77,23 @@ requireIncludes('brainrot-clicker.html', [
   'drawMascot',
 ]);
 
+requireIncludes('emoji-gator-hop.html', [
+  'window.__EMOJI_HOPPER_DEBUG__',
+  'autoBounce',
+  'fragilePlatforms',
+  'skeletonPlatforms',
+  'emojiBoosts',
+  'cameraY',
+]);
+
+requireIncludes('nostalgia-spotter.html', [
+  'window.__NOSTALGIA_SPOTTER__',
+  'differenceCount',
+  'mistakes',
+  'scanlinePhase',
+  'foundOrder',
+]);
+
 requireIncludes('stimulation-fake.html', [
   'window.__STIM_DEBUG_CONFIG__',
   'modules',

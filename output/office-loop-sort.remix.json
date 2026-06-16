@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-loop-sort",
+  "slug": "office-loop-sort",
+  "title": "夜班传单回路",
+  "source_file": "loop-sort-fake.html",
+  "parent_slug": "loop-sort-fake",
+  "lineage": [
+    "loop-sort-fake",
+    "office-loop-sort"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把 Loop Sort 式卡车放货环带三连清改成办公室夜班传单主题，货箱换成邮件、审批、报销和排班单，保留四侧投放、环带前进和三件即清。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室主题的 Loop Sort 二创：把夜班单据从四侧投上回路，等同类三件沿环带贴到一起后整批清走。",
+    "core_loop": "玩家面对一圈不断前进的夜班传单回路，四侧各有一条投递线；每次点击任意一条投递线，最前面的单据就会压进对应入口格，然后随着整圈回路持续前进；只要三份同类单据在环带上连成一段，就会立刻整批处理掉；如果整圈先被不同单据堵满，这班夜路就算彻底卡死。",
+    "controls": "单指点击底部四个投递按钮把对应单据塞进入口；点击“回路一步”手动推进一格；点击“重开这一圈”恢复固定投递序列。",
+    "mechanics": [
+      "四侧投递：不是直接拖拽排序，而是从四个入口选择哪一边先把单据送上回路，保留这条玩法最关键的入口判断",
+      "环带自走：单据上带后会沿整圈持续前进，玩家要预判它下一次转到哪一侧时会和谁贴在一起",
+      "三件即清：任意连续三件同类单据会立刻整批处理掉，留下空格继续接下一批",
+      "入口堵塞：如果某个入口格被旧单据占住，这条投递线暂时无法再发，迫使玩家等回路先转开",
+      "短局堵环：12 份固定单据、14 格回路，几十秒就能完整打一轮，也足够制造一两次明显卡顿"
+    ],
+    "visual_language": "把糖果色货箱换成冷绿夜班文书，深色玻璃回路板配发光入口，仍保持离线单文件、手机竖屏与轻量画布渲染。",
+    "state_model": "state.belt 记录 14 格回路上当前每格的单据颜色或空位；state.trucks 保存四条投递线剩余序列和入口索引；state.cleared 统计已处理件数；state.moves 统计投递次数；state.mode 在 playing/won/lost 间切换。",
+    "share_hook": "“把一整圈夜班堆单顺空了”比普通货箱分拣更贴合办公室梗，也方便继续扩到客服、物流或审批题材。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入第二套投递序列 seed",
+      "加入冰格或门帘这类单个障碍",
+      "加入限步达成文案"
+    ]
+  },
+  "files": {
+    "html": "office-loop-sort.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

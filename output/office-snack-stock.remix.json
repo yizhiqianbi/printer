@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-snack-stock",
+  "slug": "office-snack-stock",
+  "title": "茶水间补货局",
+  "source_file": "goods-sort-fake.html",
+  "parent_slug": "goods-sort-fake",
+  "lineage": [
+    "goods-sort-fake",
+    "office-snack-stock"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把 Goods Sort 式货架理货盘改成办公室茶水间补货主题，商品换成冷萃、茶包、饼干、杯面和气泡水，保留前排取货、后排补位和七格三件即清。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室茶水间主题的货架理货二创：只拿前排零食饮料，三件同类立刻整盒补走。",
+    "core_loop": "玩家面对三层茶水间零食柜，只能点击每条货道最前排可见的一件补给，把它送进下方七格补货暂存台；任意同类累计到三件会立刻整盒补走清空；前排拿走后，后排库存会自动补到最前面；如果暂存台先被不同物件塞满，这面柜就算整理失败。",
+    "controls": "单指点击任意货道当前最前排的一件；点击“重开这面柜”恢复固定补货布局。",
+    "mechanics": [
+      "前排可拿：每条货道永远只暴露一件前排货，必须先处理近端库存，保留货架理货类最关键的拿取节奏",
+      "后排补位：前排一走，后排自然露出，形成持续的小揭示反馈",
+      "七格暂存：拿起的补给先进七格暂存，三件同类才会整盒补走，不同品类堆太多就会堵台",
+      "三件即清：没有拖拽换位，纯点击选择，尽量用最小交互复刻热门理货盘的短线判断",
+      "短局货架：18 件物品、9 条货道，十几秒到几十秒就能完整刷完一轮"
+    ],
+    "visual_language": "把大众超市货架换成夜间办公室茶水间，深色柜体配冷绿灯箱、简化零食饮料图标和玻璃感暂存条，继续保持离线单文件与竖屏 DOM 结构。",
+    "state_model": "state.lanes 记录每条货道所属柜层和从前到后的库存序列；state.tray 保存当前七格补货暂存；state.remaining 保存各品类剩余件数；state.cleared 统计已整盒补走数量；state.mode 在 playing/won/lost 间切换。",
+    "share_hook": "“把茶水间零食柜一把理顺了”比普通商超货架更适合办公室梗图和后续同题材二创。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入第二套货道 seed",
+      "加入限步目标",
+      "加入补货连击文案"
+    ]
+  },
+  "files": {
+    "html": "office-snack-stock.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

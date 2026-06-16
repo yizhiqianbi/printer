@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-factory-bolt-jam",
+  "slug": "factory-bolt-jam",
+  "title": "夜班进厂通车",
+  "source_file": "traffic-bolt-jam.html",
+  "parent_slug": "traffic-bolt-jam",
+  "lineage": [
+    "traffic-bolt-jam",
+    "factory-bolt-jam"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把今天热门“挪车打螺丝”盘改成夜班进厂通车主题，保留点车顺车头挪位、先清门口短车再放后排长车。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "进厂主题的挪车二创：先疏通闸口，再把班车一台台送进厂门。",
+    "core_loop": "玩家面对一层堵在厂门前的夜班班车，每台车都只会沿着自己的车头方向往前开；如果前方一路通到闸口，它就会直接滑进去，否则只能先蹭到最近空位，继续给别的班车腾路；只有先处理门口那几台短车和竖停小车，后排长车才会逐步打开通道，直到整层车都顺利进厂。",
+    "controls": "单指点击任意班车触发滑动；能直通闸口的会直接进厂，否则先滑到最近空位；点击“重开这一班”恢复固定盘面。",
+    "mechanics": [
+      "车头朝向约束：每台车只能沿着自己的车头方向前进，保留热点挪车盘最关键的堵点判断",
+      "先滑后通：当前路没完全打通时，车辆会先占住最近空位，制造连续腾位链条",
+      "长短车混排：两格与三格班车并存，必须先动门口小车，后排长车才会真正松动",
+      "多闸口读盘：三个不同边缘闸口同时存在，要读懂哪台车离哪个出口最近",
+      "短局高复玩：固定十车盘面，几十秒到一两分钟就能完整试一轮，很适合碎片时间反复找顺序"
+    ],
+    "visual_language": "把泛用停车场换成低照度夜班厂门，普通车辆换成班组标签和冷绿闸口灯，保留单文件竖屏与纯画布堵车解盘手感。",
+    "state_model": "state.cars 记录每台车的行列、长度、朝向、标签和是否仍在场内；state.moves 统计进车次数；state.escaped 统计已进厂车辆；state.mode 在 playing/won 间切换；render_game_to_text 给出每台车当前下一步是 blocked/slide/exit。",
+    "share_hook": "“终于把这一班车全送进厂门了”天然带打工人梗感，也方便继续往园区、仓储、校门口等题材扩。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入第二套厂门盘面 seed",
+      "加入按闸口分类的放行统计",
+      "加入一步撤回或提示"
+    ]
+  },
+  "files": {
+    "html": "factory-bolt-jam.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

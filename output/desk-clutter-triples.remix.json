@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-desk-clutter-triples",
+  "slug": "desk-clutter-triples",
+  "title": "工位清台局",
+  "source_file": "triple-match-fake.html",
+  "parent_slug": "triple-match-fake",
+  "lineage": [
+    "triple-match-fake",
+    "desk-clutter-triples"
+  ],
+  "created_at": "2026-06-16T01:38:56.108Z",
+  "prompt": {
+    "text": "把 Triple Match 3D / Match Factory 式堆物三连清改成办公室清台主题，杂物换成工牌、鼠标、咖啡、便签和线材，保留顶层遮挡、七格托盘和三件即消。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室主题的堆物三连清二创：先拿露头杂件，再把同类工位物凑成三件整盒归档。",
+    "core_loop": "玩家面对一团堆在工位桌面的杂件，只能先点当前露在最上层的工牌、鼠标、便签、咖啡杯、线材和长尾夹；每点一件就会掉进下方七格待归档盒，任意同类累计到三件会立刻整盒归档清掉；如果暂存盒先被不同杂件塞满，或者倒计时先归零，这张桌面就算清台失败。",
+    "controls": "单指点击当前可见的最上层杂件；点击“重开这张桌”恢复固定堆物布局。",
+    "mechanics": [
+      "顶层遮挡：被更高层杂件压住的东西不能直接拿，必须先剥掉上层，保留这个赛道最关键的视觉搜索压力",
+      "七格托盘：所有点击物都会先进七格暂存，三件同类才会立刻消掉，不同类堆太多就直接输",
+      "三件即清：不需要拖拽或交换，只要凑够三件同类就立刻给出很强的整理反馈",
+      "隐藏露出：下层物件随着上层清掉逐渐露头，维持“越清越能看见新东西”的节奏",
+      "短局计时：单局几十秒内必须把整桌清掉，复刻热门堆物三连盘常见的时间压迫"
+    ],
+    "visual_language": "把大众生活杂物换成工位清台主题，深青桌面配冷色玻璃盒与高对比标签，继续保持离线单文件、手机竖屏和轻量 DOM 交互。",
+    "state_model": "state.items 记录每件杂件的类型、层级、坐标和是否仍在桌面上；state.tray 保存当前七格待归档盒；state.remaining 保存每个类型还剩多少件未清；state.timeLeft 是本局剩余时间；state.mode 在 playing/won/lost 间切换。",
+    "share_hook": "“这张工位桌我一把清台了”比普通日用品更适合办公室梗图和后续同主题扩展。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入第二套堆物 seed",
+      "加入风扇或磁吸类最小辅助道具",
+      "加入连清统计文案"
+    ]
+  },
+  "files": {
+    "html": "desk-clutter-triples.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

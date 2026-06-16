@@ -5,12 +5,12 @@ const outputDir = path.resolve('printer/output');
 fs.mkdirSync(outputDir, { recursive: true });
 
 const generatedAt = new Date().toISOString();
-const intent = '建立移动端竖屏赝品库：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。';
+const intent = '建立移动端竖屏 Playable Catalog：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。';
 
 const coverForFile = (file) => 'covers/' + path.basename(file, '.html') + '.png';
 
 const pipelinePlan = {
-  summary: '基于游戏参考意图生成移动端竖屏多页面 HTML 赝品库',
+  summary: '基于游戏参考意图生成移动端竖屏多页面 Playable Catalog',
   ui_requirements: [
     '所有游戏优先适配手机竖屏，桌面端居中显示手机 shell',
     '动作和实时反馈类游戏使用 canvas playfield',
@@ -66,7 +66,9305 @@ function createSheepLevel() {
 
 const sheepLevel = createSheepLevel();
 
+function createGooseLevel() {
+  const tileWidth = 56;
+  const tileHeight = 46;
+  const icons = ['keyboard', 'coffee', 'badge', 'mail', 'mouse', 'battery'];
+  const deck = [];
+  for (let round = 0; round < 9; round++) {
+    const offset = (round * 3) % icons.length;
+    for (let i = 0; i < icons.length; i++) {
+      deck.push(icons[(i + offset) % icons.length]);
+    }
+  }
+
+  const slots = [];
+  for (let row = 0; row < 6; row++) {
+    for (let col = 0; col < 5; col++) {
+      slots.push({ x: 28 + col * 68, y: 92 + row * 48, z: 0 });
+    }
+  }
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 4; col++) {
+      slots.push({ x: 62 + col * 68, y: 136 + row * 60, z: 1 });
+    }
+  }
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 4; col++) {
+      slots.push({ x: 76 + col * 64, y: 216 + row * 74, z: 2 });
+    }
+  }
+
+  return {
+    tileWidth,
+    tileHeight,
+    slots,
+    goose: { x: 147, y: 240, radius: 44 },
+    tiles: slots.map((slot, index) => ({ id: index, icon: deck[index], ...slot })),
+  };
+}
+
+const gooseLevel = createGooseLevel();
+
+function createScrewLevel() {
+  const plates = [
+    { id: 'base', x: 54, y: 248, w: 282, h: 168, layer: 0, fill: '#39445f', edge: '#6f7ca0', label: '主板' },
+    { id: 'right', x: 194, y: 138, w: 132, h: 136, layer: 1, fill: '#5a4351', edge: '#b38399', label: '夹板' },
+    { id: 'left', x: 70, y: 96, w: 152, h: 126, layer: 2, fill: '#4d5b35', edge: '#97bf63', label: '压条' },
+  ];
+  const screws = [
+    { id: 0, x: 112, y: 134, color: 'pink', layer: 2, plate: 'left' },
+    { id: 1, x: 180, y: 152, color: 'cyan', layer: 2, plate: 'left' },
+    { id: 2, x: 146, y: 204, color: 'amber', layer: 2, plate: 'left' },
+    { id: 3, x: 222, y: 170, color: 'pink', layer: 1, plate: 'right' },
+    { id: 4, x: 294, y: 184, color: 'lime', layer: 1, plate: 'right' },
+    { id: 5, x: 250, y: 252, color: 'amber', layer: 1, plate: 'right' },
+    { id: 6, x: 98, y: 286, color: 'cyan', layer: 0, plate: 'base' },
+    { id: 7, x: 172, y: 304, color: 'lime', layer: 0, plate: 'base' },
+    { id: 8, x: 258, y: 296, color: 'pink', layer: 0, plate: 'base' },
+    { id: 9, x: 120, y: 374, color: 'amber', layer: 0, plate: 'base' },
+    { id: 10, x: 214, y: 362, color: 'cyan', layer: 0, plate: 'base' },
+    { id: 11, x: 298, y: 384, color: 'lime', layer: 0, plate: 'base' },
+  ];
+  return { plates, screws, screwRadius: 21 };
+}
+
+const screwLevel = createScrewLevel();
+
+function createScrewGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    trayLabel: config.trayLabel,
+    winCopy: config.winCopy,
+    loseCopy: config.loseCopy,
+    statusNoun: config.statusNoun,
+    plateAccent: config.plateAccent,
+    backA: config.backA,
+    backB: config.backB,
+    backC: config.backC,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '拧螺丝',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="tray" id="tray"></div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">重开这一板</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const LEVEL = ${JSON.stringify(screwLevel)};
+      const THEME = ${JSON.stringify(theme)};
+      const colorMeta = THEME.colors;
+      const state = { screws: [], tray: [], mode: 'playing', removed: 0 };
+      function plateById(id) {
+        return LEVEL.plates.find((plate) => plate.id === id);
+      }
+      function plateVisible(id) {
+        return state.screws.some((screw) => screw.active && screw.plate === id);
+      }
+      function pointInPlate(point, plate) {
+        return point.x >= plate.x && point.x <= plate.x + plate.w && point.y >= plate.y && point.y <= plate.y + plate.h;
+      }
+      function free(screw) {
+        if (!screw.active || state.mode !== 'playing') return false;
+        return !state.screws.some((other) => {
+          if (!other.active || other.layer <= screw.layer) return false;
+          const otherPlate = plateById(other.plate);
+          return otherPlate ? pointInPlate(screw, otherPlate) : false;
+        });
+      }
+      function reset() {
+        state.screws = LEVEL.screws.map((screw) => ({ ...screw, active: true, spin: 0 }));
+        state.tray = [];
+        state.mode = 'playing';
+        state.removed = 0;
+        render();
+      }
+      function resolveTriples(color) {
+        const count = state.tray.filter((item) => item === color).length;
+        if (count < 3) return false;
+        let removed = 0;
+        state.tray = state.tray.filter((item) => {
+          if (item === color && removed < 3) {
+            removed += 1;
+            return false;
+          }
+          return true;
+        });
+        state.removed += 3;
+        return true;
+      }
+      function pick(screw) {
+        if (!screw || !free(screw)) return;
+        screw.active = false;
+        screw.spin = 1;
+        state.tray.push(screw.color);
+        resolveTriples(screw.color);
+        if (state.screws.every((item) => !item.active)) state.mode = 'won';
+        if (state.mode !== 'won' && state.tray.length >= 6) state.mode = 'lost';
+        render();
+      }
+      function pointer(event) {
+        const box = canvas.getBoundingClientRect();
+        const x = (event.clientX - box.left) * canvas.width / box.width;
+        const y = (event.clientY - box.top) * canvas.height / box.height;
+        const target = state.screws
+          .filter((screw) => screw.active && Math.hypot(x - screw.x, y - screw.y) <= LEVEL.screwRadius + 6)
+          .sort((a, b) => b.layer - a.layer)[0];
+        pick(target);
+      }
+      function drawPlate(plate) {
+        if (!plateVisible(plate.id)) return;
+        const offset = plate.layer * 8;
+        ctx.fillStyle = plate.fill;
+        ctx.strokeStyle = plate.edge;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(plate.x, plate.y - offset, plate.w, plate.h, 22);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        ctx.fillRect(plate.x + 16, plate.y + 14 - offset, plate.w - 32, 10);
+        ctx.fillStyle = THEME.plateAccent;
+        ctx.font = '900 12px sans-serif';
+        ctx.fillText(plate.label, plate.x + 16, plate.y + 34 - offset);
+      }
+      function drawScrew(screw) {
+        if (!screw.active) return;
+        const meta = colorMeta[screw.color];
+        const enabled = free(screw);
+        const depthOffset = screw.layer * 8;
+        ctx.save();
+        ctx.translate(screw.x, screw.y - depthOffset);
+        ctx.fillStyle = enabled ? meta.fill : '#4e4b56';
+        ctx.strokeStyle = enabled ? '#ffffff' : '#29262d';
+        ctx.lineWidth = enabled ? 3 : 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, LEVEL.screwRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = enabled ? '#17131c' : '#1d1a20';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-8, -8);
+        ctx.lineTo(8, 8);
+        ctx.moveTo(8, -8);
+        ctx.lineTo(-8, 8);
+        ctx.stroke();
+        ctx.fillStyle = enabled ? '#fff' : 'rgba(255,255,255,.42)';
+        ctx.font = '900 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(meta.label, 0, 4);
+        ctx.restore();
+      }
+      function render() {
+        ctx.fillStyle = THEME.backA;
+        ctx.fillRect(0, 0, 390, 560);
+        const sky = ctx.createLinearGradient(0, 0, 0, 240);
+        sky.addColorStop(0, THEME.backB);
+        sky.addColorStop(1, THEME.backC);
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, 390, 240);
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        ctx.beginPath();
+        ctx.roundRect(18, 18, 354, 62, 22);
+        ctx.fill();
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = '900 28px sans-serif';
+        ctx.fillText(THEME.heading, 30, 54);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 13px sans-serif';
+        ctx.fillText(THEME.subheading, 30, 74);
+        LEVEL.plates.slice().sort((a, b) => a.layer - b.layer).forEach(drawPlate);
+        state.screws.slice().sort((a, b) => a.layer - b.layer).forEach(drawScrew);
+        document.getElementById('tray').innerHTML = Array.from({ length: 6 }, (_, i) => {
+          const color = state.tray[i];
+          return '<span>' + (color ? colorMeta[color].glyph : '') + '</span>';
+        }).join('');
+        const freeCount = state.screws.filter(free).length;
+        const topLayer = state.screws.filter((screw) => screw.active).reduce((max, screw) => Math.max(max, screw.layer), -1);
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? THEME.winCopy
+          : state.mode === 'lost'
+            ? THEME.loseCopy
+            : '可拆 ' + freeCount + ' 枚 · 当前顶层 L' + Math.max(0, topLayer) + ' · 已收 ' + state.removed + ' · ' + THEME.statusNoun + '槽 ' + state.tray.length + '/6';
+      }
+      canvas.addEventListener('pointerdown', pointer);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 layered screw board',
+        mode: state.mode,
+        tray: state.tray,
+        removed: state.removed,
+        free: state.screws.filter(free).length,
+        remaining: state.screws.filter((screw) => screw.active).length,
+        visible_plates: LEVEL.plates.filter((plate) => plateVisible(plate.id)).map((plate) => plate.id)
+      });
+    `,
+  };
+}
+
+const screwBaseGame = createScrewGame({
+  id: 'screw-sorter',
+  file: 'screw-sorter.html',
+  title: '打个螺丝局',
+  sourceGame: '打个螺丝 / 一起拧螺丝式层叠拆卸排序',
+  accent: '#ffb11c',
+  summary: '先拆上层彩钉，再把同色螺丝凑进盒里，盒满就卡关。',
+  heading: '打个螺丝局',
+  subheading: '热门拧钉复刻 · 先拆遮挡层，再凑三枚同色',
+  trayLabel: '收纳盒',
+  winCopy: '你把整板螺丝拆空了，工位终于不再乱响。',
+  loseCopy: '收纳盒塞满了，螺丝还卡在板上。',
+  statusNoun: '收纳',
+  plateAccent: '#ffd781',
+  backA: '#120d12',
+  backB: '#34201b',
+  backC: '#16131f',
+  colors: {
+    pink: { fill: '#ff5d8f', label: '粉', glyph: '粉' },
+    cyan: { fill: '#42d7ff', label: '蓝', glyph: '蓝' },
+    amber: { fill: '#ffc145', label: '黄', glyph: '黄' },
+    lime: { fill: '#91d64d', label: '绿', glyph: '绿' },
+  },
+});
+
+const screwRemixGame = createScrewGame({
+  id: 'night-shift-screws',
+  file: 'night-shift-screws.html',
+  title: '夜班拆钉台',
+  sourceGame: '打个螺丝局 Remix',
+  accent: '#00d0ff',
+  summary: '把螺丝板改成夜班工牌台，节奏更硬，颜色更冷。',
+  heading: '夜班拆钉台',
+  subheading: '二创版 · 工牌压板、键帽挡片、冷光收纳盒',
+  trayLabel: '夜班盒',
+  winCopy: '夜班台面被你拆到见底，最后一颗钉也归档了。',
+  loseCopy: '夜班盒爆了，工牌和键帽还压着底板。',
+  statusNoun: '夜班',
+  plateAccent: '#8ceaff',
+  backA: '#071018',
+  backB: '#0e2842',
+  backC: '#090a12',
+  colors: {
+    pink: { fill: '#ff6dbe', label: '卡', glyph: '卡' },
+    cyan: { fill: '#52e3ff', label: '键', glyph: '键' },
+    amber: { fill: '#ffd05f', label: '灯', glyph: '灯' },
+    lime: { fill: '#87e364', label: '章', glyph: '章' },
+  },
+});
+
+function createScrewBoxGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    winCopy: config.winCopy,
+    loseCopy: config.loseCopy,
+    statusNoun: config.statusNoun,
+    plateAccent: config.plateAccent,
+    backA: config.backA,
+    backB: config.backB,
+    backC: config.backC,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '彩盒拆钉',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact stack">
+        <div class="box-grid" id="boxGrid"></div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">重开这一局</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const LEVEL = ${JSON.stringify(screwLevel)};
+      const THEME = ${JSON.stringify(theme)};
+      const colorMeta = THEME.colors;
+      const colorOrder = Object.keys(colorMeta);
+      const state = { screws: [], bins: {}, mode: 'playing', removed: 0 };
+      function plateById(id) {
+        return LEVEL.plates.find((plate) => plate.id === id);
+      }
+      function plateVisible(id) {
+        return state.screws.some((screw) => screw.active && screw.plate === id);
+      }
+      function pointInPlate(point, plate) {
+        return point.x >= plate.x && point.x <= plate.x + plate.w && point.y >= plate.y && point.y <= plate.y + plate.h;
+      }
+      function free(screw) {
+        if (!screw.active || state.mode !== 'playing') return false;
+        return !state.screws.some((other) => {
+          if (!other.active || other.layer <= screw.layer) return false;
+          const otherPlate = plateById(other.plate);
+          return otherPlate ? pointInPlate(screw, otherPlate) : false;
+        });
+      }
+      function totalPending() {
+        return colorOrder.reduce((sum, color) => sum + state.bins[color], 0);
+      }
+      function reset() {
+        state.screws = LEVEL.screws.map((screw) => ({ ...screw, active: true }));
+        state.bins = Object.fromEntries(colorOrder.map((color) => [color, 0]));
+        state.mode = 'playing';
+        state.removed = 0;
+        render();
+      }
+      function pick(screw) {
+        if (!screw || !free(screw)) return;
+        screw.active = false;
+        state.bins[screw.color] += 1;
+        if (state.bins[screw.color] >= 3) {
+          state.bins[screw.color] = 0;
+          state.removed += 3;
+        }
+        if (state.screws.every((item) => !item.active) && totalPending() === 0) {
+          state.mode = 'won';
+        } else if (totalPending() >= 6) {
+          state.mode = 'lost';
+        }
+        render();
+      }
+      function pointer(event) {
+        const box = canvas.getBoundingClientRect();
+        const x = (event.clientX - box.left) * canvas.width / box.width;
+        const y = (event.clientY - box.top) * canvas.height / box.height;
+        const target = state.screws
+          .filter((screw) => screw.active && Math.hypot(x - screw.x, y - screw.y) <= LEVEL.screwRadius + 6)
+          .sort((a, b) => b.layer - a.layer)[0];
+        pick(target);
+      }
+      function drawPlate(plate) {
+        if (!plateVisible(plate.id)) return;
+        const offset = plate.layer * 8;
+        ctx.fillStyle = plate.fill;
+        ctx.strokeStyle = plate.edge;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(plate.x, plate.y - offset, plate.w, plate.h, 22);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        ctx.fillRect(plate.x + 16, plate.y + 14 - offset, plate.w - 32, 10);
+        ctx.fillStyle = THEME.plateAccent;
+        ctx.font = '900 12px sans-serif';
+        ctx.fillText(plate.label, plate.x + 16, plate.y + 34 - offset);
+      }
+      function drawScrew(screw) {
+        if (!screw.active) return;
+        const meta = colorMeta[screw.color];
+        const enabled = free(screw);
+        const depthOffset = screw.layer * 8;
+        ctx.save();
+        ctx.translate(screw.x, screw.y - depthOffset);
+        ctx.fillStyle = enabled ? meta.fill : '#4e4b56';
+        ctx.strokeStyle = enabled ? '#ffffff' : '#29262d';
+        ctx.lineWidth = enabled ? 3 : 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, LEVEL.screwRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = enabled ? '#17131c' : '#1d1a20';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-8, -8);
+        ctx.lineTo(8, 8);
+        ctx.moveTo(8, -8);
+        ctx.lineTo(-8, 8);
+        ctx.stroke();
+        ctx.fillStyle = enabled ? '#fff' : 'rgba(255,255,255,.42)';
+        ctx.font = '900 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(meta.label, 0, 4);
+        ctx.restore();
+      }
+      function renderBoxes() {
+        document.getElementById('boxGrid').innerHTML = colorOrder.map((color) => {
+          const meta = colorMeta[color];
+          const count = state.bins[color];
+          const slots = Array.from({ length: 3 }, (_, index) => '<i style="opacity:' + (index < count ? '1' : '.18') + '">' + meta.glyph + '</i>').join('');
+          return '<div class="color-box" style="--box-fill:' + meta.fill + '"><b>' + meta.label + '盒</b><span>' + slots + '</span></div>';
+        }).join('');
+      }
+      function render() {
+        ctx.fillStyle = THEME.backA;
+        ctx.fillRect(0, 0, 390, 560);
+        const sky = ctx.createLinearGradient(0, 0, 0, 240);
+        sky.addColorStop(0, THEME.backB);
+        sky.addColorStop(1, THEME.backC);
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, 390, 240);
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        ctx.beginPath();
+        ctx.roundRect(18, 18, 354, 62, 22);
+        ctx.fill();
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = '900 28px sans-serif';
+        ctx.fillText(THEME.heading, 30, 54);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 13px sans-serif';
+        ctx.fillText(THEME.subheading, 30, 74);
+        LEVEL.plates.slice().sort((a, b) => a.layer - b.layer).forEach(drawPlate);
+        state.screws.slice().sort((a, b) => a.layer - b.layer).forEach(drawScrew);
+        renderBoxes();
+        const freeCount = state.screws.filter(free).length;
+        const topLayer = state.screws.filter((screw) => screw.active).reduce((max, screw) => Math.max(max, screw.layer), -1);
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? THEME.winCopy
+          : state.mode === 'lost'
+            ? THEME.loseCopy
+            : '可拆 ' + freeCount + ' 枚 · 当前顶层 L' + Math.max(0, topLayer) + ' · 已归档 ' + state.removed + ' · ' + THEME.statusNoun + '待满 ' + totalPending() + '/6';
+      }
+      canvas.addEventListener('pointerdown', pointer);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 layered screw board with color boxes',
+        mode: state.mode,
+        bins: state.bins,
+        removed: state.removed,
+        free: state.screws.filter(free).length,
+        remaining: state.screws.filter((screw) => screw.active).length,
+        visible_plates: LEVEL.plates.filter((plate) => plateVisible(plate.id)).map((plate) => plate.id)
+      });
+    `,
+  };
+}
+
+const screwBoxBaseGame = createScrewBoxGame({
+  id: 'screw-box-blitz',
+  file: 'screw-box-blitz.html',
+  title: '彩盒拧钉局',
+  sourceGame: '一起拧螺丝 / 无敌螺丝王式同色彩盒拆钉',
+  accent: '#65d2ff',
+  summary: '先拆上层，再把同色螺丝塞进对应彩盒，三枚凑满立刻清盒。',
+  heading: '彩盒拧钉局',
+  subheading: '热门拆钉复刻 · 同色进同盒，凑满三枚马上清空',
+  winCopy: '四个彩盒都被你喂顺了，这块压板终于整片脱落。',
+  loseCopy: '待满螺丝卡到六格上限，彩盒节奏断了。',
+  statusNoun: '彩盒',
+  plateAccent: '#d5f2ff',
+  backA: '#081017',
+  backB: '#133552',
+  backC: '#0a1018',
+  colors: {
+    pink: { fill: '#ff6e98', label: '粉', glyph: '粉' },
+    cyan: { fill: '#4fddff', label: '蓝', glyph: '蓝' },
+    amber: { fill: '#ffd36a', label: '黄', glyph: '黄' },
+    lime: { fill: '#91e36e', label: '绿', glyph: '绿' },
+  },
+});
+
+const screwBoxRemixGame = createScrewBoxGame({
+  id: 'parcel-screw-boxes',
+  file: 'parcel-screw-boxes.html',
+  title: '分拨拆钉台',
+  sourceGame: '彩盒拧钉局 Remix',
+  accent: '#ffb347',
+  summary: '把彩盒拆钉改成快递分拨台主题，颜色盒换成四个包裹框。',
+  heading: '分拨拆钉台',
+  subheading: '二创版 · 包裹框吃同色封签，三张凑满立刻出库',
+  winCopy: '这一车封签全被分拨完了，压板和包材一并清空。',
+  loseCopy: '包裹框先堵住了，后面的封签全压在台面上。',
+  statusNoun: '分拨框',
+  plateAccent: '#ffe1a7',
+  backA: '#181008',
+  backB: '#4d2a13',
+  backC: '#16100a',
+  colors: {
+    pink: { fill: '#ff8ca8', label: '急', glyph: '急' },
+    cyan: { fill: '#72d7ff', label: '蓝', glyph: '蓝' },
+    amber: { fill: '#ffc660', label: '黄', glyph: '黄' },
+    lime: { fill: '#a5da67', label: '绿', glyph: '绿' },
+  },
+});
+
+function createScrewdomGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    hint: config.hint,
+    selectCopy: config.selectCopy,
+    sendCopy: config.sendCopy,
+    clearCopy: config.clearCopy,
+    winCopy: config.winCopy,
+    loseCopy: config.loseCopy,
+    blockedCopy: config.blockedCopy,
+    pinLabel: config.pinLabel,
+    boxLabel: config.boxLabel,
+    bgA: config.bgA,
+    bgB: config.bgB,
+    bgC: config.bgC,
+    rod: config.rod,
+    pinPlate: config.pinPlate,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '针位拆钉',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact stack">
+        <div class="box-grid" id="boxGrid"></div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">重开这一盘</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const LEVEL = ${JSON.stringify(config.level)};
+      const THEME = ${JSON.stringify(theme)};
+      const colorOrder = Object.keys(THEME.colors);
+      const state = {
+        pins: [],
+        bins: Object.fromEntries(colorOrder.map((color) => [color, 0])),
+        selected: null,
+        mode: 'playing',
+        removed: 0,
+        note: THEME.hint,
+      };
+      function clonePins() {
+        return LEVEL.pins.map((pin) => ({ ...pin, stack: pin.stack.slice() }));
+      }
+      function totalPending() {
+        return colorOrder.reduce((sum, color) => sum + state.bins[color], 0);
+      }
+      function pinRect(pin) {
+        return { x: pin.x - 24, y: 116, w: 48, h: 276 };
+      }
+      function screwCenter(pin, indexFromBottom) {
+        return { x: pin.x, y: 348 - indexFromBottom * 48 };
+      }
+      function topColor(pin) {
+        return pin.stack.length ? pin.stack[pin.stack.length - 1] : null;
+      }
+      function topCenter(pin) {
+        const color = topColor(pin);
+        if (!color) return null;
+        return screwCenter(pin, pin.stack.length - 1);
+      }
+      function reset() {
+        state.pins = clonePins();
+        state.bins = Object.fromEntries(colorOrder.map((color) => [color, 0]));
+        state.selected = null;
+        state.mode = 'playing';
+        state.removed = 0;
+        state.note = THEME.hint;
+        render();
+      }
+      function activeTopCount() {
+        return state.pins.filter((pin) => pin.stack.length).length;
+      }
+      function pick(pinIndex) {
+        if (state.mode !== 'playing') return;
+        const pin = state.pins[pinIndex];
+        if (!pin || !pin.stack.length) return;
+        const color = topColor(pin);
+        if (state.selected === pinIndex) {
+          pin.stack.pop();
+          state.bins[color] += 1;
+          state.removed += 1;
+          state.selected = null;
+          if (state.bins[color] >= 3) {
+            state.bins[color] = 0;
+            state.note = THEME.colors[color].label + THEME.clearCopy;
+          } else {
+            state.note = pin.label + THEME.sendCopy.replace('{color}', THEME.colors[color].label);
+          }
+          if (state.pins.every((item) => item.stack.length === 0) && totalPending() === 0) {
+            state.mode = 'won';
+            state.note = THEME.winCopy;
+          } else if (totalPending() >= 6) {
+            state.mode = 'lost';
+            state.note = THEME.loseCopy;
+          }
+        } else {
+          state.selected = pinIndex;
+          state.note = pin.label + THEME.selectCopy.replace('{color}', THEME.colors[color].label);
+        }
+        render();
+      }
+      function pinFromPoint(point) {
+        return state.pins.findIndex((pin) => {
+          const center = topCenter(pin);
+          if (!center) return false;
+          return Math.hypot(point.x - center.x, point.y - center.y) <= 24;
+        });
+      }
+      function pointFromEvent(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * canvas.width / rect.width,
+          y: (event.clientY - rect.top) * canvas.height / rect.height,
+        };
+      }
+      function drawBackground() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, THEME.bgA);
+        gradient.addColorStop(0.45, THEME.bgB);
+        gradient.addColorStop(1, THEME.bgC);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        ctx.beginPath();
+        ctx.roundRect(18, 18, 354, 62, 22);
+        ctx.fill();
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = '900 28px sans-serif';
+        ctx.fillText(THEME.heading, 30, 54);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 13px sans-serif';
+        ctx.fillText(THEME.subheading, 30, 74);
+      }
+      function drawPin(pin, index) {
+        const rect = pinRect(pin);
+        ctx.fillStyle = THEME.pinPlate;
+        ctx.beginPath();
+        ctx.roundRect(rect.x, rect.y + 246, rect.w, 18, 10);
+        ctx.fill();
+        ctx.strokeStyle = THEME.rod;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.moveTo(pin.x, rect.y + 26);
+        ctx.lineTo(pin.x, rect.y + 246);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.62)';
+        ctx.font = '800 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(pin.label, pin.x, 406);
+        pin.stack.forEach((color, stackIndex) => {
+          const meta = THEME.colors[color];
+          const center = screwCenter(pin, stackIndex);
+          const selected = state.selected === index && stackIndex === pin.stack.length - 1;
+          ctx.fillStyle = meta.fill;
+          ctx.strokeStyle = selected ? '#ffffff' : meta.edge;
+          ctx.lineWidth = selected ? 4 : 3;
+          ctx.beginPath();
+          ctx.arc(center.x, center.y, 20, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = 'rgba(16,18,26,.74)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(center.x - 9, center.y);
+          ctx.lineTo(center.x + 9, center.y);
+          ctx.stroke();
+          ctx.fillStyle = '#0d1117';
+          ctx.font = '900 10px sans-serif';
+          ctx.fillText(meta.glyph, center.x, center.y + 4);
+        });
+      }
+      function renderBoxes() {
+        document.getElementById('boxGrid').innerHTML = colorOrder.map((color) => {
+          const meta = THEME.colors[color];
+          const count = state.bins[color];
+          const slots = Array.from({ length: 3 }, (_, index) => '<i style="opacity:' + (index < count ? '1' : '.18') + '">' + meta.glyph + '</i>').join('');
+          return '<div class="color-box" style="--box-fill:' + meta.fill + '"><b>' + meta.label + THEME.boxLabel + '</b><span>' + slots + '</span></div>';
+        }).join('');
+      }
+      function render() {
+        drawBackground();
+        state.pins.forEach(drawPin);
+        renderBoxes();
+        document.getElementById('statusText').textContent = state.mode === 'playing'
+          ? '可拆 ' + activeTopCount() + ' 柱 · 已归 ' + state.removed + ' · 待清 ' + totalPending() + '/6 · ' + state.note
+          : state.note;
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        const pinIndex = pinFromPoint(pointFromEvent(event));
+        if (pinIndex >= 0) pick(pinIndex);
+        else if (state.mode === 'playing') {
+          state.selected = null;
+          state.note = THEME.blockedCopy;
+          render();
+        }
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with five vertical screw pins and four bottom color boxes',
+        mode: state.mode,
+        selected: state.selected,
+        removed: state.removed,
+        pending: totalPending(),
+        bins: state.bins,
+        pins: state.pins.map((pin) => ({ label: pin.label, top: topColor(pin), depth: pin.stack.length })),
+      });
+    `,
+  };
+}
+
+const screwdomBaseGame = createScrewdomGame({
+  id: 'screwdom-fake',
+  file: 'screwdom-fake.html',
+  title: '钉柱归箱局',
+  sourceGame: 'Screwdom 式针位堆叠拆钉',
+  accent: '#86f2ff',
+  summary: '盯住每根钉柱的顶层颜色，按顺序拆下并送进同色箱，三枚同色立刻清箱。',
+  heading: '钉柱归箱局',
+  subheading: 'Screwdom 热门复刻 · 只拆顶层，三枚同色马上清箱',
+  hint: '先点顶层钉帽选中，再点同一根柱子把它拆下来；顺序不对会把底部箱位挤爆。',
+  selectCopy: ' 顶层这枚是 {color} 钉，再点一次就会入箱。',
+  sendCopy: ' 顶层 {color} 钉已经送进归档箱。',
+  clearCopy: ' 箱凑满三枚，整箱马上清空。',
+  winCopy: '所有钉柱都被你拆顺了，底部归档箱也清空了。',
+  loseCopy: '底部待清箱位堆到六格上限，这盘节奏断了。',
+  blockedCopy: '只能点每根柱子最上面那枚钉帽。',
+  pinLabel: '钉柱',
+  boxLabel: '箱',
+  bgA: '#08131b',
+  bgB: '#103248',
+  bgC: '#091018',
+  rod: '#a5b4c7',
+  pinPlate: 'rgba(255,255,255,.16)',
+  colors: {
+    cyan: { fill: '#63dcff', edge: '#e0f7ff', label: '蓝', glyph: '蓝' },
+    pink: { fill: '#ff7ea7', edge: '#ffe0ea', label: '粉', glyph: '粉' },
+    amber: { fill: '#ffcf67', edge: '#fff1c4', label: '黄', glyph: '黄' },
+    lime: { fill: '#93e06d', edge: '#e7ffd7', label: '绿', glyph: '绿' },
+  },
+  level: {
+    pins: [
+      { x: 58, label: 'A', stack: ['amber', 'cyan', 'pink'] },
+      { x: 124, label: 'B', stack: ['lime', 'amber', 'cyan', 'pink'] },
+      { x: 195, label: 'C', stack: ['pink', 'lime', 'amber'] },
+      { x: 266, label: 'D', stack: ['cyan', 'pink', 'lime', 'amber'] },
+      { x: 332, label: 'E', stack: ['amber', 'lime', 'cyan'] },
+    ],
+  },
+});
+
+const screwdomOfficeRemixGame = createScrewdomGame({
+  id: 'office-pin-pile',
+  file: 'office-pin-pile.html',
+  title: '工位夹签归档',
+  sourceGame: '钉柱归箱局 Remix',
+  accent: '#97f0ff',
+  summary: '把钉柱换成工位夹签柱，盯住顶层夹签颜色，三张同部门标签立刻归档。',
+  heading: '工位夹签归档',
+  subheading: '办公室二创 · 只拆最上层夹签，三张同部门立即归档',
+  hint: '先点一根夹签柱顶层标签，再点一次把它送进对应部门框；别让待归标签先把底栏堵住。',
+  selectCopy: ' 顶层是 {color} 部门签，再点一次就会归档。',
+  sendCopy: ' 顶层 {color} 部门签已经送进归档框。',
+  clearCopy: ' 这个部门框凑满三张，已经整框归档。',
+  winCopy: '整排工位夹签都已经归档完毕。',
+  loseCopy: '待归标签先把底部框位堵满了。',
+  blockedCopy: '只能处理每根夹签柱露在最上面的那一张。',
+  pinLabel: '夹签柱',
+  boxLabel: '框',
+  bgA: '#0a1218',
+  bgB: '#162b3a',
+  bgC: '#091015',
+  rod: '#a6b9c8',
+  pinPlate: 'rgba(255,255,255,.14)',
+  colors: {
+    cyan: { fill: '#6fd5ff', edge: '#e2f6ff', label: '研发', glyph: '研' },
+    pink: { fill: '#ff8bb4', edge: '#ffe1ec', label: '客服', glyph: '客' },
+    amber: { fill: '#f8c86c', edge: '#fff0c2', label: '运营', glyph: '运' },
+    lime: { fill: '#9ddd78', edge: '#e9ffd9', label: '行政', glyph: '行' },
+  },
+  level: {
+    pins: [
+      { x: 58, label: '工位 A', stack: ['amber', 'cyan', 'pink'] },
+      { x: 124, label: '工位 B', stack: ['lime', 'amber', 'cyan', 'pink'] },
+      { x: 195, label: '工位 C', stack: ['pink', 'lime', 'amber'] },
+      { x: 266, label: '工位 D', stack: ['cyan', 'pink', 'lime', 'amber'] },
+      { x: 332, label: '工位 E', stack: ['amber', 'lime', 'cyan'] },
+    ],
+  },
+});
+
+function createMergeDropGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    scoreLabel: config.scoreLabel,
+    queueLabel: config.queueLabel,
+    winLabel: config.winLabel,
+    loseLabel: config.loseLabel,
+    dropLabel: config.dropLabel,
+    jarFill: config.jarFill,
+    jarStroke: config.jarStroke,
+    bgA: config.bgA,
+    bgB: config.bgB,
+    accent: config.accent,
+    line: config.line,
+    tiers: config.tiers,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '合成',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="scoreText">${config.scoreLabel} 0</b><span id="queueText">${config.queueLabel}</span></div>
+        <p id="statusText">${config.dropLabel}</p>
+        <button class="primary" id="resetBtn">重开这一锅</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const seedBase = ${Number(generatedAt.slice(0, 10).replace(/-/g, ''))};
+      const bucket = { x: 57, y: 108, w: 276, h: 360 };
+      const loseLine = 160;
+      const gravity = 0.12;
+      const damping = 0.985;
+      const bounce = 0.84;
+      const settleSpeed = 0.42;
+      const mergeDelay = 180;
+      const spawnXs = [112, 155, 198, 241, 284];
+      const state = { pieces: [], next: 0, previewX: 195, score: 0, merges: 0, mode: 'aiming', hold: 0, rng: seedBase, cooldown: 0 };
+      function rand() {
+        state.rng = (state.rng * 1664525 + 1013904223) >>> 0;
+        return state.rng / 4294967296;
+      }
+      function tier(index) {
+        return THEME.tiers[Math.max(0, Math.min(THEME.tiers.length - 1, index))];
+      }
+      function freshNext() {
+        const roll = rand();
+        return roll < 0.45 ? 0 : roll < 0.8 ? 1 : 2;
+      }
+      function reset() {
+        state.pieces = [];
+        state.score = 0;
+        state.merges = 0;
+        state.mode = 'aiming';
+        state.hold = 0;
+        state.cooldown = 0;
+        state.previewX = 195;
+        state.next = freshNext();
+        render();
+      }
+      function spawnAt(x) {
+        if (state.mode === 'lost' || state.cooldown > 0) return;
+        const lane = spawnXs.reduce((best, value) => Math.abs(value - x) < Math.abs(best - x) ? value : best, spawnXs[0]);
+        const info = tier(state.next);
+        state.pieces.push({
+          id: Date.now() + Math.floor(rand() * 99999),
+          tier: state.next,
+          x: lane,
+          y: loseLine - info.r - 10,
+          vx: 0,
+          vy: 0,
+          justMerged: 0,
+          alive: true
+        });
+        state.next = freshNext();
+        state.cooldown = 220;
+        state.mode = 'falling';
+      }
+      function pointerPosition(event) {
+        const box = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - box.left) * canvas.width / box.width,
+          y: (event.clientY - box.top) * canvas.height / box.height
+        };
+      }
+      function insideBucket(piece) {
+        const info = tier(piece.tier);
+        return piece.x > bucket.x + info.r && piece.x < bucket.x + bucket.w - info.r;
+      }
+      function physicsStep() {
+        let moving = false;
+        for (const piece of state.pieces) {
+          if (!piece.alive) continue;
+          const info = tier(piece.tier);
+          piece.vy += gravity;
+          piece.x += piece.vx;
+          piece.y += piece.vy;
+          piece.vx *= damping;
+          if (piece.x - info.r < bucket.x) {
+            piece.x = bucket.x + info.r;
+            piece.vx = Math.abs(piece.vx) * bounce;
+          }
+          if (piece.x + info.r > bucket.x + bucket.w) {
+            piece.x = bucket.x + bucket.w - info.r;
+            piece.vx = -Math.abs(piece.vx) * bounce;
+          }
+          if (piece.y + info.r > bucket.y + bucket.h) {
+            piece.y = bucket.y + bucket.h - info.r;
+            piece.vy = -Math.abs(piece.vy) * 0.22;
+            piece.vx *= 0.96;
+            if (Math.abs(piece.vy) < 0.5) piece.vy = 0;
+          }
+          if (piece.justMerged > 0) piece.justMerged = Math.max(0, piece.justMerged - 16);
+          if (Math.abs(piece.vx) > settleSpeed || Math.abs(piece.vy) > settleSpeed) moving = true;
+        }
+        for (let i = 0; i < state.pieces.length; i++) {
+          const a = state.pieces[i];
+          if (!a || !a.alive) continue;
+          const ar = tier(a.tier).r;
+          for (let j = i + 1; j < state.pieces.length; j++) {
+            const b = state.pieces[j];
+            if (!b || !b.alive) continue;
+            const br = tier(b.tier).r;
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const distance = Math.hypot(dx, dy) || 0.0001;
+            const minDistance = ar + br;
+            if (distance < minDistance) {
+              const overlap = minDistance - distance;
+              const nx = dx / distance;
+              const ny = dy / distance;
+              a.x -= nx * overlap * 0.5;
+              a.y -= ny * overlap * 0.5;
+              b.x += nx * overlap * 0.5;
+              b.y += ny * overlap * 0.5;
+              const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+              if (relative < 0) {
+                const impulse = -relative * 0.58;
+                a.vx -= impulse * nx;
+                a.vy -= impulse * ny;
+                b.vx += impulse * nx;
+                b.vy += impulse * ny;
+              }
+              if (a.tier === b.tier && a.justMerged <= 0 && b.justMerged <= 0 && distance < minDistance * 0.72) {
+                const nextTier = Math.min(THEME.tiers.length - 1, a.tier + 1);
+                const centerX = (a.x + b.x) * 0.5;
+                const centerY = (a.y + b.y) * 0.5;
+                a.alive = false;
+                b.alive = false;
+                state.pieces.push({
+                  id: Date.now() + Math.floor(rand() * 99999),
+                  tier: nextTier,
+                  x: centerX,
+                  y: centerY,
+                  vx: (a.vx + b.vx) * 0.25,
+                  vy: Math.min(-1.6, (a.vy + b.vy) * 0.18),
+                  justMerged: mergeDelay,
+                  alive: true
+                });
+                state.score += (nextTier + 1) * 12;
+                state.merges += 1;
+                moving = true;
+                break;
+              }
+            }
+          }
+        }
+        state.pieces = state.pieces.filter((piece) => piece.alive);
+        const topDanger = state.pieces.some((piece) => {
+          const info = tier(piece.tier);
+          return piece.y - info.r < loseLine && Math.abs(piece.vy) < 0.25 && insideBucket(piece);
+        });
+        if (topDanger) {
+          state.hold += 16;
+          if (state.hold > 900) state.mode = 'lost';
+        } else {
+          state.hold = Math.max(0, state.hold - 24);
+        }
+        if (state.mode !== 'lost') state.mode = moving ? 'falling' : 'aiming';
+      }
+      function step(ms) {
+        const steps = Math.max(1, Math.round(ms / 16));
+        for (let i = 0; i < steps; i++) {
+          if (state.cooldown > 0) state.cooldown = Math.max(0, state.cooldown - 16);
+          physicsStep();
+        }
+        render();
+      }
+      function drawJar() {
+        const grad = ctx.createLinearGradient(0, bucket.y, 0, bucket.y + bucket.h);
+        grad.addColorStop(0, THEME.bgA);
+        grad.addColorStop(1, THEME.bgB);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.roundRect(bucket.x, bucket.y, bucket.w, bucket.h, 28);
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = THEME.jarStroke;
+        ctx.stroke();
+        ctx.fillStyle = THEME.jarFill;
+        ctx.fillRect(bucket.x + 18, bucket.y + 18, bucket.w - 36, 10);
+        ctx.strokeStyle = THEME.line;
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.moveTo(bucket.x + 10, loseLine);
+        ctx.lineTo(bucket.x + bucket.w - 10, loseLine);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = THEME.line;
+        ctx.font = '900 11px sans-serif';
+        ctx.fillText(THEME.loseLabel, bucket.x + 16, loseLine - 8);
+      }
+      function drawPreview() {
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 18px sans-serif';
+        ctx.fillText(THEME.heading, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(THEME.subheading, 24, 56);
+        const info = tier(state.next);
+        ctx.strokeStyle = THEME.accent;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(state.previewX, 74);
+        ctx.lineTo(state.previewX, loseLine - info.r - 20);
+        ctx.stroke();
+        drawPiece({ x: state.previewX, y: 88, tier: state.next, justMerged: 0 }, true);
+        ctx.fillStyle = '#fff';
+        ctx.font = '800 12px sans-serif';
+        ctx.fillText(THEME.dropLabel, 196, 88);
+      }
+      function drawPiece(piece, preview) {
+        const info = tier(piece.tier);
+        ctx.save();
+        if (piece.justMerged > 0) {
+          const pulse = 1 + piece.justMerged / (mergeDelay * 5);
+          ctx.translate(piece.x, piece.y);
+          ctx.scale(pulse, pulse);
+          ctx.translate(-piece.x, -piece.y);
+        }
+        ctx.beginPath();
+        ctx.arc(piece.x, piece.y, info.r, 0, Math.PI * 2);
+        ctx.fillStyle = info.fill;
+        ctx.fill();
+        ctx.lineWidth = preview ? 3 : 2;
+        ctx.strokeStyle = preview ? '#fffbe6' : 'rgba(255,255,255,.75)';
+        ctx.stroke();
+        ctx.fillStyle = '#22160d';
+        ctx.font = '900 ' + Math.max(14, Math.round(info.r * 0.84)) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(info.glyph, piece.x, piece.y + 1);
+        ctx.restore();
+      }
+      function render() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, '#140d1a');
+        bg.addColorStop(1, '#050608');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+        drawPreview();
+        drawJar();
+        state.pieces.forEach((piece) => drawPiece(piece, false));
+        document.getElementById('scoreText').textContent = THEME.scoreLabel + ' ' + state.score;
+        document.getElementById('queueText').textContent = THEME.queueLabel + ' ' + tier(state.next).label;
+        document.getElementById('statusText').textContent = state.mode === 'lost'
+          ? THEME.winLabel + ' 失败：锅满了'
+          : '已合成 ' + state.merges + ' 次 · 危险值 ' + Math.min(100, Math.round(state.hold / 9)) + '%';
+      }
+      canvas.addEventListener('pointermove', (event) => {
+        const point = pointerPosition(event);
+        state.previewX = Math.max(bucket.x + 30, Math.min(bucket.x + bucket.w - 30, point.x));
+        render();
+      });
+      canvas.addEventListener('pointerdown', (event) => {
+        const point = pointerPosition(event);
+        state.previewX = Math.max(bucket.x + 30, Math.min(bucket.x + bucket.w - 30, point.x));
+        spawnAt(state.previewX);
+        render();
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(16), 16);
+      window.advanceTime = (ms) => step(ms);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 merge jar',
+        mode: state.mode,
+        score: state.score,
+        merges: state.merges,
+        next: tier(state.next).label,
+        danger: Math.min(100, Math.round(state.hold / 9)),
+        pieces: state.pieces.map((piece) => ({ tier: tier(piece.tier).label, x: Math.round(piece.x), y: Math.round(piece.y) }))
+      });
+    `,
+  };
+}
+
+const brainrotMergeGame = createMergeDropGame({
+  id: 'brainrot-merge-pot',
+  file: 'brainrot-merge-pot.html',
+  title: '脑腐合成锅',
+  sourceGame: 'Brainrot Merge / 合成大西瓜式掉落合成',
+  accent: '#ff7a59',
+  summary: '沿着顶线丢进怪物丸子，同类碰撞升级，别让锅口堆爆。',
+  heading: '脑腐合成锅',
+  subheading: '热点复刻 · 顶部投放、同类升级、堆到警戒线就翻锅',
+  scoreLabel: '脑腐值',
+  queueLabel: '下一个',
+  winLabel: '脑腐值',
+  loseLabel: '翻锅线',
+  dropLabel: '左右挪动预览线，点一下把怪物丢进锅里。',
+  jarFill: 'rgba(255,154,61,.14)',
+  jarStroke: '#ff9a3d',
+  bgA: '#2d1718',
+  bgB: '#12090d',
+  line: '#ffcf8d',
+  tiers: [
+    { label: '拖', glyph: '拖', fill: '#ffd166', r: 19 },
+    { label: '啦', glyph: '啦', fill: '#ff9f68', r: 24 },
+    { label: '啵', glyph: '啵', fill: '#ff7aa2', r: 28 },
+    { label: '咚', glyph: '咚', fill: '#c084fc', r: 33 },
+    { label: '锅', glyph: '锅', fill: '#7dd3fc', r: 38 },
+    { label: '王', glyph: '王', fill: '#a3e635', r: 44 }
+  ]
+});
+
+const lunchMergeRemixGame = createMergeDropGame({
+  id: 'lunchbox-merge-pot',
+  file: 'lunchbox-merge-pot.html',
+  title: '午饭合成锅',
+  sourceGame: '脑腐合成锅 Remix',
+  accent: '#5eead4',
+  summary: '把脑腐丸子改成午饭配菜，掉落、碰撞、升级逻辑不变。',
+  heading: '午饭合成锅',
+  subheading: '二创版 · 把梗图怪球替成打工人午饭配菜',
+  scoreLabel: '饱腹值',
+  queueLabel: '下一口',
+  winLabel: '饱腹值',
+  loseLabel: '打包线',
+  dropLabel: '左右选落点，把便当配菜一颗颗丢进锅里。',
+  jarFill: 'rgba(93,234,212,.14)',
+  jarStroke: '#38bdf8',
+  bgA: '#102122',
+  bgB: '#071111',
+  line: '#9bf7e8',
+  tiers: [
+    { label: '蛋', glyph: '蛋', fill: '#ffe082', r: 19 },
+    { label: '菇', glyph: '菇', fill: '#ffb4a2', r: 24 },
+    { label: '肠', glyph: '肠', fill: '#fb7185', r: 28 },
+    { label: '饭', glyph: '饭', fill: '#93c5fd', r: 33 },
+    { label: '盒', glyph: '盒', fill: '#6ee7b7', r: 38 },
+    { label: '王', glyph: '王', fill: '#c4b5fd', r: 44 }
+  ]
+});
+
+function createMergeRaiderGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    scoreLabel: config.scoreLabel,
+    incomeLabel: config.incomeLabel,
+    recruitLabel: config.recruitLabel,
+    upgradeLabel: config.upgradeLabel,
+    alertIdle: config.alertIdle,
+    alertLive: config.alertLive,
+    alertLose: config.alertLose,
+    accent: config.accent,
+    bgA: config.bgA,
+    bgB: config.bgB,
+    arena: config.arena,
+    tiers: config.tiers,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '养成合成',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact stack">
+        <div class="row"><b id="coinText">${config.scoreLabel} 0</b><span id="incomeText">${config.incomeLabel} 0/s</span></div>
+        <div class="row"><button class="primary" id="spawnBtn">${config.recruitLabel}</button><button class="primary" id="upgradeBtn">${config.upgradeLabel}</button></div>
+        <div class="row"><button class="primary" id="alarmBtn">拦截小偷</button><span id="statusText">${config.alertIdle}</span></div>
+        <button class="primary" id="resetBtn">重开这块场</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const slots = [
+        { x: 104, y: 184 }, { x: 194, y: 184 }, { x: 284, y: 184 },
+        { x: 104, y: 278 }, { x: 194, y: 278 }, { x: 284, y: 278 },
+        { x: 104, y: 372 }, { x: 194, y: 372 }, { x: 284, y: 372 },
+      ];
+      const state = {
+        coins: 8,
+        incomeBonus: 1,
+        units: [],
+        slotCount: 5,
+        nextId: 1,
+        dragId: null,
+        dragX: 0,
+        dragY: 0,
+        merges: 0,
+        blocked: 0,
+        stolen: 0,
+        threat: 7.5,
+        raid: null,
+        flash: 0,
+        ticker: 0,
+      };
+      function tier(index) {
+        return THEME.tiers[Math.max(0, Math.min(THEME.tiers.length - 1, index))];
+      }
+      function spawnCost() {
+        return 6 + Math.max(0, state.units.length - 2) * 3;
+      }
+      function upgradeCost() {
+        return 22 + Math.round(state.incomeBonus * 12);
+      }
+      function activeSlots() {
+        return slots.slice(0, state.slotCount);
+      }
+      function unitAtSlot(slotIndex) {
+        return state.units.find((unit) => unit.slot === slotIndex) || null;
+      }
+      function totalIncome() {
+        return Number((state.units.reduce((sum, unit) => sum + tier(unit.tier).income, 0) * state.incomeBonus).toFixed(1));
+      }
+      function openSlots() {
+        return activeSlots().map((_, index) => index).filter((index) => !unitAtSlot(index));
+      }
+      function nextRaidDelay() {
+        return 8 + Math.max(0, 3 - Math.min(3, state.merges)) * 1.2;
+      }
+      function reset() {
+        state.coins = 8;
+        state.incomeBonus = 1;
+        state.units = [];
+        state.slotCount = 5;
+        state.nextId = 1;
+        state.dragId = null;
+        state.dragX = 0;
+        state.dragY = 0;
+        state.merges = 0;
+        state.blocked = 0;
+        state.stolen = 0;
+        state.threat = 7.5;
+        state.raid = null;
+        state.flash = 0;
+        state.ticker = 0;
+        recruit();
+        recruit();
+        render();
+      }
+      function recruit(free = false) {
+        const empty = openSlots();
+        const cost = spawnCost();
+        if (!empty.length || (!free && state.coins < cost)) return false;
+        if (!free) state.coins -= cost;
+        const slot = empty[(state.nextId + state.merges) % empty.length];
+        state.units.push({
+          id: state.nextId++,
+          slot,
+          tier: 0,
+          pulse: 1,
+        });
+        state.flash = 0.28;
+        render();
+        return true;
+      }
+      function upgradeIncome() {
+        const cost = upgradeCost();
+        if (state.coins < cost) return false;
+        state.coins -= cost;
+        state.incomeBonus = Number((state.incomeBonus + 0.35).toFixed(2));
+        state.flash = 0.4;
+        render();
+        return true;
+      }
+      function startRaid() {
+        if (state.raid) return;
+        const target = [...state.units].sort((a, b) => a.tier - b.tier || a.slot - b.slot)[0];
+        state.raid = { ttl: 2.2, targetId: target ? target.id : null, mood: target ? 'armed' : 'idle' };
+      }
+      function blockRaid() {
+        if (!state.raid || state.raid.mood !== 'armed') return false;
+        state.blocked += 1;
+        state.coins += 12 + state.blocked * 2;
+        state.raid = null;
+        state.threat = nextRaidDelay();
+        state.flash = 0.55;
+        render();
+        return true;
+      }
+      function resolveRaid() {
+        if (!state.raid) return;
+        if (state.raid.targetId == null) {
+          state.raid = null;
+          state.threat = nextRaidDelay() - 1.5;
+          return;
+        }
+        const target = state.units.find((unit) => unit.id === state.raid.targetId);
+        if (target) {
+          state.units = state.units.filter((unit) => unit.id !== target.id);
+          state.stolen += 1;
+        }
+        state.raid = null;
+        state.threat = nextRaidDelay();
+        render();
+      }
+      function point(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * canvas.width / rect.width,
+          y: (event.clientY - rect.top) * canvas.height / rect.height,
+        };
+      }
+      function findUnitAt(x, y) {
+        return state.units.find((unit) => {
+          const slot = slots[unit.slot];
+          const px = state.dragId === unit.id ? state.dragX : slot.x;
+          const py = state.dragId === unit.id ? state.dragY : slot.y;
+          return Math.hypot(px - x, py - y) < tier(unit.tier).r;
+        }) || null;
+      }
+      function slotForPoint(x, y) {
+        let best = null;
+        activeSlots().forEach((slot, index) => {
+          const distance = Math.hypot(slot.x - x, slot.y - y);
+          if (!best || distance < best.distance) best = { index, distance };
+        });
+        return best && best.distance < 54 ? best.index : null;
+      }
+      function mergeInto(target, source) {
+        target.tier = Math.min(THEME.tiers.length - 1, target.tier + 1);
+        target.pulse = 1.18;
+        state.units = state.units.filter((unit) => unit.id !== source.id);
+        state.merges += 1;
+        state.coins += tier(target.tier).income * 5;
+        if (state.slotCount < slots.length && state.merges >= 3 && state.slotCount < 6) state.slotCount = 6;
+        if (state.slotCount < slots.length && state.merges >= 6 && state.slotCount < 7) state.slotCount = 7;
+        if (state.slotCount < slots.length && state.merges >= 9 && state.slotCount < 8) state.slotCount = 8;
+        if (state.slotCount < slots.length && state.merges >= 12 && state.slotCount < 9) state.slotCount = 9;
+        state.flash = 0.42;
+      }
+      function releaseDrag() {
+        const drag = state.units.find((unit) => unit.id === state.dragId);
+        if (!drag) return;
+        const targetSlot = slotForPoint(state.dragX, state.dragY);
+        const mergeTarget = state.units.find((unit) => unit.id !== drag.id && Math.hypot(slots[unit.slot].x - state.dragX, slots[unit.slot].y - state.dragY) < 34);
+        if (mergeTarget && mergeTarget.tier === drag.tier) {
+          mergeInto(mergeTarget, drag);
+        } else if (targetSlot != null && !unitAtSlot(targetSlot)) {
+          drag.slot = targetSlot;
+        }
+        state.dragId = null;
+        render();
+      }
+      function step(ms) {
+        const dt = ms / 1000;
+        state.coins = Number((state.coins + totalIncome() * dt).toFixed(1));
+        state.ticker += dt;
+        state.flash = Math.max(0, state.flash - dt);
+        state.units.forEach((unit) => {
+          unit.pulse = Math.max(1, unit.pulse - dt * 0.8);
+        });
+        if (!state.raid) {
+          state.threat -= dt;
+          if (state.threat <= 0) startRaid();
+        } else {
+          state.raid.ttl -= dt;
+          if (state.raid.ttl <= 0) resolveRaid();
+        }
+        render();
+      }
+      function drawArena() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, THEME.bgA);
+        bg.addColorStop(1, THEME.bgB);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.font = '900 20px sans-serif';
+        ctx.fillText(THEME.heading, 20, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.68)';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(THEME.subheading, 20, 58);
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        ctx.strokeStyle = 'rgba(255,255,255,.12)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(38, 108, 314, 334, 28);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.6)';
+        ctx.font = '900 12px sans-serif';
+        ctx.fillText('合成场', 52, 132);
+        activeSlots().forEach((slot, index) => {
+          ctx.fillStyle = index < state.slotCount ? 'rgba(255,255,255,.06)' : 'rgba(255,255,255,.03)';
+          ctx.strokeStyle = 'rgba(255,255,255,.12)';
+          ctx.beginPath();
+          ctx.roundRect(slot.x - 34, slot.y - 34, 68, 68, 22);
+          ctx.fill();
+          ctx.stroke();
+        });
+        const meter = Math.max(0, Math.min(1, state.raid ? state.raid.ttl / 2.2 : state.threat / nextRaidDelay()));
+        ctx.fillStyle = 'rgba(255,255,255,.1)';
+        ctx.fillRect(52, 456, 286, 12);
+        ctx.fillStyle = state.raid ? '#ff7a59' : '#22f4ee';
+        ctx.fillRect(52, 456, 286 * meter, 12);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 11px sans-serif';
+        ctx.fillText(state.raid ? '小偷倒计时' : '下次偷袭', 52, 449);
+      }
+      function drawUnit(unit) {
+        const slot = slots[unit.slot];
+        const info = tier(unit.tier);
+        const x = state.dragId === unit.id ? state.dragX : slot.x;
+        const y = state.dragId === unit.id ? state.dragY : slot.y;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(unit.pulse, unit.pulse);
+        ctx.beginPath();
+        ctx.arc(0, 0, info.r, 0, Math.PI * 2);
+        ctx.fillStyle = info.fill;
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255,255,255,.82)';
+        ctx.stroke();
+        ctx.fillStyle = '#1d1320';
+        ctx.font = '900 ' + Math.round(info.r * 0.8) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(info.glyph, 0, 1);
+        ctx.restore();
+        ctx.fillStyle = 'rgba(255,255,255,.84)';
+        ctx.font = '900 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('+' + info.income + '/s', x, y + info.r + 16);
+      }
+      function render() {
+        drawArena();
+        state.units.filter((unit) => unit.id !== state.dragId).forEach(drawUnit);
+        const drag = state.units.find((unit) => unit.id === state.dragId);
+        if (drag) drawUnit(drag);
+        if (state.raid) {
+          ctx.fillStyle = 'rgba(0,0,0,.36)';
+          ctx.fillRect(0, 0, 390, 560);
+          ctx.fillStyle = '#ff7a59';
+          ctx.beginPath();
+          ctx.roundRect(84, 138, 222, 94, 24);
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = '900 22px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(state.raid.targetId == null ? '空场巡逻' : '小偷来抢了', 195, 176);
+          ctx.font = '12px sans-serif';
+          ctx.fillText(state.raid.targetId == null ? '这轮没人可抢，继续养成。' : THEME.alertLive, 195, 202);
+        }
+        if (state.flash > 0) {
+          ctx.fillStyle = 'rgba(255,255,255,' + (state.flash * 0.22) + ')';
+          ctx.fillRect(0, 0, 390, 560);
+        }
+        document.getElementById('coinText').textContent = THEME.scoreLabel + ' ' + Math.floor(state.coins);
+        document.getElementById('incomeText').textContent = THEME.incomeLabel + ' ' + totalIncome().toFixed(1) + '/s';
+        document.getElementById('spawnBtn').textContent = THEME.recruitLabel + ' ' + spawnCost();
+        document.getElementById('upgradeBtn').textContent = THEME.upgradeLabel + ' ' + upgradeCost();
+        document.getElementById('spawnBtn').disabled = !openSlots().length || state.coins < spawnCost();
+        document.getElementById('upgradeBtn').disabled = state.coins < upgradeCost();
+        document.getElementById('alarmBtn').disabled = !state.raid || state.raid.targetId == null;
+        document.getElementById('statusText').textContent = state.raid
+          ? THEME.alertLive
+          : (state.stolen > 0 ? THEME.alertLose + ' ' + state.stolen + ' 次' : THEME.alertIdle);
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        const p = point(event);
+        const unit = findUnitAt(p.x, p.y);
+        if (!unit) return;
+        state.dragId = unit.id;
+        state.dragX = p.x;
+        state.dragY = p.y;
+        render();
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        if (state.dragId == null) return;
+        const p = point(event);
+        state.dragX = p.x;
+        state.dragY = p.y;
+        render();
+      });
+      canvas.addEventListener('pointerup', releaseDrag);
+      canvas.addEventListener('pointercancel', () => { state.dragId = null; render(); });
+      document.getElementById('spawnBtn').addEventListener('click', () => recruit());
+      document.getElementById('upgradeBtn').addEventListener('click', upgradeIncome);
+      document.getElementById('alarmBtn').addEventListener('click', blockRaid);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(16), 16);
+      window.advanceTime = (ms) => step(ms);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 grid merge yard',
+        coins: Math.floor(state.coins),
+        income: totalIncome(),
+        units: state.units.map((unit) => ({ tier: tier(unit.tier).label, slot: unit.slot })),
+        merges: state.merges,
+        blocked: state.blocked,
+        stolen: state.stolen,
+        raidActive: Boolean(state.raid),
+        slotsOpen: state.slotCount,
+      });
+    `,
+  };
+}
+
+const brainrotRaiderGame = createMergeRaiderGame({
+  id: 'brainrot-raider-yard',
+  file: 'brainrot-raider-yard.html',
+  title: '脑腐偷家场',
+  sourceGame: 'Merge & Steal Brainrot / Italian Brainrot Merge',
+  accent: '#7c5cff',
+  summary: '招募低级梗怪、拖拽同类合成、自动产币，还得随时拦截来偷家的巡逻贼。',
+  heading: '脑腐偷家场',
+  subheading: '热点复刻 · 生单位、拖拽合成、挂机产币、定时防偷',
+  scoreLabel: '硬币',
+  incomeLabel: '秒产',
+  recruitLabel: '招一只',
+  upgradeLabel: '刷广告牌',
+  alertIdle: '先招募，再把同类拖到一起合成更高阶怪。',
+  alertLive: '小偷正在盯最低阶单位，点按钮把它赶走。',
+  alertLose: '刚才被偷走了',
+  bgA: '#1b1230',
+  bgB: '#07080f',
+  arena: '#120d1d',
+  tiers: [
+    { label: '拖', glyph: '拖', fill: '#ffd166', r: 20, income: 1 },
+    { label: '拉', glyph: '拉', fill: '#ff9f68', r: 22, income: 3 },
+    { label: '啵', glyph: '啵', fill: '#ff7aa2', r: 24, income: 6 },
+    { label: '锅', glyph: '锅', fill: '#b794f6', r: 26, income: 10 },
+    { label: '王', glyph: '王', fill: '#7dd3fc', r: 29, income: 16 },
+    { label: '尊', glyph: '尊', fill: '#a3e635', r: 31, income: 24 },
+  ],
+});
+
+const officeRaiderRemixGame = createMergeRaiderGame({
+  id: 'office-raider-yard',
+  file: 'office-raider-yard.html',
+  title: '工位摸鱼盘',
+  sourceGame: '脑腐偷家场 Remix',
+  accent: '#22f4ee',
+  summary: '把脑腐怪换成工位杂物，保留生单位、拖拽合成、产币和防偷循环。',
+  heading: '工位摸鱼盘',
+  subheading: '二创版 · 把偷家合成场翻译成夜班工位养成盘',
+  scoreLabel: '摸鱼币',
+  incomeLabel: '偷闲',
+  recruitLabel: '摆一件',
+  upgradeLabel: '补咖啡',
+  alertIdle: '先摆满工位杂物，再把同类拖到一起升级成更值钱的大件。',
+  alertLive: '巡查经理来收东西了，赶紧拦住。',
+  alertLose: '刚才被经理收走了',
+  bgA: '#0d1d24',
+  bgB: '#05090b',
+  arena: '#0e161b',
+  tiers: [
+    { label: '签', glyph: '签', fill: '#ffe082', r: 20, income: 1 },
+    { label: '杯', glyph: '杯', fill: '#8be9fd', r: 22, income: 3 },
+    { label: '表', glyph: '表', fill: '#fda4af', r: 24, income: 6 },
+    { label: '屏', glyph: '屏', fill: '#67e8f9', r: 26, income: 10 },
+    { label: '椅', glyph: '椅', fill: '#86efac', r: 29, income: 16 },
+    { label: '王', glyph: '王', fill: '#c4b5fd', r: 31, income: 24 },
+  ],
+});
+
+function createEggCollectorGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    scoreLabel: config.scoreLabel,
+    incomeLabel: config.incomeLabel,
+    buyLabel: config.buyLabel,
+    stealLabel: config.stealLabel,
+    stealReady: config.stealReady,
+    stealLocked: config.stealLocked,
+    stealFail: config.stealFail,
+    idleHint: config.idleHint,
+    palette: config.palette,
+    tiers: config.tiers,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '收集养成',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="stat-row"><span id="coinText"></span><span id="incomeText"></span></div>
+        <div class="button-row">
+          <button class="primary" id="buyBtn"></button>
+          <button class="chip" id="stealBtn"></button>
+        </div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">重开这条线</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const state = {
+        coins: 16,
+        units: [],
+        eggs: [],
+        dragEggId: null,
+        dragPoint: null,
+        nextId: 1,
+        nextOfferTier: 0,
+        nextStealTier: 1,
+        raidTimer: 6.5,
+        flash: 0,
+        mode: 'playing',
+        message: THEME.idleHint,
+      };
+      const nests = [
+        { x: 74, y: 410, w: 86, h: 92 },
+        { x: 152, y: 410, w: 86, h: 92 },
+        { x: 230, y: 410, w: 86, h: 92 },
+      ];
+      function tierMeta(index) {
+        return THEME.tiers[Math.max(0, Math.min(THEME.tiers.length - 1, index))];
+      }
+      function incomeTotal() {
+        return state.units.reduce((sum, unit) => sum + tierMeta(unit.tier).income, 0);
+      }
+      function buyCost() {
+        return 6 + state.nextOfferTier * 4;
+      }
+      function stealReady() {
+        return state.raidTimer <= 0;
+      }
+      function freeNestIndex() {
+        for (let i = 0; i < nests.length; i += 1) {
+          if (!state.eggs.some((egg) => egg.nestIndex === i) && !state.units.some((unit) => unit.nestIndex === i)) return i;
+        }
+        return -1;
+      }
+      function point(event) {
+        const box = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - box.left) * canvas.width / box.width,
+          y: (event.clientY - box.top) * canvas.height / box.height,
+        };
+      }
+      function eggRadius(egg) {
+        return 21 + egg.tier * 3;
+      }
+      function eggAt(x, y) {
+        return state.eggs
+          .filter((egg) => egg.state !== 'hatched')
+          .sort((a, b) => b.y - a.y)
+          .find((egg) => Math.hypot(x - egg.x, y - egg.y) <= eggRadius(egg) + 6) || null;
+      }
+      function spawnEgg(origin, tier) {
+        const meta = tierMeta(tier);
+        const id = state.nextId++;
+        state.eggs.push({
+          id,
+          tier,
+          laneX: 70,
+          x: origin === 'shop' ? 70 : 302,
+          y: origin === 'shop' ? 168 : 112,
+          vx: origin === 'shop' ? 54 : -72,
+          hatch: 0,
+          nestIndex: null,
+          state: 'belt',
+          source: origin,
+          label: meta.glyph,
+        });
+        return id;
+      }
+      function buyEgg() {
+        if (state.mode !== 'playing') return;
+        const cost = buyCost();
+        if (state.coins < cost) {
+          state.message = '硬币不够，先等窝里那几只继续下蛋。';
+          return;
+        }
+        state.coins -= cost;
+        spawnEgg('shop', state.nextOfferTier);
+        state.nextOfferTier = Math.min(THEME.tiers.length - 1, state.nextOfferTier + (state.coins > 34 ? 1 : 0));
+        state.message = '新蛋上了传送带，拖回工位就能开始孵。';
+        render();
+      }
+      function stealEgg() {
+        if (state.mode !== 'playing') return;
+        if (!stealReady()) {
+          state.message = THEME.stealLocked;
+          render();
+          return;
+        }
+        const slot = freeNestIndex();
+        if (slot === -1) {
+          state.coins += 8 + state.nextStealTier * 4;
+          state.raidTimer = 10.5;
+          state.message = THEME.stealFail;
+          render();
+          return;
+        }
+        spawnEgg('steal', state.nextStealTier);
+        state.nextStealTier = Math.min(THEME.tiers.length - 1, state.nextStealTier + 1);
+        state.raidTimer = 12;
+        state.flash = 1;
+        state.message = THEME.stealReady;
+        render();
+      }
+      function dropEgg(egg, nestIndex) {
+        const nest = nests[nestIndex];
+        egg.nestIndex = nestIndex;
+        egg.state = 'nest';
+        egg.vx = 0;
+        egg.x = nest.x + nest.w / 2;
+        egg.y = nest.y + nest.h / 2;
+        egg.hatch = 0;
+        state.message = '蛋进窝了，等它孵出会自动产币。';
+      }
+      function hatchEgg(egg) {
+        state.units.push({ id: egg.id, tier: egg.tier, nestIndex: egg.nestIndex, pulse: 1 });
+        state.eggs = state.eggs.filter((item) => item.id !== egg.id);
+        if (state.units.length >= 2 && state.nextOfferTier < THEME.tiers.length - 1) state.nextOfferTier += 1;
+        state.message = tierMeta(egg.tier).label + '已经孵出来了。';
+      }
+      function reset() {
+        state.coins = 16;
+        state.units = [];
+        state.eggs = [];
+        state.dragEggId = null;
+        state.dragPoint = null;
+        state.nextId = 1;
+        state.nextOfferTier = 0;
+        state.nextStealTier = 1;
+        state.raidTimer = 6.5;
+        state.flash = 0;
+        state.mode = 'playing';
+        state.message = THEME.idleHint;
+        render();
+      }
+      function updateEggs(dt) {
+        for (const egg of state.eggs) {
+          if (egg.id === state.dragEggId && state.dragPoint) {
+            egg.x = state.dragPoint.x;
+            egg.y = state.dragPoint.y;
+            continue;
+          }
+          if (egg.state === 'belt') {
+            egg.laneX += egg.vx * dt;
+            if (egg.source === 'shop') {
+              if (egg.laneX > 320) egg.laneX = 70;
+              egg.x = egg.laneX;
+              egg.y = 168 + Math.sin(egg.laneX / 26) * 4;
+            } else {
+              if (egg.laneX < 96) egg.laneX = 302;
+              egg.x = egg.laneX;
+              egg.y = 112 + Math.cos(egg.laneX / 22) * 5;
+            }
+          } else if (egg.state === 'nest') {
+            egg.hatch += dt / (3.8 - Math.min(egg.tier * 0.35, 1.4));
+            if (egg.hatch >= 1) hatchEgg(egg);
+          }
+        }
+      }
+      function updateUnits(dt) {
+        state.coins += incomeTotal() * dt;
+        state.units.forEach((unit) => { unit.pulse = Math.max(0, unit.pulse - dt * 1.8); });
+      }
+      function step(ms) {
+        const dt = ms / 1000;
+        if (state.mode !== 'playing') return;
+        state.raidTimer -= dt;
+        if (state.raidTimer < -4) state.raidTimer = 12;
+        state.flash = Math.max(0, state.flash - dt * 2.4);
+        updateEggs(dt);
+        updateUnits(dt);
+        render();
+      }
+      function drawEgg(x, y, tier, hatch, outline) {
+        const meta = tierMeta(tier);
+        const radius = 21 + tier * 3;
+        ctx.fillStyle = meta.fill;
+        ctx.strokeStyle = outline || 'rgba(255,255,255,.22)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(x, y, radius, radius + 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.18)';
+        ctx.beginPath();
+        ctx.ellipse(x - radius / 3, y - radius / 2, radius / 4, radius / 2.8, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#111827';
+        ctx.font = '900 ' + (14 + tier * 2) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(meta.glyph, x, y + 5);
+        if (typeof hatch === 'number' && hatch > 0) {
+          ctx.strokeStyle = 'rgba(255,255,255,.72)';
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.arc(x, y + radius + 12, 16, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.min(hatch, 1));
+          ctx.stroke();
+        }
+      }
+      function drawUnit(unit) {
+        const nest = nests[unit.nestIndex];
+        const meta = tierMeta(unit.tier);
+        const x = nest.x + nest.w / 2;
+        const y = nest.y + 44;
+        const r = 18 + unit.tier * 3 + unit.pulse * 3;
+        ctx.fillStyle = meta.body;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.18)';
+        ctx.beginPath();
+        ctx.arc(x - r / 3, y - r / 3, r / 2.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#061018';
+        ctx.font = '900 ' + (13 + unit.tier * 2) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(meta.glyph, x, y + 5);
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.font = '900 11px sans-serif';
+        ctx.fillText('+' + meta.income + '/s', x, y + 34);
+      }
+      function render() {
+        const palette = THEME.palette;
+        ctx.clearRect(0, 0, 390, 560);
+        const back = ctx.createLinearGradient(0, 0, 0, 560);
+        back.addColorStop(0, palette.backA);
+        back.addColorStop(1, palette.backB);
+        ctx.fillStyle = back;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.06)';
+        ctx.fillRect(38, 72, 314, 34);
+        ctx.fillRect(38, 152, 314, 34);
+        ctx.fillStyle = 'rgba(255,255,255,.26)';
+        for (let x = 58; x < 334; x += 36) {
+          ctx.fillRect(x, 89, 18, 4);
+          ctx.fillRect(x, 169, 18, 4);
+        }
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 24px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(THEME.heading, 24, 36);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.subheading, 24, 56);
+        ctx.fillText('买蛋传送带', 42, 145);
+        ctx.fillText('顺手偷隔壁', 42, 96);
+        nests.forEach((nest, index) => {
+          ctx.fillStyle = 'rgba(255,255,255,.08)';
+          ctx.strokeStyle = 'rgba(255,255,255,.18)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(nest.x, nest.y, nest.w, nest.h, 18);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,.34)';
+          ctx.font = '800 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('工位 ' + (index + 1), nest.x + nest.w / 2, nest.y + 76);
+        });
+        if (stealReady()) {
+          ctx.fillStyle = 'rgba(255,197,94,.18)';
+          ctx.fillRect(250, 72, 104, 34);
+          ctx.fillStyle = '#ffd166';
+          ctx.font = '900 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('可截胡', 302, 94);
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,.2)';
+          ctx.font = '900 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(state.raidTimer.toFixed(1) + 's', 302, 94);
+        }
+        state.eggs.forEach((egg) => drawEgg(egg.x, egg.y, egg.tier, egg.state === 'nest' ? egg.hatch : null, egg.source === 'steal' ? '#ffd166' : null));
+        state.units.forEach(drawUnit);
+        if (state.flash > 0) {
+          ctx.fillStyle = 'rgba(255,255,255,' + (state.flash * 0.24) + ')';
+          ctx.fillRect(0, 0, 390, 560);
+        }
+        document.getElementById('coinText').textContent = THEME.scoreLabel + ' ' + Math.floor(state.coins);
+        document.getElementById('incomeText').textContent = THEME.incomeLabel + ' ' + incomeTotal().toFixed(1) + '/s';
+        document.getElementById('buyBtn').textContent = THEME.buyLabel + ' ' + buyCost();
+        document.getElementById('stealBtn').textContent = stealReady() ? THEME.stealLabel : Math.max(0, state.raidTimer).toFixed(1) + 's';
+        document.getElementById('statusText').textContent = state.message;
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        const p = point(event);
+        const egg = eggAt(p.x, p.y);
+        if (!egg) return;
+        state.dragEggId = egg.id;
+        state.dragPoint = p;
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        if (state.dragEggId == null) return;
+        state.dragPoint = point(event);
+        render();
+      });
+      function releaseDrag(event) {
+        if (state.dragEggId == null) return;
+        const egg = state.eggs.find((item) => item.id === state.dragEggId);
+        const p = point(event);
+        const nestIndex = nests.findIndex((nest) => p.x >= nest.x && p.x <= nest.x + nest.w && p.y >= nest.y && p.y <= nest.y + nest.h);
+        if (egg && nestIndex >= 0 && freeNestIndex() === nestIndex) {
+          dropEgg(egg, nestIndex);
+        } else if (egg && egg.source === 'steal') {
+          egg.x = 302;
+          egg.y = 112;
+          egg.state = 'belt';
+          egg.vx = -72;
+        } else if (egg) {
+          egg.x = egg.laneX;
+          egg.y = egg.source === 'shop' ? 168 : 112;
+          egg.state = 'belt';
+          egg.vx = egg.source === 'shop' ? 54 : -72;
+          state.message = '要拖进空工位里，才能开始孵。';
+        }
+        state.dragEggId = null;
+        state.dragPoint = null;
+        render();
+      }
+      canvas.addEventListener('pointerup', releaseDrag);
+      canvas.addEventListener('pointercancel', () => {
+        state.dragEggId = null;
+        state.dragPoint = null;
+        render();
+      });
+      document.getElementById('buyBtn').addEventListener('click', buyEgg);
+      document.getElementById('stealBtn').addEventListener('click', stealEgg);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(16), 16);
+      window.advanceTime = (ms) => step(ms);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 egg conveyor base',
+        coins: Math.floor(state.coins),
+        income: incomeTotal(),
+        eggs: state.eggs.map((egg) => ({ tier: tierMeta(egg.tier).label, state: egg.state, nestIndex: egg.nestIndex })),
+        units: state.units.map((unit) => ({ tier: tierMeta(unit.tier).label, nestIndex: unit.nestIndex })),
+        nextOfferTier: tierMeta(state.nextOfferTier).label,
+        nextStealTier: tierMeta(state.nextStealTier).label,
+        stealReady: stealReady(),
+      });
+    `,
+  };
+}
+
+const brainrotEggGame = createEggCollectorGame({
+  id: 'brainrot-egg-run',
+  file: 'brainrot-egg-run.html',
+  title: '脑腐抢蛋线',
+  sourceGame: 'Collect Brainrot Egg',
+  accent: '#f59e0b',
+  summary: '买蛋上带、拖回工位孵化、自动产币，再抓偷蛋窗口白嫖高阶蛋。',
+  heading: '脑腐抢蛋线',
+  subheading: '热点复刻 · 买蛋传送带 / 拖回基地 / 孵化产币 / 偷蛋窗口',
+  scoreLabel: '硬币',
+  incomeLabel: '孵化收益',
+  buyLabel: '买一颗',
+  stealLabel: '顺走隔壁蛋',
+  stealReady: '高阶蛋截胡成功，赶紧拖回去孵。',
+  stealLocked: '偷蛋窗还没开，先养自己这三窝。',
+  stealFail: '工位满了，只能把隔壁蛋折成现金。',
+  idleHint: '先买低阶蛋，拖回空工位里孵，等它稳定产币再开偷蛋窗。',
+  palette: { backA: '#2b1603', backB: '#0b0810' },
+  tiers: [
+    { label: '纸蛋', glyph: '纸', fill: '#fde68a', body: '#fef3c7', income: 1 },
+    { label: '拖蛋', glyph: '拖', fill: '#fdba74', body: '#fed7aa', income: 2.5 },
+    { label: '锅蛋', glyph: '锅', fill: '#fca5a5', body: '#fecaca', income: 4.5 },
+    { label: '王蛋', glyph: '王', fill: '#93c5fd', body: '#bfdbfe', income: 7 },
+  ],
+});
+
+const officeEggRemixGame = createEggCollectorGame({
+  id: 'office-egg-run',
+  file: 'office-egg-run.html',
+  title: '快递柜摸鱼蛋',
+  sourceGame: '脑腐抢蛋线 Remix',
+  accent: '#34d399',
+  summary: '把脑腐蛋改成办公室快递盲盒，保留买盒、拖回工位、孵化和截胡循环。',
+  heading: '快递柜摸鱼蛋',
+  subheading: '二创版 · 把抢蛋养成盘翻成办公室快递盲盒线',
+  scoreLabel: '摸鱼币',
+  incomeLabel: '拆盒收益',
+  buyLabel: '拿一盒',
+  stealLabel: '截胡隔壁件',
+  stealReady: '截胡到加急件了，拖回你工位赶紧拆。',
+  stealLocked: '巡楼快递还没到，先把自己柜子养起来。',
+  stealFail: '工位都塞满了，只能把加急件换成摸鱼币。',
+  idleHint: '先从快递柜拿低阶盒子，拖到空工位拆开，再等办公室摆件持续产币。',
+  palette: { backA: '#05201b', backB: '#051014' },
+  tiers: [
+    { label: '便签盒', glyph: '签', fill: '#fde68a', body: '#fef3c7', income: 1 },
+    { label: '咖啡盒', glyph: '杯', fill: '#67e8f9', body: '#a5f3fc', income: 2.5 },
+    { label: '外设盒', glyph: '屏', fill: '#a7f3d0', body: '#d1fae5', income: 4.5 },
+    { label: '总监件', glyph: '王', fill: '#c4b5fd', body: '#ddd6fe', income: 7 },
+  ],
+});
+
+function createArrowEscapeLevel() {
+  const cols = 5;
+  const rows = 6;
+  const centerX = (cols - 1) / 2;
+  const centerY = (rows - 1) / 2;
+  const skip = new Set(['2,2', '2,3']);
+  const tiles = [];
+  let id = 0;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const key = `${col},${row}`;
+      if (skip.has(key)) continue;
+      const dx = col - centerX;
+      const dy = row - centerY;
+      let dir = 'up';
+      if (Math.abs(dx) > Math.abs(dy)) dir = dx < 0 ? 'left' : 'right';
+      else if (Math.abs(dy) > Math.abs(dx)) dir = dy < 0 ? 'up' : 'down';
+      else dir = row < centerY ? 'up' : 'down';
+      tiles.push({ id: id++, col, row, dir });
+    }
+  }
+  return { cols, rows, tiles };
+}
+
+const arrowEscapeLevel = createArrowEscapeLevel();
+
+function createArrowEscapeGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    progressLabel: config.progressLabel,
+    heartsLabel: config.heartsLabel,
+    tipLabel: config.tipLabel,
+    winCopy: config.winCopy,
+    loseCopy: config.loseCopy,
+    shellA: config.shellA,
+    shellB: config.shellB,
+    boardA: config.boardA,
+    boardB: config.boardB,
+    line: config.line,
+    glow: config.glow,
+    tileFill: config.tileFill,
+    tileStroke: config.tileStroke,
+    blockedFill: config.blockedFill,
+    text: config.text,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '解谜',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="progressText">${config.progressLabel}</b><span id="heartText">${config.heartsLabel}</span></div>
+        <p id="statusText">${config.tipLabel}</p>
+        <button class="primary" id="resetBtn">重开这一局</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const LEVEL = ${JSON.stringify(arrowEscapeLevel)};
+      const THEME = ${JSON.stringify(theme)};
+      const cell = 58;
+      const board = {
+        x: Math.round((390 - LEVEL.cols * cell) / 2),
+        y: 116,
+        w: LEVEL.cols * cell,
+        h: LEVEL.rows * cell
+      };
+      const arrows = {
+        up: { glyph: '↑', dx: 0, dy: -1, angle: -Math.PI / 2 },
+        right: { glyph: '→', dx: 1, dy: 0, angle: 0 },
+        down: { glyph: '↓', dx: 0, dy: 1, angle: Math.PI / 2 },
+        left: { glyph: '←', dx: -1, dy: 0, angle: Math.PI }
+      };
+      const state = { tiles: [], hearts: 3, cleared: 0, mode: 'playing', shimmer: 0 };
+      function tileAt(col, row) {
+        return state.tiles.find((tile) => tile.active && tile.col === col && tile.row === row);
+      }
+      function free(tile) {
+        if (!tile || !tile.active || state.mode !== 'playing') return false;
+        const arrow = arrows[tile.dir];
+        let col = tile.col + arrow.dx;
+        let row = tile.row + arrow.dy;
+        while (col >= 0 && col < LEVEL.cols && row >= 0 && row < LEVEL.rows) {
+          if (tileAt(col, row)) return false;
+          col += arrow.dx;
+          row += arrow.dy;
+        }
+        return true;
+      }
+      function reset() {
+        state.tiles = LEVEL.tiles.map((tile) => ({ ...tile, active: true, pulse: 0 }));
+        state.hearts = 3;
+        state.cleared = 0;
+        state.mode = 'playing';
+        state.shimmer = 0;
+        render();
+      }
+      function pick(tile) {
+        if (!tile || state.mode !== 'playing') return;
+        if (free(tile)) {
+          tile.active = false;
+          state.cleared += 1;
+          state.shimmer = 1;
+          if (state.tiles.every((item) => !item.active)) state.mode = 'won';
+        } else {
+          state.hearts -= 1;
+          tile.pulse = 1;
+          if (state.hearts <= 0) state.mode = 'lost';
+        }
+        render();
+      }
+      function tileRect(tile) {
+        return {
+          x: board.x + tile.col * cell,
+          y: board.y + tile.row * cell,
+          w: cell,
+          h: cell
+        };
+      }
+      function pointer(event) {
+        const box = canvas.getBoundingClientRect();
+        const x = (event.clientX - box.left) * canvas.width / box.width;
+        const y = (event.clientY - box.top) * canvas.height / box.height;
+        const target = state.tiles.find((tile) => {
+          if (!tile.active) return false;
+          const rect = tileRect(tile);
+          return x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h;
+        });
+        pick(target);
+      }
+      function step(ms) {
+        const delta = Math.min(0.12, ms / 1000);
+        state.shimmer = Math.max(0, state.shimmer - delta * 1.4);
+        state.tiles.forEach((tile) => {
+          if (tile.pulse > 0) tile.pulse = Math.max(0, tile.pulse - delta * 2.2);
+        });
+        render();
+      }
+      function drawArrow(rect, dir, enabled, pulse) {
+        const cx = rect.x + rect.w / 2;
+        const cy = rect.y + rect.h / 2;
+        const wobble = pulse > 0 ? pulse * 5 : 0;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(arrows[dir].angle);
+        ctx.fillStyle = enabled ? THEME.tileFill : THEME.blockedFill;
+        ctx.strokeStyle = enabled ? THEME.tileStroke : 'rgba(255,255,255,.18)';
+        ctx.lineWidth = enabled ? 3 : 2;
+        ctx.beginPath();
+        ctx.roundRect(-22 - wobble * 0.2, -16, 44 + wobble * 0.4, 32, 12);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = THEME.text;
+        ctx.beginPath();
+        ctx.moveTo(-6, -12);
+        ctx.lineTo(14, 0);
+        ctx.lineTo(-6, 12);
+        ctx.lineTo(-6, 4);
+        ctx.lineTo(-18, 4);
+        ctx.lineTo(-18, -4);
+        ctx.lineTo(-6, -4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+      function render() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, THEME.shellA);
+        bg.addColorStop(1, THEME.shellB);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 20px sans-serif';
+        ctx.fillText(THEME.heading, 24, 40);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(THEME.subheading, 24, 58);
+
+        const boardGrad = ctx.createLinearGradient(0, board.y, 0, board.y + board.h);
+        boardGrad.addColorStop(0, THEME.boardA);
+        boardGrad.addColorStop(1, THEME.boardB);
+        ctx.fillStyle = boardGrad;
+        ctx.beginPath();
+        ctx.roundRect(board.x - 10, board.y - 10, board.w + 20, board.h + 20, 28);
+        ctx.fill();
+        ctx.strokeStyle = THEME.line;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(255,255,255,.08)';
+        ctx.lineWidth = 1;
+        for (let col = 0; col <= LEVEL.cols; col++) {
+          const x = board.x + col * cell;
+          ctx.beginPath();
+          ctx.moveTo(x, board.y);
+          ctx.lineTo(x, board.y + board.h);
+          ctx.stroke();
+        }
+        for (let row = 0; row <= LEVEL.rows; row++) {
+          const y = board.y + row * cell;
+          ctx.beginPath();
+          ctx.moveTo(board.x, y);
+          ctx.lineTo(board.x + board.w, y);
+          ctx.stroke();
+        }
+
+        if (state.shimmer > 0) {
+          ctx.fillStyle = 'rgba(255,255,255,' + (state.shimmer * 0.18).toFixed(3) + ')';
+          ctx.fillRect(board.x, board.y, board.w, board.h);
+        }
+
+        state.tiles.forEach((tile) => {
+          if (!tile.active) return;
+          const rect = tileRect(tile);
+          drawArrow(rect, tile.dir, free(tile), tile.pulse);
+        });
+
+        const removable = state.tiles.filter(free).length;
+        document.getElementById('progressText').textContent = THEME.progressLabel + ' ' + state.cleared + '/' + LEVEL.tiles.length;
+        document.getElementById('heartText').textContent = THEME.heartsLabel + ' ' + '♥'.repeat(Math.max(0, state.hearts));
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? THEME.winCopy
+          : state.mode === 'lost'
+            ? THEME.loseCopy
+            : THEME.tipLabel + ' 现在可拔 ' + removable + ' 枚';
+      }
+      canvas.addEventListener('pointerdown', pointer);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(16), 16);
+      window.advanceTime = (ms) => step(ms);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'grid ' + LEVEL.cols + 'x' + LEVEL.rows + ' rendered to canvas 390x560',
+        mode: state.mode,
+        hearts: state.hearts,
+        cleared: state.cleared,
+        removable: state.tiles.filter(free).length,
+        activeTiles: state.tiles.filter((tile) => tile.active).map((tile) => ({ col: tile.col, row: tile.row, dir: tile.dir }))
+      });
+    `,
+  };
+}
+
+const arrowEscapeGame = createArrowEscapeGame({
+  id: 'arrow-escape-fake',
+  file: 'arrow-escape-fake.html',
+  title: '拔箭逃生局',
+  sourceGame: 'Arrows - Puzzle Escape',
+  accent: '#86efac',
+  summary: '只能拔出朝出口方向一路通畅的箭块，误点三次就翻车。',
+  heading: '拔箭逃生局',
+  subheading: '热门复刻 · 从外层开始剥，给中间的箭腾出逃生线',
+  progressLabel: '已清',
+  heartsLabel: '容错',
+  tipLabel: '点一枚能直线飞出棋盘的箭。',
+  winCopy: '全场清空，逃生线打通了。',
+  loseCopy: '误点次数用完，重新找外层箭。',
+  shellA: '#0d1713',
+  shellB: '#060807',
+  boardA: '#10241e',
+  boardB: '#08120f',
+  line: '#86efac',
+  glow: '#c7ffd9',
+  tileFill: '#86efac',
+  tileStroke: '#e8fff0',
+  blockedFill: '#315046',
+  text: '#05230f',
+});
+
+const courierArrowRemixGame = createArrowEscapeGame({
+  id: 'courier-arrow-rush',
+  file: 'courier-arrow-rush.html',
+  title: '快递箭阵',
+  sourceGame: '拔箭逃生局 Remix',
+  accent: '#fbbf24',
+  summary: '把逃生箭改成快递分拣箭道，同机制但更像一块高峰站点面板。',
+  heading: '快递箭阵',
+  subheading: '二创版 · 先清外侧分流箭，再放中间包裹出站',
+  progressLabel: '出站',
+  heartsLabel: '压单',
+  tipLabel: '先点能直接飞出站台的分流箭。',
+  winCopy: '包裹全部出站，晚高峰守住了。',
+  loseCopy: '压单爆了，回到上一轮重排。',
+  shellA: '#1a1308',
+  shellB: '#070605',
+  boardA: '#30220b',
+  boardB: '#140f07',
+  line: '#fbbf24',
+  glow: '#fff1b3',
+  tileFill: '#fbbf24',
+  tileStroke: '#fff4d1',
+  blockedFill: '#6a5321',
+  text: '#241503',
+});
+
+function createEmojiHopperGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    hint: config.hint,
+    winlessCopy: config.winlessCopy,
+    loseCopy: config.loseCopy,
+    accent: config.accent,
+    skyA: config.skyA,
+    skyB: config.skyB,
+    cloud: config.cloud,
+    normal: config.normal,
+    fragile: config.fragile,
+    skeleton: config.skeleton,
+    boost: config.boost,
+    player: config.player,
+    pickup: config.pickup,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '跳跃',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="stat-grid">
+          <span><b id="scoreText">0</b><i>当前</i></span>
+          <span><b id="bestText">0</b><i>最高</i></span>
+          <span><b id="boostText">0</b><i>连踩</i></span>
+        </div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">重开这一跳</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const WIDTH = canvas.width;
+      const HEIGHT = canvas.height;
+      const THEME = ${JSON.stringify(theme)};
+      const storageKey = 'printer-best-' + ${JSON.stringify(config.id)};
+      let best = Number(localStorage.getItem(storageKey) || 0);
+      const state = { mode: 'playing', score: 0, combo: 0, time: 0, cameraY: 0, targetX: WIDTH * 0.5, pointerActive: false, player: null, platforms: [], pickups: [], seed: 17 };
+      window.__EMOJI_HOPPER_DEBUG__ = { reference: ${JSON.stringify(config.sourceGame)}, mechanics: ['autoBounce', 'horizontalSteer', 'fragilePlatforms', 'skeletonPlatforms', 'emojiBoosts'], portraitCanvas: [WIDTH, HEIGHT] };
+      function rng(seed) {
+        let value = seed >>> 0;
+        return () => ((value = (value * 1664525 + 1013904223) >>> 0) / 4294967296);
+      }
+      let random = rng(state.seed);
+      function rand() {
+        return random();
+      }
+      function makePlatform(y, forcedType) {
+        const roll = rand();
+        const type = forcedType || (roll < 0.13 ? 'fragile' : roll < 0.22 ? 'skeleton' : roll < 0.3 ? 'boost' : 'normal');
+        return {
+          x: 34 + rand() * 250,
+          y,
+          w: 74 + rand() * 18,
+          h: 18,
+          type,
+          broken: false,
+          used: false,
+        };
+      }
+      function makePickup(y) {
+        return {
+          x: 58 + rand() * 274,
+          y,
+          type: rand() < 0.5 ? 'emoji' : 'spark',
+          active: true,
+        };
+      }
+      function reset() {
+        random = rng(state.seed);
+        state.mode = 'playing';
+        state.score = 0;
+        state.combo = 0;
+        state.time = 0;
+        state.cameraY = 0;
+        state.targetX = WIDTH * 0.5;
+        state.pointerActive = false;
+        state.player = { x: WIDTH * 0.5, y: 474, vx: 0, vy: -420, r: 16, boostTrail: 0 };
+        state.platforms = [];
+        state.pickups = [];
+        for (let i = 0; i < 13; i++) {
+          const y = 520 - i * 78;
+          state.platforms.push(makePlatform(y, i < 3 ? 'normal' : undefined));
+          if (i > 3 && i % 4 === 0) state.pickups.push(makePickup(y - 34));
+        }
+        render();
+      }
+      function spawnAhead() {
+        let topY = state.platforms.reduce((min, platform) => Math.min(min, platform.y), Infinity);
+        while (topY > state.cameraY - 920) {
+          topY -= 68 + rand() * 26;
+          state.platforms.push(makePlatform(topY));
+          if (rand() < 0.32) state.pickups.push(makePickup(topY - 30));
+        }
+        state.platforms = state.platforms.filter((platform) => platform.y < state.cameraY + HEIGHT + 120 && !platform.broken);
+        state.pickups = state.pickups.filter((pickup) => pickup.active && pickup.y < state.cameraY + HEIGHT + 140);
+      }
+      function lose(reason) {
+        state.mode = 'lost';
+        state.combo = 0;
+        document.getElementById('statusText').textContent = reason || THEME.loseCopy;
+      }
+      function landOn(platform) {
+        if (platform.type === 'skeleton') {
+          lose(THEME.loseCopy);
+          return;
+        }
+        state.combo += 1;
+        state.player.vy = platform.type === 'boost' ? -705 : -540;
+        state.player.boostTrail = platform.type === 'boost' ? 0.34 : 0.14;
+        if (platform.type === 'fragile') platform.broken = true;
+      }
+      function collectPickup(pickup) {
+        pickup.active = false;
+        state.player.vy = -760;
+        state.player.boostTrail = 0.48;
+        state.combo += 2;
+      }
+      function updateScore() {
+        state.score = Math.max(state.score, Math.max(0, Math.floor((-state.cameraY + 40) / 22)));
+        if (state.score > best) {
+          best = state.score;
+          localStorage.setItem(storageKey, String(best));
+        }
+      }
+      function step(ms) {
+        const dt = Math.min(0.032, ms / 1000);
+        state.time += dt;
+        if (state.mode !== 'playing') {
+          render();
+          return;
+        }
+        const player = state.player;
+        const previousY = player.y;
+        const drift = Math.max(-1, Math.min(1, (state.targetX - player.x) / 86));
+        player.vx = drift * 205;
+        player.vy += 1480 * dt;
+        player.x += player.vx * dt;
+        player.y += player.vy * dt;
+        if (player.x < -18) player.x = WIDTH + 18;
+        if (player.x > WIDTH + 18) player.x = -18;
+        if (player.vy > 0) {
+          const landing = state.platforms
+            .filter((platform) => !platform.broken && player.x + player.r > platform.x && player.x - player.r < platform.x + platform.w)
+            .find((platform) => previousY + player.r <= platform.y && player.y + player.r >= platform.y);
+          if (landing) landOn(landing);
+        }
+        state.pickups.forEach((pickup) => {
+          if (!pickup.active) return;
+          if (Math.hypot(player.x - pickup.x, player.y - pickup.y) < player.r + 18) collectPickup(pickup);
+        });
+        if (player.y - state.cameraY < 204) state.cameraY = player.y - 204;
+        player.boostTrail = Math.max(0, player.boostTrail - dt);
+        spawnAhead();
+        updateScore();
+        if (player.y - state.cameraY > HEIGHT + 44) lose(THEME.loseCopy);
+        render();
+      }
+      function drawBackdrop() {
+        const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+        grad.addColorStop(0, THEME.skyA);
+        grad.addColorStop(1, THEME.skyB);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+        for (let i = 0; i < 14; i++) {
+          const x = (i * 31 + state.time * 14) % (WIDTH + 40) - 20;
+          const y = 48 + (i * 37 % 460);
+          ctx.fillStyle = 'rgba(255,255,255,.08)';
+          ctx.beginPath();
+          ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      function drawPlatform(platform) {
+        const y = platform.y - state.cameraY;
+        if (y < -40 || y > HEIGHT + 40) return;
+        const color = platform.type === 'fragile' ? THEME.fragile : platform.type === 'skeleton' ? THEME.skeleton : platform.type === 'boost' ? THEME.boost : THEME.normal;
+        ctx.fillStyle = color;
+        ctx.strokeStyle = 'rgba(255,255,255,.72)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(platform.x, y - 10, platform.w, 20, 12);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(8,9,16,.45)';
+        ctx.beginPath();
+        ctx.arc(platform.x + 18, y - 2, 3, 0, Math.PI * 2);
+        ctx.arc(platform.x + platform.w - 18, y - 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+        if (platform.type === 'fragile') {
+          ctx.strokeStyle = 'rgba(255,255,255,.9)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(platform.x + 16, y + 5);
+          ctx.lineTo(platform.x + platform.w * 0.48, y - 4);
+          ctx.lineTo(platform.x + platform.w - 18, y + 4);
+          ctx.stroke();
+        } else if (platform.type === 'skeleton') {
+          ctx.fillStyle = 'rgba(255,255,255,.94)';
+          ctx.font = '900 16px sans-serif';
+          ctx.fillText('☠', platform.x + platform.w * 0.5 - 8, y + 6);
+        } else if (platform.type === 'boost') {
+          ctx.fillStyle = 'rgba(255,255,255,.94)';
+          ctx.font = '900 14px sans-serif';
+          ctx.fillText('↟', platform.x + platform.w * 0.5 - 5, y + 5);
+        }
+      }
+      function drawPickups() {
+        state.pickups.forEach((pickup) => {
+          if (!pickup.active) return;
+          const y = pickup.y - state.cameraY;
+          if (y < -40 || y > HEIGHT + 40) return;
+          ctx.fillStyle = THEME.pickup;
+          ctx.beginPath();
+          ctx.arc(pickup.x, y, 17, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#1d1027';
+          ctx.font = '900 16px sans-serif';
+          ctx.fillText(pickup.type === 'emoji' ? '😎' : '✦', pickup.x - 9, y + 6);
+        });
+      }
+      function drawPlayer() {
+        const y = state.player.y - state.cameraY;
+        if (state.player.boostTrail > 0) {
+          ctx.fillStyle = 'rgba(255,233,110,' + Math.max(0.16, state.player.boostTrail).toFixed(3) + ')';
+          ctx.beginPath();
+          ctx.ellipse(state.player.x, y + 18, 14, 28, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = THEME.player;
+        ctx.beginPath();
+        ctx.arc(state.player.x, y, state.player.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#190f1b';
+        ctx.beginPath();
+        ctx.arc(state.player.x - 5, y - 3, 2.2, 0, Math.PI * 2);
+        ctx.arc(state.player.x + 5, y - 3, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#190f1b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(state.player.x, y + 4, 6, .2, Math.PI - .2);
+        ctx.stroke();
+      }
+      function render() {
+        drawBackdrop();
+        state.platforms.forEach(drawPlatform);
+        drawPickups();
+        drawPlayer();
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.font = '900 26px sans-serif';
+        ctx.fillText(THEME.heading, 18, 34);
+        ctx.fillStyle = 'rgba(255,255,255,.68)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.subheading, 18, 54);
+        ctx.fillText('SCORE ' + state.score, 18, 86);
+        ctx.fillText('BEST ' + best, 148, 86);
+        ctx.fillText('COMBO ' + state.combo, 264, 86);
+        document.getElementById('scoreText').textContent = String(state.score);
+        document.getElementById('bestText').textContent = String(best);
+        document.getElementById('boostText').textContent = String(state.combo);
+        document.getElementById('statusText').textContent = state.mode === 'lost' ? THEME.loseCopy : THEME.hint;
+      }
+      function setTarget(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        state.targetX = (clientX - rect.left) * WIDTH / rect.width;
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        state.pointerActive = true;
+        setTarget(event.clientX);
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        if (!state.pointerActive) return;
+        setTarget(event.clientX);
+      });
+      canvas.addEventListener('pointerup', () => {
+        state.pointerActive = false;
+      });
+      canvas.addEventListener('pointercancel', () => {
+        state.pointerActive = false;
+      });
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft' || event.key.toLowerCase() === 'a') state.targetX = Math.max(22, state.targetX - 42);
+        if (event.key === 'ArrowRight' || event.key.toLowerCase() === 'd') state.targetX = Math.min(WIDTH - 22, state.targetX + 42);
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(16), 16);
+      window.advanceTime = (ms) => step(ms);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 vertical hopper',
+        mode: state.mode,
+        score: state.score,
+        best,
+        combo: state.combo,
+        cameraY: Math.round(state.cameraY),
+        player: { x: Math.round(state.player.x), y: Math.round(state.player.y), vy: Math.round(state.player.vy) },
+        platformTypes: state.platforms.reduce((acc, platform) => {
+          acc[platform.type] = (acc[platform.type] || 0) + 1;
+          return acc;
+        }, {}),
+        pickups: state.pickups.filter((pickup) => pickup.active).length
+      });
+    `,
+  };
+}
+
+const emojiHopperGame = createEmojiHopperGame({
+  id: 'emoji-gator-hop',
+  file: 'emoji-gator-hop.html',
+  title: '表情踩鳄梯',
+  sourceGame: 'TikTok hidden emoji DM game',
+  accent: '#74f4b4',
+  summary: '左右挪动表情往上蹦，踩断裂鳄梯会塌，碰上表情加速泡能一口气冲高。',
+  heading: '表情踩鳄梯',
+  subheading: '热点复刻 · 自动弹跳、断台、骷髅台和表情加速都压进一屏',
+  hint: '左右挪动接下一只鳄梯，灰骷髅别踩，吃到表情泡会猛冲一段。',
+  winlessCopy: '',
+  loseCopy: '掉出镜头了，重新连踩一把。',
+  skyA: '#103d2d',
+  skyB: '#07140f',
+  cloud: '#9ff7d4',
+  normal: '#74f4b4',
+  fragile: '#ffe07c',
+  skeleton: '#76808c',
+  boost: '#ffb14f',
+  player: '#fff77d',
+  pickup: '#ffd966',
+});
+
+const officeHopRemixGame = createEmojiHopperGame({
+  id: 'office-hop-stack',
+  file: 'office-hop-stack.html',
+  title: '工牌踩箱梯',
+  sourceGame: '表情踩鳄梯 Remix',
+  accent: '#7dd3fc',
+  summary: '把踩鳄跳高改成夜班工位箱梯，踩碎纸箱会塌，咖啡徽章是冲刺加速。',
+  heading: '工牌踩箱梯',
+  subheading: '二创版 · 文档托盘代替鳄梯，咖啡冲刺保留那种社交 App 小玩具节奏',
+  hint: '向左右接文件托盘，破箱只吃一次，咖啡徽章能把你往上顶。',
+  winlessCopy: '',
+  loseCopy: '工牌掉回一楼大厅了，晚班重开。',
+  skyA: '#12263d',
+  skyB: '#070c14',
+  cloud: '#b2ecff',
+  normal: '#7dd3fc',
+  fragile: '#f9c873',
+  skeleton: '#8f95a3',
+  boost: '#6ee7b7',
+  player: '#fef3c7',
+  pickup: '#6ee7b7',
+});
+
+const tubeSortLevel = {
+  capacity: 4,
+  tubes: [
+    ['pink', 'blue', 'amber', 'teal'],
+    ['teal', 'pink', 'amber', 'blue'],
+    ['amber', 'teal', 'blue', 'pink'],
+    ['blue', 'amber', 'pink', 'teal'],
+    [],
+    [],
+  ],
+};
+
+function createTubeSortGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    moveLabel: config.moveLabel,
+    hintLabel: config.hintLabel,
+    selectedLabel: config.selectedLabel,
+    winCopy: config.winCopy,
+    idleCopy: config.idleCopy,
+    accent: config.accent,
+    bgA: config.bgA,
+    bgB: config.bgB,
+    glass: config.glass,
+    glassStroke: config.glassStroke,
+    shadow: config.shadow,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '分拣',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="moveText">${config.moveLabel} 0</b><span id="hintText">${config.hintLabel}</span></div>
+        <p id="statusText">${config.idleCopy}</p>
+        <button class="primary" id="resetBtn">重开这一局</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const LEVEL = ${JSON.stringify(tubeSortLevel)};
+      const THEME = ${JSON.stringify(theme)};
+      const tubeRects = [
+        { x: 44, y: 132, w: 74, h: 182 },
+        { x: 158, y: 132, w: 74, h: 182 },
+        { x: 272, y: 132, w: 74, h: 182 },
+        { x: 101, y: 338, w: 74, h: 182 },
+        { x: 215, y: 338, w: 74, h: 182 },
+        { x: 329, y: 338, w: 74, h: 182 }
+      ].map((tube) => ({ ...tube, x: tube.x - 37 }));
+      const state = { tubes: [], selected: null, moves: 0, mode: 'playing' };
+      function cloneLevel() {
+        return LEVEL.tubes.map((tube) => tube.slice());
+      }
+      function topColor(index) {
+        const tube = state.tubes[index];
+        return tube && tube.length ? tube[tube.length - 1] : null;
+      }
+      function topRun(index) {
+        const tube = state.tubes[index];
+        if (!tube || !tube.length) return 0;
+        const color = tube[tube.length - 1];
+        let count = 0;
+        for (let i = tube.length - 1; i >= 0; i--) {
+          if (tube[i] !== color) break;
+          count += 1;
+        }
+        return count;
+      }
+      function freeSlots(index) {
+        return LEVEL.capacity - state.tubes[index].length;
+      }
+      function solvedTube(tube) {
+        return tube.length === LEVEL.capacity && tube.every((color) => color === tube[0]);
+      }
+      function checkWin() {
+        return state.tubes.every((tube) => tube.length === 0 || solvedTube(tube));
+      }
+      function canPour(from, to) {
+        if (from === to || from == null || to == null) return false;
+        const source = state.tubes[from];
+        const target = state.tubes[to];
+        if (!source.length || target.length >= LEVEL.capacity) return false;
+        if (!target.length) return true;
+        return topColor(from) === topColor(to) && freeSlots(to) > 0;
+      }
+      function reset() {
+        state.tubes = cloneLevel();
+        state.selected = null;
+        state.moves = 0;
+        state.mode = 'playing';
+        render();
+      }
+      function pour(from, to) {
+        if (!canPour(from, to) || state.mode !== 'playing') return false;
+        const amount = Math.min(topRun(from), freeSlots(to));
+        const color = topColor(from);
+        for (let i = 0; i < amount; i++) {
+          state.tubes[from].pop();
+          state.tubes[to].push(color);
+        }
+        state.moves += 1;
+        state.selected = null;
+        if (checkWin()) state.mode = 'won';
+        render();
+        return true;
+      }
+      function tubeAt(x, y) {
+        return tubeRects.findIndex((tube) => x >= tube.x && x <= tube.x + tube.w && y >= tube.y && y <= tube.y + tube.h);
+      }
+      function handleTap(index) {
+        if (index < 0 || state.mode !== 'playing') return;
+        const tube = state.tubes[index];
+        if (state.selected == null) {
+          if (!tube.length) return;
+          state.selected = index;
+          render();
+          return;
+        }
+        if (state.selected === index) {
+          state.selected = null;
+          render();
+          return;
+        }
+        if (!pour(state.selected, index)) {
+          if (tube.length) state.selected = index;
+          else state.selected = null;
+          render();
+        }
+      }
+      function pointer(event) {
+        const box = canvas.getBoundingClientRect();
+        const x = (event.clientX - box.left) * canvas.width / box.width;
+        const y = (event.clientY - box.top) * canvas.height / box.height;
+        handleTap(tubeAt(x, y));
+      }
+      function drawOrb(x, y, colorKey, label) {
+        const meta = THEME.colors[colorKey];
+        ctx.beginPath();
+        ctx.arc(x, y, 24, 0, Math.PI * 2);
+        ctx.fillStyle = meta.fill;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255,255,255,.7)';
+        ctx.stroke();
+        ctx.fillStyle = '#22140d';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label || meta.glyph, x, y + 1);
+      }
+      function drawTube(tube, index) {
+        const rect = tubeRects[index];
+        const selected = state.selected === index;
+        const targetable = state.selected != null && canPour(state.selected, index);
+        ctx.save();
+        ctx.fillStyle = THEME.glass;
+        ctx.strokeStyle = targetable ? THEME.accent : selected ? '#fff7d6' : THEME.glassStroke;
+        ctx.lineWidth = selected || targetable ? 4 : 3;
+        ctx.beginPath();
+        ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 24);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(rect.x + 14, rect.y + 16);
+        ctx.lineTo(rect.x + 14, rect.y + rect.h - 14);
+        ctx.lineTo(rect.x + rect.w - 14, rect.y + rect.h - 14);
+        ctx.lineTo(rect.x + rect.w - 14, rect.y + 16);
+        ctx.strokeStyle = 'rgba(255,255,255,.16)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        for (let i = 0; i < LEVEL.capacity; i++) {
+          const colorKey = tube[i];
+          const cy = rect.y + rect.h - 28 - i * 38;
+          if (colorKey) drawOrb(rect.x + rect.w / 2, cy, colorKey);
+          else {
+            ctx.beginPath();
+            ctx.arc(rect.x + rect.w / 2, cy, 24, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,255,255,.08)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+        }
+        if (selected) {
+          ctx.fillStyle = THEME.accent;
+          ctx.font = '900 12px sans-serif';
+          ctx.fillText(THEME.selectedLabel, rect.x + rect.w / 2, rect.y - 12);
+        }
+        ctx.restore();
+      }
+      function render() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, THEME.bgA);
+        bg.addColorStop(1, THEME.bgB);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 27px sans-serif';
+        ctx.fillText(THEME.heading, 24, 44);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.subheading, 24, 64);
+        ctx.fillStyle = THEME.shadow;
+        ctx.beginPath();
+        ctx.ellipse(195, 522, 142, 24, 0, 0, Math.PI * 2);
+        ctx.fill();
+        state.tubes.forEach((tube, index) => drawTube(tube, index));
+        document.getElementById('moveText').textContent = THEME.moveLabel + ' ' + state.moves;
+        document.getElementById('hintText').textContent = state.selected == null
+          ? THEME.hintLabel
+          : THEME.selectedLabel + ' ' + (state.selected + 1);
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? THEME.winCopy
+          : state.selected == null
+            ? THEME.idleCopy
+            : '把上层连续同色倒进空瓶，或倒到同色顶层。';
+      }
+      canvas.addEventListener('pointerdown', pointer);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 tube sort board',
+        mode: state.mode,
+        selected: state.selected,
+        moves: state.moves,
+        solved: state.tubes.filter((tube) => solvedTube(tube)).length,
+        tops: state.tubes.map((tube) => tube.length ? tube[tube.length - 1] : null),
+        tubes: state.tubes.map((tube) => tube.slice())
+      });
+    `,
+  };
+}
+
+const marbleSortGame = createTubeSortGame({
+  id: 'marble-sort-fake',
+  file: 'marble-sort-fake.html',
+  title: '弹珠分色瓶',
+  sourceGame: 'Marble Sort! / Water Sort Puzzle 式单指分拣',
+  accent: '#67e8f9',
+  summary: '选一瓶，把顶层连续同色弹珠倒进空瓶或同色瓶，直到每瓶只剩一种颜色。',
+  heading: '弹珠分色瓶',
+  subheading: '热门 sorting 复刻 · 单指换瓶、同色归位、短局高复玩',
+  moveLabel: '手数',
+  hintLabel: '点一瓶选中',
+  selectedLabel: '已选',
+  winCopy: '所有颜色都归瓶了，这一把分得很干净。',
+  idleCopy: '把顶层连续同色倒进空瓶，或倒到同色顶层。',
+  bgA: '#0f1728',
+  bgB: '#06080f',
+  glass: 'rgba(255,255,255,.08)',
+  glassStroke: 'rgba(151,238,255,.48)',
+  shadow: 'rgba(0,0,0,.34)',
+  colors: {
+    pink: { fill: '#fb7185', glyph: '莓' },
+    blue: { fill: '#60a5fa', glyph: '冰' },
+    amber: { fill: '#fbbf24', glyph: '蜜' },
+    teal: { fill: '#2dd4bf', glyph: '青' },
+  },
+});
+
+const milkTeaSortRemixGame = createTubeSortGame({
+  id: 'milk-tea-sorter',
+  file: 'milk-tea-sorter.html',
+  title: '奶茶封杯局',
+  sourceGame: '弹珠分色瓶 Remix',
+  accent: '#f59e0b',
+  summary: '把弹珠换成奶茶配料杯，还是同一套换杯分拣节奏，但更像门店备料台。',
+  heading: '奶茶封杯局',
+  subheading: '二创版 · 把分色瓶改成奶茶备料杯与封杯台',
+  moveLabel: '出杯',
+  hintLabel: '点一杯选中',
+  selectedLabel: '封杯位',
+  winCopy: '所有配料都分杯封好了，这单能顺畅出餐了。',
+  idleCopy: '先选一杯，再把顶层同料倒进空杯或同料顶层。',
+  bgA: '#28160b',
+  bgB: '#100907',
+  glass: 'rgba(255,244,220,.08)',
+  glassStroke: 'rgba(255,206,132,.5)',
+  shadow: 'rgba(0,0,0,.38)',
+  colors: {
+    pink: { fill: '#f472b6', glyph: '莓' },
+    blue: { fill: '#7dd3fc', glyph: '冻' },
+    amber: { fill: '#fbbf24', glyph: '珠' },
+    teal: { fill: '#86efac', glyph: '椰' },
+  },
+});
+
+const woolSortLevel = {
+  capacity: 4,
+  spools: [
+    ['coral', 'sky', 'gold', 'mint'],
+    ['mint', 'coral', 'gold', 'sky'],
+    ['gold', 'mint', 'sky', 'coral'],
+    ['sky', 'gold', 'coral', 'mint'],
+    [],
+    [],
+  ],
+  embroidery: [
+    ['gold', 'gold', 'coral', 'coral', 'mint', 'mint', 'sky', 'sky'],
+    ['gold', 'coral', 'coral', 'mint', 'mint', 'sky', 'sky', 'gold'],
+    ['coral', 'coral', 'mint', 'mint', 'sky', 'sky', 'gold', 'gold'],
+    ['coral', 'mint', 'mint', 'sky', 'sky', 'gold', 'gold', 'coral'],
+    ['mint', 'mint', 'sky', 'sky', 'gold', 'gold', 'coral', 'coral'],
+    ['mint', 'sky', 'sky', 'gold', 'gold', 'coral', 'coral', 'mint'],
+  ],
+};
+
+function createWoolSortGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    moveLabel: config.moveLabel,
+    hintLabel: config.hintLabel,
+    selectedLabel: config.selectedLabel,
+    artLabel: config.artLabel,
+    doneCopy: config.doneCopy,
+    winCopy: config.winCopy,
+    idleCopy: config.idleCopy,
+    accent: config.accent,
+    bgA: config.bgA,
+    bgB: config.bgB,
+    panel: config.panel,
+    line: config.line,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '绕线',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="moveText">${config.moveLabel} 0</b><span id="progressText">${config.artLabel} 0 / 4</span></div>
+        <p id="statusText">${config.idleCopy}</p>
+        <button class="primary" id="resetBtn">重开这一绷</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const LEVEL = ${JSON.stringify(woolSortLevel)};
+      const THEME = ${JSON.stringify(theme)};
+      const spoolRects = [
+        { x: 32, y: 126, w: 92, h: 170 },
+        { x: 149, y: 126, w: 92, h: 170 },
+        { x: 266, y: 126, w: 92, h: 170 },
+        { x: 90, y: 318, w: 92, h: 170 },
+        { x: 207, y: 318, w: 92, h: 170 },
+        { x: 324, y: 318, w: 92, h: 170 }
+      ].map((spool) => ({ ...spool, x: spool.x - 46 }));
+      const state = { spools: [], selected: null, moves: 0, mode: 'playing', stitched: [] };
+      function cloneLevel() {
+        return LEVEL.spools.map((spool) => spool.slice());
+      }
+      function topColor(index) {
+        const spool = state.spools[index];
+        return spool && spool.length ? spool[spool.length - 1] : null;
+      }
+      function topRun(index) {
+        const spool = state.spools[index];
+        if (!spool || !spool.length) return 0;
+        const color = topColor(index);
+        let count = 0;
+        for (let i = spool.length - 1; i >= 0; i--) {
+          if (spool[i] !== color) break;
+          count += 1;
+        }
+        return count;
+      }
+      function freeSlots(index) {
+        return LEVEL.capacity - state.spools[index].length;
+      }
+      function solvedSpool(spool) {
+        return spool.length === LEVEL.capacity && spool.every((color) => color === spool[0]);
+      }
+      function solvedCount() {
+        return state.spools.filter((spool) => solvedSpool(spool)).length;
+      }
+      function checkWin() {
+        return state.spools.every((spool) => spool.length === 0 || solvedSpool(spool));
+      }
+      function canPour(from, to) {
+        if (from === to || from == null || to == null) return false;
+        const source = state.spools[from];
+        const target = state.spools[to];
+        if (!source.length || target.length >= LEVEL.capacity) return false;
+        if (!target.length) return true;
+        return topColor(from) === topColor(to) && freeSlots(to) > 0;
+      }
+      function refreshEmbroidery() {
+        const next = [];
+        const solved = new Set(state.spools.filter((spool) => solvedSpool(spool)).map((spool) => spool[0]));
+        LEVEL.embroidery.forEach((row, y) => row.forEach((color, x) => {
+          if (solved.has(color)) next.push({ x, y, color });
+        }));
+        state.stitched = next;
+      }
+      function reset() {
+        state.spools = cloneLevel();
+        state.selected = null;
+        state.moves = 0;
+        state.mode = 'playing';
+        state.stitched = [];
+        refreshEmbroidery();
+        render();
+      }
+      function pour(from, to) {
+        if (!canPour(from, to) || state.mode !== 'playing') return false;
+        const amount = Math.min(topRun(from), freeSlots(to));
+        const color = topColor(from);
+        for (let i = 0; i < amount; i++) {
+          state.spools[from].pop();
+          state.spools[to].push(color);
+        }
+        state.moves += 1;
+        state.selected = null;
+        refreshEmbroidery();
+        if (checkWin()) state.mode = 'won';
+        render();
+        return true;
+      }
+      function spoolAt(x, y) {
+        return spoolRects.findIndex((spool) => x >= spool.x && x <= spool.x + spool.w && y >= spool.y && y <= spool.y + spool.h);
+      }
+      function handleTap(index) {
+        if (index < 0 || state.mode !== 'playing') return;
+        const spool = state.spools[index];
+        if (state.selected == null) {
+          if (!spool.length) return;
+          state.selected = index;
+          render();
+          return;
+        }
+        if (state.selected === index) {
+          state.selected = null;
+          render();
+          return;
+        }
+        if (!pour(state.selected, index)) {
+          if (spool.length) state.selected = index;
+          else state.selected = null;
+          render();
+        }
+      }
+      function pointer(event) {
+        const box = canvas.getBoundingClientRect();
+        const x = (event.clientX - box.left) * canvas.width / box.width;
+        const y = (event.clientY - box.top) * canvas.height / box.height;
+        handleTap(spoolAt(x, y));
+      }
+      function drawEmbroidery() {
+        const ox = 28;
+        const oy = 24;
+        const cell = 18;
+        ctx.fillStyle = 'rgba(255,255,255,.06)';
+        ctx.beginPath();
+        ctx.roundRect(18, 16, 208, 132, 24);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.12)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        for (let y = 0; y < LEVEL.embroidery.length; y++) {
+          for (let x = 0; x < LEVEL.embroidery[y].length; x++) {
+            ctx.fillStyle = 'rgba(255,255,255,.05)';
+            ctx.fillRect(ox + x * cell, oy + y * cell, cell - 2, cell - 2);
+          }
+        }
+        state.stitched.forEach((stitch) => {
+          const meta = THEME.colors[stitch.color];
+          const px = ox + stitch.x * cell + 1;
+          const py = oy + stitch.y * cell + 1;
+          ctx.fillStyle = meta.fill;
+          ctx.fillRect(px, py, cell - 4, cell - 4);
+          ctx.strokeStyle = 'rgba(255,255,255,.48)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          ctx.moveTo(px + 3, py + 3);
+          ctx.lineTo(px + cell - 7, py + cell - 7);
+          ctx.moveTo(px + cell - 7, py + 3);
+          ctx.lineTo(px + 3, py + cell - 7);
+          ctx.stroke();
+        });
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 18px sans-serif';
+        ctx.fillText(THEME.heading, 244, 42);
+        ctx.fillStyle = 'rgba(255,255,255,.74)';
+        ctx.font = '700 11px sans-serif';
+        ctx.fillText(THEME.subheading, 244, 60);
+      }
+      function drawSpool(spool, index) {
+        const rect = spoolRects[index];
+        const selected = state.selected === index;
+        const targetable = state.selected != null && canPour(state.selected, index);
+        const solved = solvedSpool(spool);
+        ctx.save();
+        ctx.fillStyle = solved ? 'rgba(255,255,255,.14)' : THEME.panel;
+        ctx.strokeStyle = targetable ? THEME.accent : selected ? '#fff4d4' : THEME.line;
+        ctx.lineWidth = selected || targetable ? 3.5 : 2;
+        ctx.beginPath();
+        ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 26);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.12)';
+        ctx.fillRect(rect.x + 18, rect.y + 14, rect.w - 36, 10);
+        ctx.fillRect(rect.x + 18, rect.y + rect.h - 24, rect.w - 36, 10);
+        for (let i = 0; i < LEVEL.capacity; i++) {
+          const colorKey = spool[i];
+          const cy = rect.y + rect.h - 42 - i * 26;
+          if (colorKey) {
+            const meta = THEME.colors[colorKey];
+            ctx.strokeStyle = meta.fill;
+            ctx.lineWidth = 12;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(rect.x + 24, cy);
+            ctx.bezierCurveTo(rect.x + 40, cy - 12, rect.x + 52, cy + 12, rect.x + 68, cy);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(rect.x + 26, cy + 9);
+            ctx.bezierCurveTo(rect.x + 42, cy - 3, rect.x + 54, cy + 21, rect.x + 70, cy + 9);
+            ctx.stroke();
+          } else {
+            ctx.strokeStyle = 'rgba(255,255,255,.08)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(rect.x + 24, cy + 4);
+            ctx.lineTo(rect.x + 68, cy + 4);
+            ctx.stroke();
+          }
+        }
+        if (selected) {
+          ctx.fillStyle = THEME.accent;
+          ctx.font = '900 12px sans-serif';
+          ctx.fillText(THEME.selectedLabel, rect.x + 20, rect.y - 10);
+        } else if (solved) {
+          ctx.fillStyle = '#fff3c4';
+          ctx.font = '900 12px sans-serif';
+          ctx.fillText(THEME.doneCopy, rect.x + 18, rect.y - 10);
+        }
+        ctx.restore();
+      }
+      function render() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, THEME.bgA);
+        bg.addColorStop(1, THEME.bgB);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+        drawEmbroidery();
+        state.spools.forEach((spool, index) => drawSpool(spool, index));
+        document.getElementById('moveText').textContent = THEME.moveLabel + ' ' + state.moves;
+        document.getElementById('progressText').textContent = THEME.artLabel + ' ' + solvedCount() + ' / 4';
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? THEME.winCopy
+          : state.selected == null
+            ? THEME.idleCopy
+            : '把顶层连续同色绕到空卷轴，或绕到同色顶层卷轴。';
+      }
+      canvas.addEventListener('pointerdown', pointer);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 wool sort board with embroidery preview',
+        mode: state.mode,
+        selected: state.selected,
+        moves: state.moves,
+        solved: solvedCount(),
+        tops: state.spools.map((spool) => spool.length ? spool[spool.length - 1] : null),
+        spools: state.spools.map((spool) => spool.slice()),
+        stitched: state.stitched.length
+      });
+    `,
+  };
+}
+
+const woolSortBaseGame = createWoolSortGame({
+  id: 'wool-sort-fake',
+  file: 'wool-sort-fake.html',
+  title: '线团绣图局',
+  sourceGame: 'Wool Sort 式绕线分拣 + 像素绣图显现',
+  accent: '#f472b6',
+  summary: '按同色把线团倒进空卷轴或同色卷轴，四卷归齐后整张绣图才会完整显出来。',
+  heading: '线团绣图局',
+  subheading: '热门 Wool Sort 复刻 · 绕线归色后，像素绣片会一块块亮出来',
+  moveLabel: '绕线',
+  hintLabel: '点一卷选中',
+  selectedLabel: '已选',
+  artLabel: '绣片',
+  doneCopy: '已绣好',
+  winCopy: '四色线团都理顺了，整张绣片也终于收针。',
+  idleCopy: '先选一卷，再把顶层同色绕到空卷轴或同色顶层。',
+  bgA: '#261228',
+  bgB: '#0f0913',
+  panel: 'rgba(255,255,255,.08)',
+  line: 'rgba(255,214,234,.34)',
+  colors: {
+    coral: { fill: '#fb7185' },
+    sky: { fill: '#67e8f9' },
+    gold: { fill: '#fbbf24' },
+    mint: { fill: '#86efac' },
+  },
+});
+
+const officeWoolRemixGame = createWoolSortGame({
+  id: 'office-loom-sort',
+  file: 'office-loom-sort.html',
+  title: '工位理线板',
+  sourceGame: '线团绣图局 Remix',
+  accent: '#60a5fa',
+  summary: '把绣线改成工位排线：四种线束理顺后，面板上的工牌像素图才会完整亮起。',
+  heading: '工位理线板',
+  subheading: '二创版 · 把绣图换成工牌面板，理线动作还是那套短局节奏',
+  moveLabel: '排线',
+  hintLabel: '点一卷选中',
+  selectedLabel: '已夹',
+  artLabel: '工牌图',
+  doneCopy: '已归束',
+  winCopy: '四路线束都夹顺了，整块工牌面板终于亮全。',
+  idleCopy: '先选一卷，再把顶层同色线束绕进空轴或同色线轴。',
+  bgA: '#132234',
+  bgB: '#081019',
+  panel: 'rgba(182,220,255,.08)',
+  line: 'rgba(151,213,255,.34)',
+  colors: {
+    coral: { fill: '#fb7185' },
+    sky: { fill: '#60a5fa' },
+    gold: { fill: '#fbbf24' },
+    mint: { fill: '#34d399' },
+  },
+});
+
+function createPixelFlowGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    queueLabel: config.queueLabel,
+    slotLabel: config.slotLabel,
+    overflowLabel: config.overflowLabel,
+    readyCopy: config.readyCopy,
+    jamCopy: config.jamCopy,
+    bgA: config.bgA,
+    bgB: config.bgB,
+    belt: config.belt,
+    beltGlow: config.beltGlow,
+    panel: config.panel,
+    targetBack: config.targetBack,
+    colors: config.colors,
+    pixels: config.pixels,
+    queuePattern: config.queuePattern,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '环流',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact stack">
+        <div class="row"><b id="queueText"></b><span id="overflowText"></span></div>
+        <div class="tray" id="slotRack"></div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">重开这一环</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const pathPoints = [
+        { x: 92, y: 94 }, { x: 150, y: 94 }, { x: 208, y: 94 }, { x: 266, y: 94 }, { x: 324, y: 94 },
+        { x: 324, y: 150 }, { x: 324, y: 206 }, { x: 324, y: 262 }, { x: 324, y: 318 },
+        { x: 266, y: 374 }, { x: 208, y: 374 }, { x: 150, y: 374 }, { x: 92, y: 374 },
+        { x: 92, y: 318 }, { x: 92, y: 262 }, { x: 92, y: 206 }, { x: 92, y: 150 }
+      ];
+      const pixelCells = THEME.pixels.map((color, index) => ({
+        color,
+        painted: false,
+        x: 141 + (index % 4) * 28,
+        y: 168 + Math.floor(index / 4) * 28
+      }));
+      const spawnEvery = 2;
+      const maxOverflow = 5;
+      const slotAmmo = 3;
+      const state = {
+        carriers: [],
+        slots: [],
+        queueIndex: 0,
+        tick: 0,
+        spawnCursor: 0,
+        nextColor: '',
+        overflow: 0,
+        painted: 0,
+        score: 0,
+        mode: 'playing'
+      };
+      function colorMeta(key) {
+        return THEME.colors[key];
+      }
+      function nextQueueColor() {
+        const key = THEME.queuePattern[state.queueIndex % THEME.queuePattern.length];
+        state.queueIndex += 1;
+        return key;
+      }
+      function reset() {
+        state.carriers = [];
+        state.slots = Array.from({ length: 5 }, () => null);
+        state.queueIndex = 0;
+        state.tick = 0;
+        state.spawnCursor = 0;
+        state.nextColor = nextQueueColor();
+        state.overflow = 0;
+        state.painted = 0;
+        state.score = 0;
+        state.mode = 'playing';
+        pixelCells.forEach((cell) => { cell.painted = false; });
+        render();
+      }
+      function slotState(slot) {
+        if (!slot) return 'empty';
+        return slot.spent ? 'spent' : 'armed';
+      }
+      function deploy(slotIndex) {
+        if (state.mode !== 'playing') return;
+        const slot = state.slots[slotIndex];
+        if (!slot) {
+          state.slots[slotIndex] = { color: state.nextColor, ammo: slotAmmo, spent: false, flash: 18 };
+          state.nextColor = nextQueueColor();
+        } else if (slot.spent) {
+          state.slots[slotIndex] = null;
+        }
+        if (state.slots.every((item) => item && item.spent)) state.mode = 'lost';
+        render();
+      }
+      function paintPixel(color) {
+        const target = pixelCells.find((cell) => !cell.painted && cell.color === color);
+        if (!target) return false;
+        target.painted = true;
+        state.painted += 1;
+        state.score += 10;
+        if (state.painted >= pixelCells.length) state.mode = 'won';
+        return true;
+      }
+      function fireSlots() {
+        for (const slot of state.slots) {
+          if (!slot || slot.spent || state.mode !== 'playing') continue;
+          const target = state.carriers.find((carrier) => carrier.step >= 2 && carrier.step <= 12 && carrier.color === slot.color);
+          if (!target) continue;
+          target.hit = true;
+          slot.ammo -= 1;
+          slot.flash = 8;
+          paintPixel(slot.color);
+          if (slot.ammo <= 0) slot.spent = true;
+        }
+        state.carriers = state.carriers.filter((carrier) => !carrier.hit);
+      }
+      function moveCarriers() {
+        const survivors = [];
+        for (const carrier of state.carriers) {
+          carrier.step += 1;
+          if (carrier.step >= pathPoints.length) {
+            state.overflow += 1;
+            if (state.overflow >= maxOverflow) state.mode = 'lost';
+          } else {
+            survivors.push(carrier);
+          }
+        }
+        state.carriers = survivors;
+      }
+      function spawnCarrier() {
+        if (state.mode !== 'playing') return;
+        if (state.tick % spawnEvery !== 0) return;
+        if (state.carriers.some((carrier) => carrier.step === 0)) return;
+        const color = THEME.queuePattern[state.spawnCursor % THEME.queuePattern.length];
+        state.spawnCursor += 1;
+        state.carriers.push({ color, step: 0, wobble: (state.spawnCursor % 3) * 0.35 });
+      }
+      function step() {
+        if (state.mode !== 'playing') return render();
+        state.tick += 1;
+        moveCarriers();
+        spawnCarrier();
+        fireSlots();
+        if (state.slots.every((item) => item && item.spent)) state.mode = 'lost';
+        render();
+      }
+      function drawTarget() {
+        ctx.fillStyle = THEME.targetBack;
+        ctx.beginPath();
+        ctx.roundRect(123, 148, 144, 144, 24);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.18)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        pixelCells.forEach((cell) => {
+          const meta = colorMeta(cell.color);
+          ctx.fillStyle = cell.painted ? meta.fill : 'rgba(255,255,255,.08)';
+          ctx.fillRect(cell.x, cell.y, 22, 22);
+          ctx.strokeStyle = cell.painted ? 'rgba(255,255,255,.72)' : 'rgba(255,255,255,.12)';
+          ctx.strokeRect(cell.x, cell.y, 22, 22);
+        });
+      }
+      function drawBelt() {
+        ctx.strokeStyle = THEME.belt;
+        ctx.lineWidth = 18;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+        for (let i = 1; i < pathPoints.length; i++) ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.strokeStyle = THEME.beltGlow;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      function drawCarrier(carrier) {
+        const point = pathPoints[carrier.step];
+        if (!point) return;
+        const meta = colorMeta(carrier.color);
+        ctx.save();
+        ctx.translate(point.x, point.y + Math.sin((state.tick + carrier.wobble) * 0.6) * 2);
+        ctx.fillStyle = meta.fill;
+        ctx.beginPath();
+        ctx.roundRect(-16, -12, 32, 24, 8);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.76)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#120d16';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(meta.glyph, 0, 1);
+        ctx.restore();
+      }
+      function drawPorts() {
+        const startX = 72;
+        for (let i = 0; i < 5; i++) {
+          const x = startX + i * 60;
+          const slot = state.slots[i];
+          ctx.fillStyle = slot ? (slot.spent ? '#3b2436' : THEME.panel) : 'rgba(255,255,255,.06)';
+          ctx.beginPath();
+          ctx.roundRect(x, 438, 46, 58, 14);
+          ctx.fill();
+          ctx.strokeStyle = slot ? 'rgba(255,255,255,.24)' : 'rgba(255,255,255,.12)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.font = '900 11px sans-serif';
+          ctx.textAlign = 'center';
+          if (!slot) {
+            ctx.fillStyle = 'rgba(255,255,255,.46)';
+            ctx.fillText('空槽', x + 23, 470);
+          } else {
+            const meta = colorMeta(slot.color);
+            ctx.fillStyle = meta.fill;
+            ctx.font = '900 22px sans-serif';
+            ctx.fillText(meta.glyph, x + 23, 462);
+            ctx.fillStyle = slot.spent ? '#ff9cb8' : '#fff';
+            ctx.font = '900 11px sans-serif';
+            ctx.fillText(slot.spent ? '点按清槽' : '电量 ' + slot.ammo, x + 23, 482);
+          }
+        }
+        ctx.textAlign = 'left';
+      }
+      function syncRack() {
+        const rack = document.getElementById('slotRack');
+        rack.innerHTML = state.slots.map((slot, index) => {
+          const stateText = slotState(slot);
+          const label = !slot
+            ? '部署'
+            : slot.spent
+              ? '清槽'
+              : colorMeta(slot.color).label + ' ' + slot.ammo;
+          return '<button class="chip ' + (stateText === 'spent' ? 'picked' : '') + '" data-slot="' + index + '">' + label + '<small>' + THEME.slotLabel + ' ' + (index + 1) + '</small></button>';
+        }).join('');
+      }
+      function render() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, THEME.bgA);
+        bg.addColorStop(1, THEME.bgB);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 26px sans-serif';
+        ctx.fillText(THEME.heading, 24, 42);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.subheading, 24, 62);
+        drawBelt();
+        drawTarget();
+        state.carriers.forEach(drawCarrier);
+        drawPorts();
+        document.getElementById('queueText').textContent = THEME.queueLabel + ' ' + colorMeta(state.nextColor).label;
+        document.getElementById('overflowText').textContent = THEME.overflowLabel + ' ' + state.overflow + '/' + maxOverflow;
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? THEME.readyCopy
+          : state.mode === 'lost'
+            ? THEME.jamCopy
+            : '已点亮 ' + state.painted + '/' + pixelCells.length + ' 格 · 分数 ' + state.score + ' · 点空槽部署，点废槽清走。';
+        syncRack();
+      }
+      document.getElementById('slotRack').addEventListener('click', (event) => {
+        const target = event.target.closest('[data-slot]');
+        if (!target) return;
+        deploy(Number(target.dataset.slot || 0));
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(step, 260);
+      window.advanceTime = (ms) => {
+        const steps = Math.max(1, Math.round(ms / 260));
+        for (let i = 0; i < steps; i++) step();
+      };
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 conveyor loop around 4x4 pixel target',
+        mode: state.mode,
+        score: state.score,
+        overflow: state.overflow,
+        next: colorMeta(state.nextColor).label,
+        painted: state.painted,
+        carriers: state.carriers.map((carrier) => ({ color: carrier.color, step: carrier.step })),
+        slots: state.slots.map((slot) => slot ? { color: slot.color, ammo: slot.ammo, spent: slot.spent } : null)
+      });
+    `,
+  };
+}
+
+const pixelFlowGame = createPixelFlowGame({
+  id: 'pixel-loop-fake',
+  file: 'pixel-loop-fake.html',
+  title: '像素环流局',
+  sourceGame: 'Pixel Flow 式实时环带清色',
+  accent: '#ff8a4c',
+  summary: '彩块沿环带绕图跑，点空槽部署同色清扫头，五格废槽全堵就崩盘。',
+  heading: '像素环流局',
+  subheading: '热点复刻 · 环带输送、同色清扫、五槽堵死即翻车',
+  queueLabel: '下个清扫头',
+  slotLabel: '工位',
+  overflowLabel: '漏件',
+  readyCopy: '整张像素图被你点亮了，这一环算是干净闭合。',
+  jamCopy: '漏件太多，或者五个工位全成废槽，这环已经堵死了。',
+  bgA: '#190f17',
+  bgB: '#07080d',
+  belt: '#2f2433',
+  beltGlow: '#ffb067',
+  panel: 'rgba(255,176,103,.18)',
+  targetBack: 'rgba(255,255,255,.06)',
+  colors: {
+    coral: { fill: '#ff8a4c', glyph: '焰', label: '焰块' },
+    aqua: { fill: '#4de7d5', glyph: '浪', label: '浪块' },
+    lime: { fill: '#b6ef63', glyph: '芽', label: '芽块' },
+    violet: { fill: '#c193ff', glyph: '雾', label: '雾块' },
+  },
+  pixels: ['coral','aqua','lime','violet','coral','coral','aqua','violet','lime','lime','violet','aqua','coral','aqua','lime','violet'],
+  queuePattern: ['coral','aqua','lime','violet','coral','lime','aqua','violet','coral','aqua','lime','violet']
+});
+
+const officePixelRemixGame = createPixelFlowGame({
+  id: 'overtime-pixel-loop',
+  file: 'overtime-pixel-loop.html',
+  title: '加班像素回路',
+  sourceGame: '像素环流局 Remix',
+  accent: '#6ee7ff',
+  summary: '把彩块改成工位杂务，还是同一套环带压力局，但更像夜班清单在绕圈追你。',
+  heading: '加班像素回路',
+  subheading: '二创版 · 工牌、邮件、表格、报销在环带上轮番压来',
+  queueLabel: '下个处理头',
+  slotLabel: '夜班槽',
+  overflowLabel: '堆单',
+  readyCopy: '这一屏夜班杂务总算被你清完，工位短暂恢复呼吸。',
+  jamCopy: '堆单炸了，五个夜班槽也全报废，这班已经彻底卡死。',
+  bgA: '#081018',
+  bgB: '#05070a',
+  belt: '#1a2a34',
+  beltGlow: '#7ce9ff',
+  panel: 'rgba(124,233,255,.16)',
+  targetBack: 'rgba(255,255,255,.05)',
+  colors: {
+    coral: { fill: '#ff8f70', glyph: '邮', label: '邮件' },
+    aqua: { fill: '#6ee7ff', glyph: '表', label: '表格' },
+    lime: { fill: '#b8f97c', glyph: '会', label: '会议' },
+    violet: { fill: '#c6a3ff', glyph: '销', label: '报销' },
+  },
+  pixels: ['coral','coral','aqua','violet','lime','aqua','aqua','violet','lime','lime','violet','coral','aqua','coral','lime','violet'],
+  queuePattern: ['coral','aqua','violet','lime','coral','aqua','lime','violet','coral','lime','aqua','violet']
+});
+
+const gooseRemixWarmupLevel = {
+  tileWidth: gooseLevel.tileWidth,
+  tileHeight: gooseLevel.tileHeight,
+  slots: gooseLevel.slots,
+  goose: gooseLevel.goose,
+  tiles: [
+    { id: 0, icon: 'shrimp', x: 48, y: 118, z: 0 },
+    { id: 1, icon: 'corn', x: 118, y: 118, z: 0 },
+    { id: 2, icon: 'lotus', x: 188, y: 118, z: 0 },
+    { id: 3, icon: 'tofu', x: 258, y: 118, z: 0 },
+    { id: 4, icon: 'shrimp', x: 83, y: 182, z: 1 },
+    { id: 5, icon: 'corn', x: 153, y: 182, z: 1 },
+    { id: 6, icon: 'lotus', x: 223, y: 182, z: 1 },
+    { id: 7, icon: 'tofu', x: 118, y: 248, z: 2 },
+    { id: 8, icon: 'shrimp', x: 188, y: 248, z: 2 },
+    { id: 9, icon: 'corn', x: 83, y: 314, z: 1 },
+    { id: 10, icon: 'lotus', x: 153, y: 314, z: 1 },
+    { id: 11, icon: 'tofu', x: 223, y: 314, z: 1 },
+  ],
+};
+
+const gooseRushRemixGame = {
+  id: 'midnight-goose-rush',
+  file: 'midnight-goose-rush.html',
+  title: '夜宵颠锅抓鸽王',
+  kind: '堆叠',
+  sourceGame: '摸鱼捞大鸽 Remix',
+  accent: '#f97316',
+  summary: '把抓大鹅的热身关和陡增二关压成一个更贴脸的夜宵锅局。',
+  canvas: true,
+  markup: `
+    <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+    <section class="panel compact">
+      <div class="row"><b id="stageText">第 1 锅</b><span id="timerText">0 秒</span></div>
+      <div class="tray" id="tray"></div>
+      <p id="statusText"></p>
+      <div class="stack">
+        <button class="primary" id="shakeBtn">颠锅 x0</button>
+        <button class="choice" id="resetBtn">重开这锅</button>
+      </div>
+    </section>
+  `,
+  script: `
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const LEVELS = [
+      { id: 1, label: '热身锅', time: 24, shakes: 1, gooseTitle: '第一锅只给你练手', board: ${JSON.stringify(gooseRemixWarmupLevel)} },
+      {
+        id: 2,
+        label: '正片锅',
+        time: 48,
+        shakes: 3,
+        gooseTitle: '第二锅开始真上强度',
+        board: ${JSON.stringify({
+          ...gooseLevel,
+          tiles: gooseLevel.tiles.map((tile, index) => ({
+            ...tile,
+            icon: ['shrimp', 'corn', 'lotus', 'tofu', 'pepper', 'fishball'][index % 6],
+          })),
+        })}
+      }
+    ];
+    const TILE_W = LEVELS[0].board.tileWidth;
+    const TILE_H = LEVELS[0].board.tileHeight;
+    const iconSet = {
+      shrimp: { label: '虾', color: '#ff8b7b' },
+      corn: { label: '玉', color: '#ffd54f' },
+      lotus: { label: '藕', color: '#c4b5fd' },
+      tofu: { label: '豆', color: '#f8fafc' },
+      pepper: { label: '椒', color: '#fb7185' },
+      fishball: { label: '丸', color: '#7dd3fc' }
+    };
+    const state = { levelIndex: 0, tiles: [], tray: [], mode: 'playing', removed: 0, timeLeft: 0, shakes: 0, rescued: false, pulse: 0 };
+    function currentLevel() { return LEVELS[state.levelIndex]; }
+    function rect(tile) { return { left: tile.x, top: tile.y, right: tile.x + TILE_W, bottom: tile.y + TILE_H }; }
+    function overlapsRect(a, b) {
+      const ra = rect(a);
+      const rb = rect(b);
+      const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+      const h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+      return w > 0 && h > 0;
+    }
+    function overlapsGoose(tile) {
+      const goose = currentLevel().board.goose;
+      const tileCx = tile.x + TILE_W / 2;
+      const tileCy = tile.y + TILE_H / 2;
+      return Math.abs(tileCx - goose.x) < goose.radius + TILE_W * 0.38 && Math.abs(tileCy - goose.y) < goose.radius + TILE_H * 0.42;
+    }
+    function gooseFree() { return !state.tiles.some((tile) => tile.active && overlapsGoose(tile)); }
+    function free(tile) {
+      return tile.active && !state.tiles.some((other) => other.active && other.z > tile.z && overlapsRect(tile, other));
+    }
+    function loadLevel(index) {
+      const level = LEVELS[index];
+      state.levelIndex = index;
+      state.tiles = level.board.tiles.map((tile) => ({ ...tile, active: true }));
+      state.tray = [];
+      state.mode = 'playing';
+      state.removed = 0;
+      state.timeLeft = level.time;
+      state.shakes = level.shakes;
+      state.rescued = false;
+      state.pulse = 0;
+      render();
+    }
+    function reset() { loadLevel(0); }
+    function resolveTriples(icon) {
+      const count = state.tray.filter((item) => item === icon).length;
+      if (count < 3) return;
+      let removed = 0;
+      state.tray = state.tray.filter((item) => {
+        if (item === icon && removed < 3) {
+          removed += 1;
+          return false;
+        }
+        return true;
+      });
+      state.removed += 3;
+      state.pulse = 1;
+    }
+    function pickTile(tile) {
+      if (!tile || state.mode !== 'playing' || !free(tile)) return;
+      tile.active = false;
+      state.tray.push(tile.icon);
+      resolveTriples(tile.icon);
+      if (state.tray.length >= 7) state.mode = 'lost';
+      render();
+    }
+    function rescueGoose() {
+      if (state.mode !== 'playing' || !gooseFree()) return;
+      state.rescued = true;
+      state.mode = state.levelIndex === LEVELS.length - 1 ? 'won' : 'between';
+      state.pulse = 1;
+      render();
+    }
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+      }
+    }
+    function shakePan() {
+      if (state.mode !== 'playing' || state.shakes <= 0) return;
+      state.shakes -= 1;
+      state.timeLeft = Math.max(5, state.timeLeft - (state.levelIndex === 0 ? 2 : 4));
+      const board = currentLevel().board;
+      [0, 1, 2].forEach((z) => {
+        const active = state.tiles.filter((tile) => tile.active && tile.z === z);
+        const slots = board.slots.filter((slot) => slot.z === z).map((slot) => ({ x: slot.x, y: slot.y }));
+        shuffle(slots);
+        active.forEach((tile, index) => {
+          if (slots[index]) {
+            tile.x = slots[index].x;
+            tile.y = slots[index].y;
+          }
+        });
+      });
+      state.tiles.filter((tile) => tile.active && tile.z > 0).sort((a, b) => b.z - a.z).slice(0, state.levelIndex === 0 ? 2 : 4).forEach((tile) => { tile.z -= 1; });
+      state.pulse = 1;
+      render();
+    }
+    function pointer(ev) {
+      const box = canvas.getBoundingClientRect();
+      const x = (ev.clientX - box.left) * canvas.width / box.width;
+      const y = (ev.clientY - box.top) * canvas.height / box.height;
+      const goose = currentLevel().board.goose;
+      if (gooseFree() && Math.hypot(x - goose.x, y - goose.y) <= goose.radius + 10) {
+        rescueGoose();
+        return;
+      }
+      const top = state.tiles.filter((tile) => tile.active && x >= tile.x && x <= tile.x + TILE_W && y >= tile.y && y <= tile.y + TILE_H).sort((a, b) => b.z - a.z)[0];
+      pickTile(top);
+    }
+    function step(ms) {
+      if (state.mode !== 'playing') {
+        render();
+        return;
+      }
+      state.timeLeft = Math.max(0, state.timeLeft - ms / 1000);
+      state.pulse = Math.max(0, state.pulse - ms / 900);
+      if (state.timeLeft <= 0) state.mode = 'lost';
+      render();
+    }
+    function drawIcon(icon, cx, cy) {
+      const meta = iconSet[icon];
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.lineWidth = 2.1;
+      ctx.strokeStyle = '#1d1311';
+      if (icon === 'shrimp') {
+        ctx.fillStyle = meta.color;
+        ctx.beginPath(); ctx.arc(-2, 0, 12, 0.3, Math.PI * 1.8); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = '#fff3ea';
+        ctx.beginPath(); ctx.arc(-2, 0, 8, 0.5, Math.PI * 1.65); ctx.stroke();
+      } else if (icon === 'corn') {
+        ctx.fillStyle = meta.color;
+        ctx.beginPath(); ctx.roundRect(-7, -14, 14, 28, 7); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fff7c8';
+        for (let row = 0; row < 4; row++) {
+          for (let col = 0; col < 2; col++) ctx.fillRect(-5 + col * 6, -10 + row * 6, 4, 4);
+        }
+      } else if (icon === 'lotus') {
+        ctx.fillStyle = meta.color;
+        for (let i = -1; i <= 1; i++) {
+          ctx.beginPath(); ctx.arc(i * 8, 0, 7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        }
+      } else if (icon === 'tofu') {
+        ctx.fillStyle = meta.color;
+        ctx.beginPath(); ctx.roundRect(-14, -11, 28, 22, 6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#d1d5db';
+        ctx.fillRect(-8, -5, 16, 10);
+      } else if (icon === 'pepper') {
+        ctx.fillStyle = meta.color;
+        ctx.beginPath(); ctx.moveTo(-12, 2); ctx.quadraticCurveTo(-6, -16, 9, -10); ctx.quadraticCurveTo(13, 5, -2, 12); ctx.closePath(); ctx.fill(); ctx.stroke();
+      } else if (icon === 'fishball') {
+        ctx.fillStyle = meta.color;
+        ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#eff6ff';
+        ctx.beginPath(); ctx.arc(-4, -4, 3, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+    function drawGoose() {
+      const goose = currentLevel().board.goose;
+      ctx.save();
+      ctx.translate(goose.x, goose.y + Math.sin((96 - state.timeLeft) * 3) * 2);
+      ctx.globalAlpha = gooseFree() ? 1 : 0.26;
+      ctx.fillStyle = gooseFree() ? '#fff1c4' : '#56473c';
+      ctx.strokeStyle = '#23120f';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 10, 28 + state.pulse * 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(16, -18, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath(); ctx.moveTo(28, -18); ctx.lineTo(40, -13); ctx.lineTo(28, -7); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#17121d';
+      ctx.beginPath(); ctx.arc(18, -20, 2.1, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    function render() {
+      const level = currentLevel();
+      ctx.fillStyle = '#120906';
+      ctx.fillRect(0, 0, 390, 560);
+      const topGrad = ctx.createLinearGradient(0, 0, 0, 108);
+      topGrad.addColorStop(0, '#5f1b0f');
+      topGrad.addColorStop(1, '#24100d');
+      ctx.fillStyle = topGrad;
+      ctx.beginPath(); ctx.roundRect(18, 18, 354, 68, 24); ctx.fill();
+      ctx.fillStyle = '#fff8ef';
+      ctx.font = '900 27px sans-serif';
+      const title = state.mode === 'between' ? '第一锅过了' : state.mode === 'won' ? '鸽王拿下' : '夜宵颠锅抓鸽王';
+      ctx.fillText(title, 30, 54);
+      ctx.fillStyle = '#ffd1ac';
+      ctx.font = '700 13px sans-serif';
+      ctx.fillText('抖音热榜同源节奏 · ' + level.label + ' · 剩 ' + state.tiles.filter((tile) => tile.active).length + ' 件', 30, 76);
+      ctx.fillStyle = '#5c2c16';
+      ctx.beginPath(); ctx.arc(195, 300, 152, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#8a401a';
+      ctx.beginPath(); ctx.arc(195, 300, 128, 0, Math.PI * 2); ctx.fill();
+      drawGoose();
+      state.tiles.filter((tile) => tile.active).sort((a, b) => a.z - b.z).forEach((tile) => {
+        const enabled = free(tile);
+        const depthOffset = tile.z * 5;
+        ctx.fillStyle = enabled ? '#fff0df' : '#7b5c4b';
+        ctx.strokeStyle = enabled ? '#ffffff' : '#46342d';
+        ctx.lineWidth = enabled ? 2.1 : 1.1;
+        ctx.beginPath(); ctx.roundRect(tile.x, tile.y - depthOffset, TILE_W, TILE_H, 10); ctx.fill(); ctx.stroke();
+        drawIcon(tile.icon, tile.x + TILE_W / 2, tile.y + TILE_H / 2 - depthOffset);
+        if (!enabled) {
+          ctx.fillStyle = 'rgba(16,8,6,.16)';
+          ctx.fillRect(tile.x + 4, tile.y + 3 - depthOffset, TILE_W - 8, TILE_H - 8);
+        }
+      });
+      if (gooseFree() && !state.rescued && state.mode === 'playing') {
+        ctx.fillStyle = '#fff4cf';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('锅底露鸽了，点它直接收工', 195, 468);
+        ctx.textAlign = 'left';
+      }
+      document.getElementById('tray').innerHTML = Array.from({ length: 7 }, (_, i) => '<span>' + (state.tray[i] ? iconSet[state.tray[i]].label : '') + '</span>').join('');
+      document.getElementById('stageText').textContent = '第 ' + level.id + ' 锅';
+      document.getElementById('timerText').textContent = Math.ceil(state.timeLeft) + ' 秒';
+      document.getElementById('statusText').textContent = state.mode === 'between'
+        ? '第一锅只是热身，第二锅才是榜单里真正折磨人的那一锅。'
+        : state.mode === 'won'
+          ? '两锅都过了，锅底那只鸽王也被你拎走了。'
+          : state.mode === 'lost'
+            ? (state.timeLeft <= 0 ? '时间到了，锅还没翻干净。' : '暂存栏爆了，这锅只能重开。')
+            : '可点 ' + state.tiles.filter(free).length + ' · 已消 ' + state.removed + ' · 颠锅剩 ' + state.shakes + ' · ' + level.gooseTitle;
+      document.getElementById('shakeBtn').textContent = state.mode === 'between' ? '进第二锅' : '颠锅 x' + state.shakes;
+      document.getElementById('resetBtn').textContent = state.mode === 'won' ? '从第一锅重开' : '重开这锅';
+    }
+    canvas.addEventListener('pointerdown', pointer);
+    document.getElementById('shakeBtn').addEventListener('click', () => {
+      if (state.mode === 'between') {
+        loadLevel(state.levelIndex + 1);
+        return;
+      }
+      shakePan();
+    });
+    document.getElementById('resetBtn').addEventListener('click', reset);
+    reset();
+    setInterval(() => step(200), 200);
+    window.advanceTime = (ms) => step(ms);
+    window.render_game_to_text = () => JSON.stringify({
+      coordinate_system: 'canvas 390x560 origin top-left',
+      mode: state.mode,
+      stage: currentLevel().id,
+      tray: state.tray,
+      remaining: state.tiles.filter((tile) => tile.active).length,
+      free: state.tiles.filter(free).length,
+      removed: state.removed,
+      timeLeft: Number(state.timeLeft.toFixed(1)),
+      shakes: state.shakes,
+      gooseFree: gooseFree(),
+      rescued: state.rescued
+    });
+  `,
+};
+
+function createZenLogicGame(config) {
+  const theme = {
+    tokenGlyph: config.tokenGlyph,
+    tokenNoun: config.tokenNoun,
+    intro: config.intro,
+    hintLead: config.hintLead,
+    winCopy: config.winCopy,
+    regionColors: config.regionColors,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    panel: config.panel,
+    blocked: config.blocked,
+  };
+  const regionMap = [
+    ['A', 'A', 'B', 'B', 'C', 'C'],
+    ['A', 'A', 'B', 'B', 'C', 'C'],
+    ['D', 'D', 'B', 'E', 'C', 'C'],
+    ['D', 'D', 'E', 'E', 'F', 'F'],
+    ['D', 'E', 'E', 'E', 'F', 'F'],
+    ['D', 'E', 'F', 'F', 'F', 'F'],
+  ];
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '逻辑',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="countText">已放 0 / 6</b><span id="hintText">唯一候选 0</span></div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">重开这盘</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const SIZE = 6;
+      const CELL = 48;
+      const BOARD_X = 51;
+      const BOARD_Y = 106;
+      const REGION_MAP = ${JSON.stringify(regionMap)};
+      const THEME = ${JSON.stringify(theme)};
+      const REGION_KEYS = ['A', 'B', 'C', 'D', 'E', 'F'];
+      const state = { queens: [], mode: 'playing', forced: [], note: '', invalidTaps: 0 };
+      window.__ZEN_LOGIC_DEBUG__ = { regions: REGION_MAP, size: SIZE, theme: THEME };
+      function key(row, col) {
+        return row + '-' + col;
+      }
+      function hasQueen(row, col) {
+        return state.queens.some((queen) => queen.row === row && queen.col === col);
+      }
+      function queenInRow(row) {
+        return state.queens.some((queen) => queen.row === row);
+      }
+      function queenInCol(col) {
+        return state.queens.some((queen) => queen.col === col);
+      }
+      function queenInRegion(region) {
+        return state.queens.some((queen) => REGION_MAP[queen.row][queen.col] === region);
+      }
+      function blockedReason(row, col) {
+        for (const queen of state.queens) {
+          if (queen.row === row) return '这一行已经放过了';
+          if (queen.col === col) return '这一列已经放过了';
+          if (REGION_MAP[queen.row][queen.col] === REGION_MAP[row][col]) return '这个色块已经放过了';
+          if (Math.abs(queen.row - row) <= 1 && Math.abs(queen.col - col) <= 1) return '它会和已放目标挨在一起';
+        }
+        return '';
+      }
+      function cellBlocked(row, col) {
+        return !hasQueen(row, col) && Boolean(blockedReason(row, col));
+      }
+      function candidatesForCells(cells) {
+        return cells.filter(([row, col]) => !hasQueen(row, col) && !cellBlocked(row, col));
+      }
+      function forcedKeys() {
+        const forced = new Set();
+        for (let row = 0; row < SIZE; row += 1) {
+          if (queenInRow(row)) continue;
+          const cells = Array.from({ length: SIZE }, (_, col) => [row, col]);
+          const candidates = candidatesForCells(cells);
+          if (candidates.length === 1) forced.add(key(candidates[0][0], candidates[0][1]));
+        }
+        for (let col = 0; col < SIZE; col += 1) {
+          if (queenInCol(col)) continue;
+          const cells = Array.from({ length: SIZE }, (_, row) => [row, col]);
+          const candidates = candidatesForCells(cells);
+          if (candidates.length === 1) forced.add(key(candidates[0][0], candidates[0][1]));
+        }
+        for (const region of REGION_KEYS) {
+          if (queenInRegion(region)) continue;
+          const cells = [];
+          for (let row = 0; row < SIZE; row += 1) {
+            for (let col = 0; col < SIZE; col += 1) {
+              if (REGION_MAP[row][col] === region) cells.push([row, col]);
+            }
+          }
+          const candidates = candidatesForCells(cells);
+          if (candidates.length === 1) forced.add(key(candidates[0][0], candidates[0][1]));
+        }
+        return Array.from(forced);
+      }
+      function solved() {
+        if (state.queens.length !== SIZE) return false;
+        for (let row = 0; row < SIZE; row += 1) {
+          if (state.queens.filter((queen) => queen.row === row).length !== 1) return false;
+        }
+        for (let col = 0; col < SIZE; col += 1) {
+          if (state.queens.filter((queen) => queen.col === col).length !== 1) return false;
+        }
+        for (const region of REGION_KEYS) {
+          if (state.queens.filter((queen) => REGION_MAP[queen.row][queen.col] === region).length !== 1) return false;
+        }
+        for (let i = 0; i < state.queens.length; i += 1) {
+          for (let j = i + 1; j < state.queens.length; j += 1) {
+            const a = state.queens[i];
+            const b = state.queens[j];
+            if (Math.abs(a.row - b.row) <= 1 && Math.abs(a.col - b.col) <= 1) return false;
+          }
+        }
+        return true;
+      }
+      function recalc(nextNote) {
+        state.forced = forcedKeys();
+        state.note = nextNote || '';
+        state.mode = solved() ? 'won' : 'playing';
+        render();
+      }
+      function toggleCell(row, col) {
+        if (state.mode === 'won') {
+          reset();
+          return;
+        }
+        const existing = state.queens.findIndex((queen) => queen.row === row && queen.col === col);
+        if (existing >= 0) {
+          state.queens.splice(existing, 1);
+          recalc('撤回了一格，继续排。');
+          return;
+        }
+        const reason = blockedReason(row, col);
+        if (reason) {
+          state.invalidTaps += 1;
+          state.note = THEME.hintLead + reason;
+          render();
+          return;
+        }
+        state.queens.push({ row, col });
+        recalc('');
+      }
+      function pointer(event) {
+        const box = canvas.getBoundingClientRect();
+        const x = (event.clientX - box.left) * canvas.width / box.width;
+        const y = (event.clientY - box.top) * canvas.height / box.height;
+        const col = Math.floor((x - BOARD_X) / CELL);
+        const row = Math.floor((y - BOARD_Y) / CELL);
+        if (row < 0 || row >= SIZE || col < 0 || col >= SIZE) return;
+        toggleCell(row, col);
+      }
+      function drawBoard() {
+        const palette = THEME.regionColors;
+        for (let row = 0; row < SIZE; row += 1) {
+          for (let col = 0; col < SIZE; col += 1) {
+            const x = BOARD_X + col * CELL;
+            const y = BOARD_Y + row * CELL;
+            const regionIndex = REGION_KEYS.indexOf(REGION_MAP[row][col]);
+            ctx.fillStyle = palette[regionIndex];
+            ctx.fillRect(x, y, CELL - 2, CELL - 2);
+            if (cellBlocked(row, col)) {
+              ctx.fillStyle = THEME.blocked;
+              ctx.fillRect(x, y, CELL - 2, CELL - 2);
+              ctx.strokeStyle = 'rgba(255,255,255,.24)';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(x + 13, y + 13);
+              ctx.lineTo(x + CELL - 15, y + CELL - 15);
+              ctx.moveTo(x + CELL - 15, y + 13);
+              ctx.lineTo(x + 13, y + CELL - 15);
+              ctx.stroke();
+            }
+            if (state.forced.includes(key(row, col)) && !hasQueen(row, col)) {
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 3;
+              ctx.strokeRect(x + 6, y + 6, CELL - 14, CELL - 14);
+            }
+            if (hasQueen(row, col)) {
+              ctx.fillStyle = THEME.panel;
+              ctx.beginPath();
+              ctx.arc(x + CELL / 2 - 1, y + CELL / 2 - 1, 14, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '900 18px sans-serif';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(THEME.tokenGlyph, x + CELL / 2 - 1, y + CELL / 2 + 1);
+            }
+          }
+        }
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = 'rgba(255,255,255,.85)';
+        ctx.font = '800 12px sans-serif';
+        for (let i = 0; i < SIZE; i += 1) {
+          ctx.fillText(String(i + 1), BOARD_X + i * CELL + CELL / 2 - 1, BOARD_Y - 12);
+          ctx.fillText(String(i + 1), BOARD_X - 18, BOARD_Y + i * CELL + CELL / 2 + 4);
+        }
+      }
+      function render() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, THEME.bgTop);
+        gradient.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.9)';
+        ctx.font = '900 14px sans-serif';
+        ctx.fillText(THEME.intro, 24, 32);
+        ctx.fillStyle = 'rgba(255,255,255,.66)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText('每行、每列、每个色块各放 1 个，而且不能贴边相邻。', 24, 52);
+        drawBoard();
+        const placed = state.queens.length;
+        document.getElementById('countText').textContent = '已放 ' + placed + ' / ' + SIZE;
+        document.getElementById('hintText').textContent = '唯一候选 ' + state.forced.length;
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? THEME.winCopy
+          : state.note || ('还差 ' + (SIZE - placed) + ' 个 ' + THEME.tokenNoun + '。');
+      }
+      function reset() {
+        state.queens = [];
+        state.mode = 'playing';
+        state.forced = [];
+        state.note = '';
+        state.invalidTaps = 0;
+        recalc('');
+      }
+      canvas.addEventListener('pointerdown', pointer);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with 6x6 logic grid',
+        mode: state.mode,
+        token: THEME.tokenNoun,
+        placed: state.queens.length,
+        forced: state.forced.length,
+        invalidTaps: state.invalidTaps,
+        queens: state.queens.map((queen) => ({ row: queen.row, col: queen.col, region: REGION_MAP[queen.row][queen.col] }))
+      });
+    `,
+  };
+}
+
+const zenLogicBaseGame = createZenLogicGame({
+  id: 'zen-logic-fake',
+  file: 'zen-logic-fake.html',
+  title: '佛系排排坐',
+  sourceGame: '佛系消消消式数独 / Queens 混合逻辑盘',
+  accent: '#7ad79d',
+  summary: '看行列和色块把 6 只羊摆开，谁都不能挨着谁。',
+  tokenGlyph: '羊',
+  tokenNoun: '小羊',
+  intro: '热门逻辑盘复刻 · 色块唯一位',
+  hintLead: '这里不行：',
+  winCopy: '六只羊已经排开了，整盘逻辑成立。',
+  regionColors: ['#86d5a2', '#76c5df', '#f1b970', '#c79af4', '#f08f9d', '#8dc3ff'],
+  bgTop: '#0c2d1f',
+  bgBottom: '#102319',
+  panel: '#214b34',
+  blocked: 'rgba(15,24,18,.42)',
+});
+
+const meetingGridlockGame = createZenLogicGame({
+  id: 'meeting-gridlock',
+  file: 'meeting-gridlock.html',
+  title: '会议室别挨着',
+  sourceGame: '佛系消消消式逻辑盘 · 会议座位二创',
+  accent: '#7cc8ff',
+  summary: '给 6 组参会人分座：每行每列每区各一位，而且谁也别紧挨着坐。',
+  tokenGlyph: '人',
+  tokenNoun: '参会人',
+  intro: '会议座位二创 · 谁都别贴着坐',
+  hintLead: '这格冲突：',
+  winCopy: '所有参会人都被隔开了，这场会总算能开。',
+  regionColors: ['#7cc8ff', '#68d6b0', '#f7bd6d', '#fb8aa5', '#b58ef7', '#8eb2ff'],
+  bgTop: '#0b1e31',
+  bgBottom: '#0f1725',
+  panel: '#183149',
+  blocked: 'rgba(9,16,24,.44)',
+});
+
+function createSnakeGame(config) {
+  const theme = {
+    hudLead: config.hudLead,
+    goalCopy: config.goalCopy,
+    boostCopy: config.boostCopy,
+    arenaTitle: config.arenaTitle,
+    boostLabel: config.boostLabel,
+    baseColor: config.baseColor,
+    boostColor: config.boostColor,
+    pelletA: config.pelletA,
+    pelletB: config.pelletB,
+    arenaTop: config.arenaTop,
+    arenaBottom: config.arenaBottom,
+    ring: config.ring,
+    grid: config.grid,
+    botNames: config.botNames,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '竞技',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="stat-row"><b id="snakeScore">长度 12</b><span id="snakeRank">第 5 名</span></div>
+        <p id="snakeStatus">${theme.goalCopy}</p>
+        <div class="button-row">
+          <button class="choice" id="boostBtn">${theme.boostLabel}</button>
+          <button class="primary" id="resetBtn">重开</button>
+        </div>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const CONFIG = ${JSON.stringify(theme)};
+      window.__SNAKE_DEBUG_CONFIG__ = { reference: ${JSON.stringify(config.sourceGame)}, canvas: [390, 560], boost: true, bots: CONFIG.botNames.length, targetLength: 40 };
+      const WORLD = { w: 820, h: 1180 };
+      const SEGMENT = 10;
+      const BASE_SPEED = 94;
+      const BOOST_SPEED = 154;
+      const TURN_RATE = 3.8;
+      const GOAL = 40;
+      const botColors = ['#ff8a65', '#ffd54f', '#81c784', '#64b5f6', '#ce93d8'];
+      const pointer = { active: false, x: WORLD.w / 2, y: WORLD.h / 2 };
+      const state = { mode: 'playing', player: null, bots: [], pellets: [], boostHeld: false, tick: 0, deathBursts: 0 };
+      function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+      function wrapAngle(angle) {
+        while (angle > Math.PI) angle -= Math.PI * 2;
+        while (angle < -Math.PI) angle += Math.PI * 2;
+        return angle;
+      }
+      function rand(seed) {
+        const x = Math.sin(seed * 12.9898) * 43758.5453;
+        return x - Math.floor(x);
+      }
+      function spawnPellet(seed, bonus) {
+        return {
+          x: 26 + rand(seed * 3 + 1) * (WORLD.w - 52),
+          y: 30 + rand(seed * 5 + 2) * (WORLD.h - 60),
+          r: bonus ? 7 : 5,
+          gain: bonus ? 2 : 1,
+          hue: bonus ? CONFIG.pelletB : CONFIG.pelletA,
+        };
+      }
+      function makeSnake(name, color, x, y, angle, ai) {
+        const trail = [];
+        for (let i = 0; i < 160; i += 1) trail.push({ x: x - i * SEGMENT * Math.cos(angle), y: y - i * SEGMENT * Math.sin(angle) });
+        return { name, color, x, y, angle, ai, alive: true, speed: BASE_SPEED, target: { x, y }, length: 12, trail, think: 0, boostMeter: 0 };
+      }
+      function segmentsOf(snake) {
+        const needed = Math.max(12, snake.length * SEGMENT);
+        return snake.trail.filter((_, index) => index % SEGMENT === 0).slice(0, Math.max(3, Math.floor(needed / SEGMENT)));
+      }
+      function sprinkle(x, y, count, hue) {
+        for (let i = 0; i < count; i += 1) {
+          state.pellets.push({
+            x: clamp(x + Math.cos(i * 2.2) * (10 + i * 3), 20, WORLD.w - 20),
+            y: clamp(y + Math.sin(i * 1.7) * (10 + i * 3), 20, WORLD.h - 20),
+            r: i % 3 === 0 ? 7 : 5,
+            gain: i % 3 === 0 ? 2 : 1,
+            hue: i % 2 === 0 ? hue : CONFIG.pelletB,
+          });
+        }
+      }
+      function eliminateSnake(snake, droppedByPlayer) {
+        snake.alive = false;
+        const points = segmentsOf(snake).slice(1);
+        points.forEach((point, index) => {
+          state.pellets.push({
+            x: clamp(point.x + Math.sin(index * 2.4) * 4, 18, WORLD.w - 18),
+            y: clamp(point.y + Math.cos(index * 1.8) * 4, 18, WORLD.h - 18),
+            r: index % 5 === 0 ? 7 : 5,
+            gain: index % 5 === 0 ? 2 : 1,
+            hue: droppedByPlayer ? CONFIG.pelletB : snake.color,
+          });
+        });
+        state.deathBursts += 1;
+      }
+      function reset() {
+        state.mode = 'playing';
+        state.boostHeld = false;
+        state.tick = 0;
+        state.deathBursts = 0;
+        state.player = makeSnake('YOU', CONFIG.baseColor, WORLD.w / 2, WORLD.h * 0.72, -Math.PI / 2, false);
+        state.bots = CONFIG.botNames.map((name, index) => makeSnake(name, botColors[index % botColors.length], 140 + (index % 2) * 300, 180 + index * 150, index % 2 ? Math.PI * 0.15 : Math.PI * 0.85, true));
+        state.pellets = Array.from({ length: 120 }, (_, index) => spawnPellet(index + 1, index % 9 === 0));
+        render();
+      }
+      function updateTrail(snake) {
+        snake.trail.unshift({ x: snake.x, y: snake.y });
+        const maxTrail = Math.max(180, snake.length * SEGMENT + 80);
+        if (snake.trail.length > maxTrail) snake.trail.length = maxTrail;
+      }
+      function trimForBoost(snake, dt) {
+        if (snake.length <= 12) return;
+        snake.boostMeter += dt * 7;
+        while (snake.boostMeter >= 1 && snake.length > 12) {
+          snake.boostMeter -= 1;
+          snake.length -= 1;
+          const tail = snake.trail[Math.min(snake.trail.length - 1, snake.length * SEGMENT - 1)];
+          if (tail) state.pellets.push({ x: tail.x, y: tail.y, r: 5, gain: 1, hue: CONFIG.pelletA });
+        }
+      }
+      function steerSnake(snake, targetX, targetY, dt, boosting) {
+        const desired = Math.atan2(targetY - snake.y, targetX - snake.x);
+        const diff = wrapAngle(desired - snake.angle);
+        snake.angle += clamp(diff, -TURN_RATE * dt, TURN_RATE * dt);
+        snake.speed += ((boosting ? BOOST_SPEED : BASE_SPEED) - snake.speed) * Math.min(1, dt * 4.4);
+        snake.x = clamp(snake.x + Math.cos(snake.angle) * snake.speed * dt, 16, WORLD.w - 16);
+        snake.y = clamp(snake.y + Math.sin(snake.angle) * snake.speed * dt, 16, WORLD.h - 16);
+        updateTrail(snake);
+      }
+      function thinkBot(bot, dt) {
+        bot.think -= dt;
+        if (bot.think <= 0) {
+          const juicy = state.pellets.slice(0, 80).sort((a, b) => Math.hypot(bot.x - a.x, bot.y - a.y) - Math.hypot(bot.x - b.x, bot.y - b.y))[0];
+          bot.target = juicy ? { x: juicy.x, y: juicy.y } : { x: WORLD.w / 2, y: WORLD.h / 2 };
+          bot.think = 0.35 + rand(state.tick + bot.x + bot.y) * 0.5;
+        }
+        if (bot.x < 80) bot.target.x = WORLD.w - 80;
+        if (bot.x > WORLD.w - 80) bot.target.x = 80;
+        if (bot.y < 80) bot.target.y = WORLD.h - 80;
+        if (bot.y > WORLD.h - 80) bot.target.y = 80;
+      }
+      function collectPellets(snake) {
+        state.pellets = state.pellets.filter((pellet) => {
+          if (Math.hypot(snake.x - pellet.x, snake.y - pellet.y) > 14 + pellet.r) return true;
+          snake.length = Math.min(60, snake.length + pellet.gain);
+          return false;
+        });
+      }
+      function hitTrail(head, owner) {
+        const snakes = [state.player, ...state.bots].filter((snake) => snake.alive);
+        for (const snake of snakes) {
+          const segments = segmentsOf(snake);
+          for (let i = snake === owner ? 9 : 4; i < segments.length; i += 1) {
+            const point = segments[i];
+            if (Math.hypot(head.x - point.x, head.y - point.y) < 9) return snake;
+          }
+        }
+        return null;
+      }
+      function ranking() {
+        return [state.player, ...state.bots].filter((snake) => snake.alive).sort((a, b) => b.length - a.length);
+      }
+      function pointerEvent(event) {
+        const box = canvas.getBoundingClientRect();
+        pointer.active = true;
+        pointer.x = (event.clientX - box.left) * canvas.width / box.width;
+        pointer.y = (event.clientY - box.top) * canvas.height / box.height;
+      }
+      canvas.addEventListener('pointerdown', pointerEvent);
+      canvas.addEventListener('pointermove', (event) => { if (event.buttons) pointerEvent(event); });
+      canvas.addEventListener('pointerup', () => { pointer.active = false; });
+      window.addEventListener('keydown', (event) => {
+        if (event.key === ' ') state.boostHeld = true;
+        if (event.key === 'ArrowLeft') pointer.x -= 32;
+        if (event.key === 'ArrowRight') pointer.x += 32;
+        if (event.key === 'ArrowUp') pointer.y -= 32;
+        if (event.key === 'ArrowDown') pointer.y += 32;
+      });
+      window.addEventListener('keyup', (event) => { if (event.key === ' ') state.boostHeld = false; });
+      const boostBtn = document.getElementById('boostBtn');
+      ['pointerdown', 'pointerenter'].forEach((type) => boostBtn.addEventListener(type, () => { state.boostHeld = true; }));
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach((type) => boostBtn.addEventListener(type, () => { state.boostHeld = false; }));
+      function step(ms) {
+        if (state.mode !== 'playing') { render(); return; }
+        const dt = Math.min(0.032, ms / 1000);
+        state.tick += dt;
+        const player = state.player;
+        const targetX = pointer.active ? pointer.x / canvas.width * WORLD.w : player.x + Math.cos(player.angle) * 120;
+        const targetY = pointer.active ? pointer.y / canvas.height * WORLD.h : player.y + Math.sin(player.angle) * 120;
+        steerSnake(player, targetX, targetY, dt, state.boostHeld);
+        if (state.boostHeld) trimForBoost(player, dt);
+        collectPellets(player);
+        state.bots.forEach((bot) => {
+          if (!bot.alive) return;
+          thinkBot(bot, dt);
+          const shouldBoost = bot.length > 15 && rand(state.tick * 40 + bot.x) > 0.94;
+          steerSnake(bot, bot.target.x, bot.target.y, dt, shouldBoost);
+          if (shouldBoost && bot.length > 12 && rand(state.tick * 90 + bot.y) > 0.45) bot.length -= 1;
+          collectPellets(bot);
+        });
+        const playerHit = hitTrail(player, player);
+        if (playerHit) state.mode = 'lost';
+        state.bots.forEach((bot) => {
+          if (!bot.alive) return;
+          const collided = hitTrail(bot, bot);
+          if (collided) eliminateSnake(bot, collided === state.player);
+        });
+        if (state.bots.filter((bot) => bot.alive).length < CONFIG.botNames.length) {
+          while (state.pellets.length < 140) state.pellets.push(spawnPellet(state.pellets.length + state.tick * 100, state.pellets.length % 11 === 0));
+        }
+        if (player.length >= GOAL) state.mode = 'won';
+        render();
+      }
+      function drawArena() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, CONFIG.arenaTop);
+        gradient.addColorStop(1, CONFIG.arenaBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.strokeStyle = CONFIG.ring;
+        ctx.lineWidth = 5;
+        ctx.strokeRect(14, 14, 362, 532);
+        ctx.strokeStyle = CONFIG.grid;
+        ctx.lineWidth = 1;
+        for (let x = 38; x < 360; x += 44) { ctx.beginPath(); ctx.moveTo(x, 18); ctx.lineTo(x, 542); ctx.stroke(); }
+        for (let y = 38; y < 540; y += 44) { ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(372, y); ctx.stroke(); }
+        ctx.fillStyle = 'rgba(255,255,255,.86)';
+        ctx.font = '900 14px sans-serif';
+        ctx.fillText(CONFIG.arenaTitle, 24, 34);
+      }
+      function project(point) {
+        return { x: point.x / WORLD.w * 350 + 20, y: point.y / WORLD.h * 500 + 38 };
+      }
+      function drawSnake(snake, playerLike) {
+        const segments = segmentsOf(snake);
+        segments.slice().reverse().forEach((segment, index) => {
+          const p = project(segment);
+          const radius = Math.max(4, 9 - index * 0.16);
+          ctx.fillStyle = snake.color;
+          ctx.globalAlpha = playerLike && state.boostHeld ? 0.9 : 0.78;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        const head = project({ x: snake.x, y: snake.y });
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(head.x, head.y, 3.2, 0, Math.PI * 2);
+        ctx.arc(head.x + Math.cos(snake.angle) * 4, head.y + Math.sin(snake.angle) * 4, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = playerLike ? '#0a0a0a' : 'rgba(255,255,255,.92)';
+        ctx.font = '800 10px sans-serif';
+        ctx.fillText(snake.name, head.x - 14, head.y - 14);
+      }
+      function render() {
+        drawArena();
+        state.pellets.forEach((pellet) => {
+          const p = project(pellet);
+          ctx.fillStyle = pellet.hue;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, pellet.r * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        state.bots.filter((bot) => bot.alive).forEach((bot) => drawSnake(bot, false));
+        if (state.player.alive) drawSnake(state.player, true);
+        if (state.mode !== 'playing') {
+          ctx.fillStyle = 'rgba(0,0,0,.42)';
+          ctx.fillRect(56, 212, 278, 120);
+          ctx.strokeStyle = CONFIG.ring;
+          ctx.strokeRect(56, 212, 278, 120);
+          ctx.fillStyle = '#fff';
+          ctx.font = '900 30px sans-serif';
+          ctx.fillText(state.mode === 'won' ? '冲榜成功' : '蛇头撞没了', 108, 266);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.mode === 'won' ? CONFIG.hudLead : CONFIG.boostCopy, 88, 296);
+        }
+        const order = ranking();
+        const rank = Math.max(1, order.findIndex((snake) => snake === state.player) + 1);
+        document.getElementById('snakeScore').textContent = '长度 ' + state.player.length;
+        document.getElementById('snakeRank').textContent = '第 ' + rank + ' 名 / ' + order.length;
+        document.getElementById('snakeStatus').textContent = state.mode === 'playing'
+          ? (state.boostHeld ? CONFIG.boostCopy : CONFIG.goalCopy)
+          : (state.mode === 'won' ? CONFIG.hudLead : '撞到别人的蛇身了，重开再冲。');
+        boostBtn.textContent = state.boostHeld ? '松开停冲' : CONFIG.boostLabel;
+      }
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(16), 16);
+      window.advanceTime = (ms) => { for (let i = 0; i < Math.max(1, Math.round(ms / 16)); i += 1) step(16); };
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 mapped from 820x1180 arena',
+        mode: state.mode,
+        playerLength: state.player.length,
+        aliveBots: state.bots.filter((bot) => bot.alive).length,
+        pellets: state.pellets.length,
+        deathBursts: state.deathBursts,
+        rank: ranking().findIndex((snake) => snake === state.player) + 1,
+        boostHeld: state.boostHeld
+      });
+    `,
+  };
+}
+
+const snakeBattleBaseGame = createSnakeGame({
+  id: 'snake-battle-fake',
+  file: 'snake-battle-fake.html',
+  title: '贪吃蛇冲榜局',
+  sourceGame: '贪吃蛇大作战式单指冲榜',
+  accent: '#58d26a',
+  summary: '单指转向，按住加速甩尾，蹭豆把长度冲到 40。',
+  hudLead: '长度冲到 40 就算上榜，撞线前多吃几颗大豆。',
+  goalCopy: '拖动转向，按住加速会掉尾巴，但抢豆更快。',
+  boostCopy: '正在加速甩尾，尾部会掉出可回收的小豆。',
+  arenaTitle: '冲榜热区',
+  boostLabel: '按住加速',
+  baseColor: '#58d26a',
+  boostColor: '#b7ff72',
+  pelletA: '#f7f38a',
+  pelletB: '#ffcf5a',
+  arenaTop: '#102b14',
+  arenaBottom: '#07140b',
+  ring: '#72ff88',
+  grid: 'rgba(114,255,136,.10)',
+  botNames: ['芽芽', '团团', '阿卷', '晚高峰'],
+});
+
+const subwaySnakeRemixGame = createSnakeGame({
+  id: 'subway-snake-shift',
+  file: 'subway-snake-shift.html',
+  title: '地铁刷卡蛇',
+  sourceGame: '贪吃蛇大作战式通勤二创',
+  accent: '#5dc2ff',
+  summary: '把光豆换成刷卡点，蛇身像列车长龙，冲刺时掉落通勤票。',
+  hudLead: '先吃进站点，再冲过换乘口，长度到 40 就算通勤通关。',
+  goalCopy: '拖动像给列车变道，长按冲刺会掉票，但能抢到换乘豆。',
+  boostCopy: '正在压站冲刺，尾巴会抖出票根，别一头撞进别车。',
+  arenaTitle: '换乘大厅',
+  boostLabel: '长按冲刺',
+  baseColor: '#5dc2ff',
+  boostColor: '#c4f0ff',
+  pelletA: '#ffd166',
+  pelletB: '#ff8f5e',
+  arenaTop: '#0b1830',
+  arenaBottom: '#09111f',
+  ring: '#5dc2ff',
+  grid: 'rgba(93,194,255,.11)',
+  botNames: ['二号线', '九号线', '末班车', '闸机口'],
+});
+
+function createBusJamGame(config) {
+  const theme = {
+    topCopy: config.topCopy,
+    buttonCopy: config.buttonCopy,
+    emptyCopy: config.emptyCopy,
+    winCopy: config.winCopy,
+    loseCopy: config.loseCopy,
+    laneLabel: config.laneLabel,
+    riderLabel: config.riderLabel,
+    depotLabel: config.depotLabel,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    panelTint: config.panelTint,
+    curb: config.curb,
+    bay: config.bay,
+    colors: config.colors,
+    lanes: config.lanes,
+    queue: config.queue,
+    capacity: config.capacity,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '分流',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="tripText">已发 0 车</b><span id="queueText">剩余 16 人</span></div>
+        <p id="statusText">${theme.topCopy}</p>
+        <button class="primary" id="resetBtn">${theme.buttonCopy}</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const CONFIG = ${JSON.stringify(theme)};
+      window.__BUS_JAM_DEBUG__ = {
+        reference: ${JSON.stringify(config.sourceGame)},
+        lanes: CONFIG.lanes.map((lane) => lane.slice()),
+        queue: CONFIG.queue.slice(),
+        capacity: CONFIG.capacity
+      };
+      const state = {
+        lanes: [],
+        buses: [],
+        queueIndex: 0,
+        trips: 0,
+        mode: 'playing',
+        note: CONFIG.topCopy,
+        lastFrame: 0,
+      };
+      const colorKeys = Object.keys(CONFIG.colors);
+      function makeBus(color, bay) {
+        return { color, bay, passengers: [], departing: false, timer: 0, pulse: 0 };
+      }
+      function reset() {
+        state.lanes = CONFIG.lanes.map((lane) => lane.slice());
+        state.queueIndex = 0;
+        state.trips = 0;
+        state.mode = 'playing';
+        state.note = CONFIG.topCopy;
+        state.buses = Array.from({ length: 3 }, (_, bay) => {
+          const color = CONFIG.queue[state.queueIndex++];
+          return color ? makeBus(color, bay) : null;
+        });
+        render();
+      }
+      function remainingPassengers() {
+        return state.lanes.reduce((sum, lane) => sum + lane.length, 0);
+      }
+      function visibleFrontColors() {
+        return state.lanes.map((lane) => lane[0]).filter(Boolean);
+      }
+      function hasMatchingFront(color) {
+        return state.lanes.some((lane) => lane[0] === color);
+      }
+      function replaceBus(index) {
+        const nextColor = CONFIG.queue[state.queueIndex++];
+        state.buses[index] = nextColor ? makeBus(nextColor, index) : null;
+      }
+      function boardBus(bus) {
+        if (!bus || bus.departing || state.mode !== 'playing') return;
+        let loaded = 0;
+        let moved = true;
+        while (bus.passengers.length < CONFIG.capacity && moved) {
+          moved = false;
+          for (const lane of state.lanes) {
+            if (!lane.length || lane[0] !== bus.color || bus.passengers.length >= CONFIG.capacity) continue;
+            bus.passengers.push(lane.shift());
+            loaded += 1;
+            moved = true;
+          }
+        }
+        if (!loaded) {
+          state.note = CONFIG.emptyCopy.replace('{color}', CONFIG.colors[bus.color].label);
+          render();
+          return;
+        }
+        bus.departing = true;
+        bus.timer = 320;
+        bus.pulse = 1;
+        state.trips += 1;
+        state.note = CONFIG.colors[bus.color].label + '车带走了 ' + loaded + ' 位' + CONFIG.riderLabel + '。';
+        resolveState();
+        render();
+      }
+      function resolveState() {
+        const remaining = remainingPassengers();
+        if (remaining === 0) {
+          state.mode = 'won';
+          state.note = CONFIG.winCopy;
+          return;
+        }
+        const activeColors = state.buses.filter(Boolean).filter((bus) => !bus.departing).map((bus) => bus.color);
+        const frontColors = visibleFrontColors();
+        const canPlay = activeColors.some((color) => frontColors.includes(color));
+        const pendingDepartures = state.buses.some((bus) => bus && bus.departing);
+        if (!canPlay && !pendingDepartures) {
+          state.mode = 'lost';
+          state.note = CONFIG.loseCopy;
+        }
+      }
+      function step(ms) {
+        let changed = false;
+        state.buses.forEach((bus, index) => {
+          if (!bus || !bus.departing) return;
+          bus.timer -= ms;
+          bus.pulse = Math.max(0, bus.pulse - ms / 320);
+          changed = true;
+          if (bus.timer <= 0) replaceBus(index);
+        });
+        if (changed) {
+          resolveState();
+          render();
+        }
+      }
+      function loop(ts) {
+        if (!state.lastFrame) state.lastFrame = ts;
+        const delta = Math.min(32, ts - state.lastFrame);
+        state.lastFrame = ts;
+        if (state.buses.some((bus) => bus && bus.departing)) step(delta);
+        requestAnimationFrame(loop);
+      }
+      function pointFromEvent(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * canvas.width / rect.width,
+          y: (event.clientY - rect.top) * canvas.height / rect.height
+        };
+      }
+      function busRect(index) {
+        const x = 24 + index * 118;
+        return { x, y: 366, w: 104, h: 126 };
+      }
+      function busAt(point) {
+        return state.buses.find((bus, index) => {
+          if (!bus) return false;
+          const rect = busRect(index);
+          return point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h;
+        }) || null;
+      }
+      function drawPassenger(x, y, color, active) {
+        const meta = CONFIG.colors[color];
+        ctx.save();
+        ctx.globalAlpha = active ? 1 : 0.42;
+        ctx.translate(x, y);
+        ctx.fillStyle = meta.fill;
+        ctx.strokeStyle = meta.edge;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, -12, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.roundRect(-15, 2, 30, 28, 12);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#12202f';
+        ctx.font = '900 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(meta.glyph, 0, 9);
+        ctx.restore();
+      }
+      function drawQueueLane(lane, index) {
+        const x = 62 + index * 82;
+        ctx.fillStyle = 'rgba(255,255,255,.06)';
+        ctx.strokeStyle = 'rgba(255,255,255,.12)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(x - 24, 84, 48, 234, 22);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.55)';
+        ctx.font = '800 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(CONFIG.laneLabel + ' ' + (index + 1), x, 104);
+        lane.forEach((color, pos) => {
+          drawPassenger(x, 138 + pos * 48, color, pos === 0 && hasMatchingFront(color));
+        });
+      }
+      function drawBus(bus, index) {
+        const rect = busRect(index);
+        const meta = CONFIG.colors[bus.color];
+        const tilt = bus.departing ? Math.min(22, (1 - bus.timer / 320) * 22) : 0;
+        ctx.save();
+        ctx.translate(rect.x + tilt, rect.y);
+        ctx.fillStyle = CONFIG.bay;
+        ctx.beginPath();
+        ctx.roundRect(0, 18, rect.w, rect.h - 18, 22);
+        ctx.fill();
+        ctx.fillStyle = meta.fill;
+        ctx.strokeStyle = meta.edge;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(6, 0, rect.w - 12, 90, 18);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.20)';
+        ctx.fillRect(18, 16, 54, 18);
+        ctx.fillRect(78, 16, 10, 18);
+        ctx.fillStyle = '#0d1a27';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(meta.label, rect.w / 2, 76);
+        ctx.fillStyle = '#fdfdfd';
+        ctx.font = '900 12px sans-serif';
+        ctx.fillText(bus.departing ? '发车中' : CONFIG.depotLabel, rect.w / 2, 112);
+        for (let seat = 0; seat < CONFIG.capacity; seat++) {
+          const filled = seat < bus.passengers.length;
+          ctx.fillStyle = filled ? meta.edge : 'rgba(255,255,255,.15)';
+          ctx.beginPath();
+          ctx.roundRect(18 + seat * 20, 126, 14, 22, 6);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      function render() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, CONFIG.bgTop);
+        gradient.addColorStop(1, CONFIG.bgBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        for (let stripe = 0; stripe < 7; stripe++) ctx.fillRect(26 + stripe * 52, 334, 32, 6);
+        ctx.fillStyle = CONFIG.curb;
+        ctx.fillRect(0, 344, 390, 170);
+        ctx.fillStyle = 'rgba(255,255,255,.12)';
+        ctx.fillRect(0, 354, 390, 3);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(${JSON.stringify(config.title)}, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(CONFIG.topCopy, 24, 58);
+        state.lanes.forEach(drawQueueLane);
+        ctx.fillStyle = 'rgba(255,255,255,.68)';
+        ctx.font = '800 12px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('可发车位', 24, 360);
+        state.buses.forEach((bus, index) => { if (bus) drawBus(bus, index); });
+        if (state.mode !== 'playing') {
+          ctx.fillStyle = 'rgba(7,12,18,.72)';
+          ctx.fillRect(18, 172, 354, 118);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(state.mode === 'won' ? '全部送走' : '站台堵死了', 195, 220);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.note, 195, 250);
+        }
+        document.getElementById('tripText').textContent = '已发 ' + state.trips + ' 车';
+        document.getElementById('queueText').textContent = '剩余 ' + remainingPassengers() + ' 位';
+        document.getElementById('statusText').textContent = state.note;
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        const target = busAt(pointFromEvent(event));
+        if (target) boardBus(target);
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      requestAnimationFrame(loop);
+      window.advanceTime = (ms) => step(Number(ms) || 16);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with 4 rider lanes and 3 bus bays',
+        mode: state.mode,
+        trips: state.trips,
+        remaining: remainingPassengers(),
+        visible_fronts: state.lanes.map((lane) => lane[0] || null),
+        active_buses: state.buses.map((bus) => bus ? { color: bus.color, riders: bus.passengers.length, departing: bus.departing } : null),
+        queue_index: state.queueIndex
+      });
+    `,
+  };
+}
+
+const busJamBaseGame = createBusJamGame({
+  id: 'bus-jam-fake',
+  file: 'bus-jam-fake.html',
+  title: '巴士分流站',
+  sourceGame: 'Bus Escape: Traffic Jam / Bus Jam 式乘客分流',
+  accent: '#58c7ff',
+  summary: '点发同色巴士，让站台前排乘客一车车离开，后排才会继续露出来。',
+  topCopy: '热门 Bus Jam 复刻 · 只有排在最前面的乘客能上车',
+  buttonCopy: '重开这一站',
+  emptyCopy: '{color}车前面还没人，先发别的颜色。',
+  winCopy: '这一站已经清空，所有同色巴士都顺利带走了人。',
+  loseCopy: '眼前车色全对不上，站台短暂堵死了。',
+  laneLabel: '队列',
+  riderLabel: '乘客',
+  depotLabel: '点击发车',
+  bgTop: '#10253c',
+  bgBottom: '#0a1421',
+  panelTint: '#16344e',
+  curb: '#1c2733',
+  bay: '#182432',
+  capacity: 4,
+  colors: {
+    amber: { fill: '#ffbf47', edge: '#ffe39d', label: '黄线', glyph: '黄' },
+    cyan: { fill: '#59cfff', edge: '#cbf2ff', label: '蓝线', glyph: '蓝' },
+    pink: { fill: '#ff7aa8', edge: '#ffd0e2', label: '粉线', glyph: '粉' },
+    lime: { fill: '#89d84a', edge: '#ddffb8', label: '绿线', glyph: '绿' },
+  },
+  lanes: [
+    ['amber', 'amber', 'cyan', 'pink'],
+    ['cyan', 'lime', 'lime', 'amber'],
+    ['pink', 'pink', 'amber', 'lime'],
+    ['lime', 'cyan', 'pink', 'cyan'],
+  ],
+  queue: ['amber', 'pink', 'lime', 'cyan', 'pink', 'lime', 'amber', 'cyan'],
+});
+
+const busJamNightRemixGame = createBusJamGame({
+  id: 'night-shift-shuttle',
+  file: 'night-shift-shuttle.html',
+  title: '夜班摆渡车',
+  sourceGame: '巴士分流站 Remix',
+  accent: '#8be9ff',
+  summary: '把通勤站改成夜班园区摆渡：先送走门口这批工牌，后面的工位人流才会露头。',
+  topCopy: '夜班园区二创 · 只有最靠门的一排工牌能先上摆渡车',
+  buttonCopy: '重开这一班',
+  emptyCopy: '{color}车门口还没人，先把别的组送走。',
+  winCopy: '夜班门口已经散场，摆渡车把这波工牌全带走了。',
+  loseCopy: '门口露出的工牌和当前车色全撞不上，这班先卡住了。',
+  laneLabel: '闸口',
+  riderLabel: '工牌',
+  depotLabel: '点门口发车',
+  bgTop: '#0b1a2b',
+  bgBottom: '#070d16',
+  panelTint: '#12283d',
+  curb: '#171f2a',
+  bay: '#111b28',
+  capacity: 4,
+  colors: {
+    amber: { fill: '#ffb25b', edge: '#ffe1b6', label: '仓储组', glyph: '仓' },
+    cyan: { fill: '#6bc5ff', edge: '#d4efff', label: '研发组', glyph: '研' },
+    pink: { fill: '#ff7da0', edge: '#ffd3df', label: '客服组', glyph: '客' },
+    lime: { fill: '#8fd966', edge: '#e4ffc8', label: '包装组', glyph: '包' },
+  },
+  lanes: [
+    ['cyan', 'cyan', 'amber', 'pink'],
+    ['pink', 'lime', 'lime', 'amber'],
+    ['amber', 'pink', 'cyan', 'lime'],
+    ['lime', 'amber', 'pink', 'cyan'],
+  ],
+  queue: ['cyan', 'pink', 'amber', 'lime', 'cyan', 'amber', 'pink', 'lime'],
+});
+
+function createSeatAwayGame(config) {
+  const theme = {
+    topCopy: config.topCopy,
+    hint: config.hint,
+    exitCopy: config.exitCopy,
+    slideCopy: config.slideCopy,
+    stuckCopy: config.stuckCopy,
+    winCopy: config.winCopy,
+    statusNoun: config.statusNoun,
+    boardLabel: config.boardLabel,
+    exitLabel: config.exitLabel,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    boardFill: config.boardFill,
+    boardLine: config.boardLine,
+    slotFill: config.slotFill,
+    exitGlow: config.exitGlow,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '挪座',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="moveText">挪动 0</b><span id="leftText">剩余 0</span></div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">${config.buttonCopy}</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const LEVEL = ${JSON.stringify(config.level)};
+      const THEME = ${JSON.stringify(theme)};
+      const DIRS = {
+        up: { dr: -1, dc: 0, arrow: '↑' },
+        right: { dr: 0, dc: 1, arrow: '→' },
+        down: { dr: 1, dc: 0, arrow: '↓' },
+        left: { dr: 0, dc: -1, arrow: '←' },
+      };
+      const state = { seats: [], moves: 0, cleared: 0, mode: 'playing', note: THEME.hint };
+      function reset() {
+        state.seats = LEVEL.seats.map((seat) => ({ ...seat, active: true, leaving: 0 }));
+        state.moves = 0;
+        state.cleared = 0;
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        render();
+      }
+      function activeSeats() {
+        return state.seats.filter((seat) => seat.active);
+      }
+      function seatAt(row, col, ignoreId) {
+        return state.seats.find((seat) => seat.active && seat.id !== ignoreId && seat.row === row && seat.col === col) || null;
+      }
+      function pathFor(seat) {
+        const dir = DIRS[seat.dir];
+        let row = seat.row;
+        let col = seat.col;
+        let distance = 0;
+        while (true) {
+          const nextRow = row + dir.dr;
+          const nextCol = col + dir.dc;
+          if (nextRow < 0 || nextRow >= LEVEL.rows || nextCol < 0 || nextCol >= LEVEL.cols) {
+            return { type: distance > 0 || true ? 'exit' : 'blocked', row, col, distance };
+          }
+          if (seatAt(nextRow, nextCol, seat.id)) {
+            return distance > 0 ? { type: 'slide', row, col, distance } : { type: 'blocked', row: seat.row, col: seat.col, distance: 0 };
+          }
+          row = nextRow;
+          col = nextCol;
+          distance += 1;
+        }
+      }
+      function movable(seat) {
+        return state.mode === 'playing' && pathFor(seat).type !== 'blocked';
+      }
+      function pointFromEvent(event) {
+        const box = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - box.left) * canvas.width / box.width,
+          y: (event.clientY - box.top) * canvas.height / box.height,
+        };
+      }
+      function seatRect(seat) {
+        const cell = LEVEL.cell;
+        const boardX = LEVEL.boardX;
+        const boardY = LEVEL.boardY;
+        return {
+          x: boardX + seat.col * cell + 6,
+          y: boardY + seat.row * cell + 6,
+          w: cell - 12,
+          h: cell - 12,
+        };
+      }
+      function seatFromPoint(point) {
+        return activeSeats()
+          .filter((seat) => {
+            const rect = seatRect(seat);
+            return point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h;
+          })
+          .sort((a, b) => b.row - a.row || b.col - a.col)[0] || null;
+      }
+      function actOnSeat(seat) {
+        if (!seat || state.mode !== 'playing') return;
+        const outcome = pathFor(seat);
+        if (outcome.type === 'blocked') {
+          state.note = seat.label + THEME.stuckCopy;
+          render();
+          return;
+        }
+        state.moves += 1;
+        if (outcome.type === 'slide') {
+          seat.row = outcome.row;
+          seat.col = outcome.col;
+          state.note = seat.label + THEME.slideCopy;
+        } else {
+          seat.active = false;
+          state.cleared += 1;
+          state.note = seat.label + THEME.exitCopy;
+        }
+        if (!activeSeats().length) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+        }
+        render();
+      }
+      function drawBoard() {
+        const boardW = LEVEL.cols * LEVEL.cell;
+        const boardH = LEVEL.rows * LEVEL.cell;
+        const boardX = LEVEL.boardX;
+        const boardY = LEVEL.boardY;
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, THEME.bgTop);
+        gradient.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.06)';
+        for (let stripe = 0; stripe < 9; stripe++) ctx.fillRect(22 + stripe * 40, 76 + (stripe % 2) * 4, 24, 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(${JSON.stringify(config.title)}, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.topCopy, 24, 58);
+        ctx.fillStyle = THEME.boardFill;
+        ctx.strokeStyle = THEME.boardLine;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(boardX - 10, boardY - 10, boardW + 20, boardH + 20, 28);
+        ctx.fill();
+        ctx.stroke();
+        for (let row = 0; row < LEVEL.rows; row++) {
+          for (let col = 0; col < LEVEL.cols; col++) {
+            const x = boardX + col * LEVEL.cell;
+            const y = boardY + row * LEVEL.cell;
+            ctx.fillStyle = THEME.slotFill;
+            ctx.beginPath();
+            ctx.roundRect(x + 5, y + 5, LEVEL.cell - 10, LEVEL.cell - 10, 18);
+            ctx.fill();
+          }
+        }
+        LEVEL.exits.forEach((exit) => {
+          const glow = ctx.createLinearGradient(exit.x1, exit.y1, exit.x2, exit.y2);
+          glow.addColorStop(0, 'rgba(255,255,255,0)');
+          glow.addColorStop(1, THEME.exitGlow);
+          ctx.strokeStyle = glow;
+          ctx.lineWidth = 10;
+          ctx.beginPath();
+          ctx.moveTo(exit.x1, exit.y1);
+          ctx.lineTo(exit.x2, exit.y2);
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,.76)';
+          ctx.font = '800 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(THEME.exitLabel, exit.lx, exit.ly);
+        });
+        ctx.fillStyle = 'rgba(255,255,255,.6)';
+        ctx.font = '800 12px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(THEME.boardLabel, boardX - 2, boardY - 18);
+      }
+      function drawSeat(seat) {
+        const rect = seatRect(seat);
+        const meta = THEME.colors[seat.color];
+        const enabled = movable(seat);
+        ctx.save();
+        ctx.translate(rect.x, rect.y);
+        ctx.fillStyle = enabled ? meta.fill : 'rgba(92,96,112,.82)';
+        ctx.strokeStyle = enabled ? meta.edge : 'rgba(20,21,29,.9)';
+        ctx.lineWidth = enabled ? 3 : 2;
+        ctx.beginPath();
+        ctx.roundRect(0, 18, rect.w, rect.h - 18, 16);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = enabled ? meta.edge : 'rgba(255,255,255,.26)';
+        ctx.beginPath();
+        ctx.roundRect(8, 0, rect.w - 16, 24, 10);
+        ctx.fill();
+        ctx.fillStyle = '#0c1320';
+        ctx.font = '900 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(seat.glyph, rect.w / 2, 17);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 20px sans-serif';
+        ctx.fillText(DIRS[seat.dir].arrow, rect.w / 2, rect.h - 16);
+        ctx.fillStyle = 'rgba(255,255,255,.9)';
+        ctx.font = '800 10px sans-serif';
+        ctx.fillText(seat.label, rect.w / 2, rect.h - 36);
+        ctx.restore();
+      }
+      function render() {
+        drawBoard();
+        activeSeats().forEach(drawSeat);
+        if (state.mode === 'won') {
+          ctx.fillStyle = 'rgba(6,10,18,.74)';
+          ctx.fillRect(24, 176, 342, 120);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('全员离场', 195, 220);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.note, 195, 250);
+        }
+        document.getElementById('moveText').textContent = THEME.statusNoun + ' ' + state.moves;
+        document.getElementById('leftText').textContent = '剩余 ' + activeSeats().length;
+        document.getElementById('statusText').textContent = state.note;
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        actOnSeat(seatFromPoint(pointFromEvent(event)));
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => render();
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with a 5x5 seat board; row increases downward, col increases rightward',
+        mode: state.mode,
+        moves: state.moves,
+        remaining: activeSeats().length,
+        seats: activeSeats().map((seat) => {
+          const outcome = pathFor(seat);
+          return { id: seat.id, row: seat.row, col: seat.col, dir: seat.dir, label: seat.label, movable: outcome.type !== 'blocked', next: outcome.type };
+        }),
+      });
+    `,
+  };
+}
+
+const seatAwayBaseGame = createSeatAwayGame({
+  id: 'seat-away-fake',
+  file: 'seat-away-fake.html',
+  title: '挪座离场局',
+  sourceGame: 'Seat Away 式箭头挪座解谜',
+  accent: '#62d8ff',
+  summary: '点一张座椅就沿箭头滑走，能直冲出口的会直接离场，清空整盘即过关。',
+  buttonCopy: '重开这一排',
+  topCopy: 'Seat Away 热门挪座复刻 · 只许沿箭头滑，腾出离场路线',
+  hint: '先点能挪开的前排座位，后面被堵住的出口才会慢慢露出来。',
+  exitCopy: ' 顺着通道滑出去了。',
+  slideCopy: ' 先挪到空位，给后排让路。',
+  stuckCopy: ' 眼前没空位，先挪别的。',
+  winCopy: '这一排已经全离场，通道彻底清空了。',
+  statusNoun: '挪动',
+  boardLabel: '候车区',
+  exitLabel: '出口',
+  bgTop: '#0f2333',
+  bgBottom: '#09121a',
+  boardFill: '#15283a',
+  boardLine: '#395876',
+  slotFill: 'rgba(255,255,255,.06)',
+  exitGlow: 'rgba(98,216,255,.82)',
+  colors: {
+    amber: { fill: '#ffbf52', edge: '#ffe6a8' },
+    cyan: { fill: '#67d7ff', edge: '#d5f4ff' },
+    pink: { fill: '#ff87b5', edge: '#ffd8e8' },
+    lime: { fill: '#9fdf62', edge: '#ebffc7' },
+  },
+  level: {
+    rows: 5,
+    cols: 5,
+    cell: 62,
+    boardX: 40,
+    boardY: 120,
+    seats: [
+      { id: 0, row: 0, col: 1, dir: 'down', color: 'amber', label: 'A1', glyph: '客' },
+      { id: 1, row: 1, col: 1, dir: 'right', color: 'cyan', label: 'B2', glyph: '客' },
+      { id: 2, row: 1, col: 3, dir: 'up', color: 'pink', label: 'C3', glyph: '客' },
+      { id: 3, row: 2, col: 0, dir: 'right', color: 'lime', label: 'D4', glyph: '客' },
+      { id: 4, row: 2, col: 2, dir: 'down', color: 'amber', label: 'E5', glyph: '客' },
+      { id: 5, row: 3, col: 2, dir: 'left', color: 'pink', label: 'F6', glyph: '客' },
+      { id: 6, row: 3, col: 4, dir: 'up', color: 'cyan', label: 'G7', glyph: '客' },
+      { id: 7, row: 4, col: 1, dir: 'left', color: 'lime', label: 'H8', glyph: '客' },
+    ],
+    exits: [
+      { x1: 54, y1: 110, x2: 116, y2: 110, lx: 85, ly: 102 },
+      { x1: 274, y1: 110, x2: 336, y2: 110, lx: 305, ly: 102 },
+      { x1: 338, y1: 176, x2: 338, y2: 238, lx: 352, ly: 208 },
+      { x1: 338, y1: 300, x2: 338, y2: 362, lx: 352, ly: 332 },
+      { x1: 54, y1: 440, x2: 116, y2: 440, lx: 85, ly: 458 },
+    ],
+  },
+});
+
+const seatAwayOfficeRemixGame = createSeatAwayGame({
+  id: 'office-seat-scramble',
+  file: 'office-seat-scramble.html',
+  title: '工位让一让',
+  sourceGame: '挪座离场局 Remix',
+  accent: '#8ae8ff',
+  summary: '把乘客座位改成工牌工位：工椅只沿箭头滑，先腾出过道，再把整片工位清空。',
+  buttonCopy: '重开这一层',
+  topCopy: '办公室二创 · 只沿箭头推工椅，把堵住通道的工位挪开',
+  hint: '先把能滑开的工椅推走，后排工牌才有路离开这片工位。',
+  exitCopy: ' 顺着过道撤出了工位区。',
+  slideCopy: ' 先挪到空工位，给同事让出通道。',
+  stuckCopy: ' 前面卡着椅子，先处理别的工位。',
+  winCopy: '这一层工位已经清空，晚班终于能散场了。',
+  statusNoun: '推椅',
+  boardLabel: '工位区',
+  exitLabel: '走道',
+  bgTop: '#0c1d2c',
+  bgBottom: '#060b11',
+  boardFill: '#132333',
+  boardLine: '#34566f',
+  slotFill: 'rgba(255,255,255,.05)',
+  exitGlow: 'rgba(138,232,255,.88)',
+  colors: {
+    amber: { fill: '#f6b35b', edge: '#ffe3bd' },
+    cyan: { fill: '#6fc7ff', edge: '#d4efff' },
+    pink: { fill: '#ff8aa9', edge: '#ffd4e0' },
+    lime: { fill: '#8dd56f', edge: '#e0ffc9' },
+  },
+  level: {
+    rows: 5,
+    cols: 5,
+    cell: 62,
+    boardX: 40,
+    boardY: 120,
+    seats: [
+      { id: 0, row: 0, col: 2, dir: 'down', color: 'cyan', label: '研', glyph: '牌' },
+      { id: 1, row: 1, col: 0, dir: 'right', color: 'lime', label: '包', glyph: '牌' },
+      { id: 2, row: 1, col: 2, dir: 'right', color: 'amber', label: '仓', glyph: '牌' },
+      { id: 3, row: 1, col: 4, dir: 'up', color: 'pink', label: '客', glyph: '牌' },
+      { id: 4, row: 2, col: 1, dir: 'down', color: 'cyan', label: '研', glyph: '牌' },
+      { id: 5, row: 2, col: 3, dir: 'left', color: 'amber', label: '仓', glyph: '牌' },
+      { id: 6, row: 3, col: 3, dir: 'up', color: 'pink', label: '客', glyph: '牌' },
+      { id: 7, row: 4, col: 1, dir: 'left', color: 'lime', label: '包', glyph: '牌' },
+    ],
+    exits: [
+      { x1: 116, y1: 110, x2: 178, y2: 110, lx: 147, ly: 102 },
+      { x1: 240, y1: 110, x2: 302, y2: 110, lx: 271, ly: 102 },
+      { x1: 40, y1: 362, x2: 40, y2: 424, lx: 26, ly: 394 },
+      { x1: 338, y1: 176, x2: 338, y2: 238, lx: 352, ly: 208 },
+      { x1: 214, y1: 440, x2: 276, y2: 440, lx: 245, ly: 458 },
+    ],
+  },
+});
+
+function createColorBlockJamGame(config) {
+  const theme = {
+    topCopy: config.topCopy,
+    hint: config.hint,
+    swipeCopy: config.swipeCopy,
+    blockedCopy: config.blockedCopy,
+    exitCopy: config.exitCopy,
+    winCopy: config.winCopy,
+    selectCopy: config.selectCopy,
+    movesLabel: config.movesLabel,
+    leftLabel: config.leftLabel,
+    gateLabel: config.gateLabel,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    boardFill: config.boardFill,
+    boardLine: config.boardLine,
+    slotFill: config.slotFill,
+    wallFill: config.wallFill,
+    wallEdge: config.wallEdge,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '彩块出门',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact stack">
+        <div class="row"><b id="moveText">${config.movesLabel} 0</b><span id="leftText">${config.leftLabel} 0</span></div>
+        <div class="row">
+          <button class="choice" type="button" data-dir="up">↑</button>
+          <button class="choice" type="button" data-dir="left">←</button>
+          <button class="choice" type="button" data-dir="down">↓</button>
+          <button class="choice" type="button" data-dir="right">→</button>
+        </div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">${config.buttonCopy}</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const LEVEL = ${JSON.stringify(config.level)};
+      const THEME = ${JSON.stringify(theme)};
+      const DIRS = {
+        up: { dr: -1, dc: 0, arrow: '↑' },
+        right: { dr: 0, dc: 1, arrow: '→' },
+        down: { dr: 1, dc: 0, arrow: '↓' },
+        left: { dr: 0, dc: -1, arrow: '←' },
+      };
+      const state = { blocks: [], selectedId: null, moves: 0, mode: 'playing', note: THEME.hint };
+      let pointerStart = null;
+      function activeBlocks() {
+        return state.blocks.filter((block) => block.active);
+      }
+      function reset() {
+        state.blocks = LEVEL.blocks.map((block) => ({ ...block, active: true }));
+        state.selectedId = null;
+        state.moves = 0;
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        render();
+      }
+      function colorMeta(name) {
+        return THEME.colors[name] || { fill: '#888', edge: '#fff', gate: '#fff' };
+      }
+      function selectedBlock() {
+        return state.blocks.find((block) => block.id === state.selectedId && block.active) || null;
+      }
+      function spansOverlap(a1, a2, b1, b2) {
+        return a1 <= b2 && b1 <= a2;
+      }
+      function collides(test, ignoreId) {
+        for (const wall of LEVEL.walls) {
+          if (
+            test.col < wall.col + wall.w &&
+            test.col + test.w > wall.col &&
+            test.row < wall.row + wall.h &&
+            test.row + test.h > wall.row
+          ) return true;
+        }
+        return state.blocks.some((block) => (
+          block.active &&
+          block.id !== ignoreId &&
+          test.col < block.col + block.w &&
+          test.col + test.w > block.col &&
+          test.row < block.row + block.h &&
+          test.row + test.h > block.row
+        ));
+      }
+      function gateFor(block, dirName, row, col) {
+        const exits = LEVEL.exits.filter((exit) => exit.color === block.color && exit.side === dirName);
+        for (const exit of exits) {
+          if (dirName === 'left' && col === 0 && spansOverlap(row, row + block.h - 1, exit.from, exit.to)) return exit;
+          if (dirName === 'right' && col + block.w === LEVEL.cols && spansOverlap(row, row + block.h - 1, exit.from, exit.to)) return exit;
+          if (dirName === 'up' && row === 0 && spansOverlap(col, col + block.w - 1, exit.from, exit.to)) return exit;
+          if (dirName === 'down' && row + block.h === LEVEL.rows && spansOverlap(col, col + block.w - 1, exit.from, exit.to)) return exit;
+        }
+        return null;
+      }
+      function outcomeFor(block, dirName) {
+        if (!block || state.mode !== 'playing') return { type: 'blocked', row: 0, col: 0, steps: 0 };
+        const dir = DIRS[dirName];
+        if (!dir) return { type: 'blocked', row: block.row, col: block.col, steps: 0 };
+        let row = block.row;
+        let col = block.col;
+        let steps = 0;
+        while (true) {
+          const nextRow = row + dir.dr;
+          const nextCol = col + dir.dc;
+          if (nextRow < 0 || nextCol < 0 || nextRow + block.h > LEVEL.rows || nextCol + block.w > LEVEL.cols) break;
+          if (collides({ row: nextRow, col: nextCol, w: block.w, h: block.h }, block.id)) break;
+          row = nextRow;
+          col = nextCol;
+          steps += 1;
+        }
+        const gate = gateFor(block, dirName, row, col);
+        if (gate) return { type: 'exit', row, col, steps, gate };
+        if (steps > 0) return { type: 'slide', row, col, steps };
+        return { type: 'blocked', row, col, steps: 0 };
+      }
+      function choose(block) {
+        if (!block || state.mode !== 'playing') return;
+        state.selectedId = block.id;
+        state.note = block.label + THEME.selectCopy;
+        render();
+      }
+      function act(dirName) {
+        const block = selectedBlock();
+        if (!block) {
+          state.note = THEME.hint;
+          render();
+          return;
+        }
+        const outcome = outcomeFor(block, dirName);
+        if (outcome.type === 'blocked') {
+          state.note = block.label + THEME.blockedCopy;
+          render();
+          return;
+        }
+        state.moves += 1;
+        if (outcome.type === 'slide') {
+          block.row = outcome.row;
+          block.col = outcome.col;
+          state.note = block.label + THEME.swipeCopy.replace('{steps}', String(outcome.steps));
+        } else {
+          block.row = outcome.row;
+          block.col = outcome.col;
+          block.active = false;
+          state.selectedId = null;
+          state.note = block.label + THEME.exitCopy;
+        }
+        if (!activeBlocks().length) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+        }
+        render();
+      }
+      function pointFromEvent(event) {
+        const box = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - box.left) * canvas.width / box.width,
+          y: (event.clientY - box.top) * canvas.height / box.height,
+        };
+      }
+      function blockRect(block) {
+        return {
+          x: LEVEL.boardX + block.col * LEVEL.cell,
+          y: LEVEL.boardY + block.row * LEVEL.cell,
+          w: block.w * LEVEL.cell,
+          h: block.h * LEVEL.cell,
+        };
+      }
+      function blockFromPoint(point) {
+        return activeBlocks()
+          .filter((block) => {
+            const rect = blockRect(block);
+            return point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h;
+          })
+          .sort((a, b) => (b.w * b.h) - (a.w * a.h))[0] || null;
+      }
+      function drawBackground() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, THEME.bgTop);
+        gradient.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.05)';
+        for (let i = 0; i < 8; i += 1) ctx.fillRect(26, 84 + i * 18, 338, 1);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(${JSON.stringify(config.title)}, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.topCopy, 24, 58);
+      }
+      function drawBoard() {
+        const width = LEVEL.cols * LEVEL.cell;
+        const height = LEVEL.rows * LEVEL.cell;
+        ctx.fillStyle = THEME.boardFill;
+        ctx.strokeStyle = THEME.boardLine;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(LEVEL.boardX - 10, LEVEL.boardY - 10, width + 20, height + 20, 28);
+        ctx.fill();
+        ctx.stroke();
+        for (let row = 0; row < LEVEL.rows; row += 1) {
+          for (let col = 0; col < LEVEL.cols; col += 1) {
+            const x = LEVEL.boardX + col * LEVEL.cell;
+            const y = LEVEL.boardY + row * LEVEL.cell;
+            ctx.fillStyle = THEME.slotFill;
+            ctx.beginPath();
+            ctx.roundRect(x + 4, y + 4, LEVEL.cell - 8, LEVEL.cell - 8, 12);
+            ctx.fill();
+          }
+        }
+        for (const wall of LEVEL.walls) {
+          const x = LEVEL.boardX + wall.col * LEVEL.cell;
+          const y = LEVEL.boardY + wall.row * LEVEL.cell;
+          ctx.fillStyle = THEME.wallFill;
+          ctx.strokeStyle = THEME.wallEdge;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(x + 6, y + 6, wall.w * LEVEL.cell - 12, wall.h * LEVEL.cell - 12, 14);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,.56)';
+          ctx.font = '900 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(wall.label, x + wall.w * LEVEL.cell / 2, y + wall.h * LEVEL.cell / 2 + 4);
+        }
+        for (const exit of LEVEL.exits) {
+          const meta = colorMeta(exit.color);
+          ctx.strokeStyle = meta.gate;
+          ctx.lineWidth = 10;
+          ctx.beginPath();
+          if (exit.side === 'left') {
+            const y1 = LEVEL.boardY + exit.from * LEVEL.cell + 8;
+            const y2 = LEVEL.boardY + (exit.to + 1) * LEVEL.cell - 8;
+            ctx.moveTo(LEVEL.boardX - 14, y1);
+            ctx.lineTo(LEVEL.boardX - 14, y2);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,.76)';
+            ctx.font = '800 10px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(THEME.gateLabel[exit.color], 18, (y1 + y2) / 2 + 4);
+          }
+          if (exit.side === 'right') {
+            const y1 = LEVEL.boardY + exit.from * LEVEL.cell + 8;
+            const y2 = LEVEL.boardY + (exit.to + 1) * LEVEL.cell - 8;
+            ctx.moveTo(LEVEL.boardX + LEVEL.cols * LEVEL.cell + 14, y1);
+            ctx.lineTo(LEVEL.boardX + LEVEL.cols * LEVEL.cell + 14, y2);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,.76)';
+            ctx.font = '800 10px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(THEME.gateLabel[exit.color], 372, (y1 + y2) / 2 + 4);
+          }
+          if (exit.side === 'up') {
+            const x1 = LEVEL.boardX + exit.from * LEVEL.cell + 8;
+            const x2 = LEVEL.boardX + (exit.to + 1) * LEVEL.cell - 8;
+            ctx.moveTo(x1, LEVEL.boardY - 14);
+            ctx.lineTo(x2, LEVEL.boardY - 14);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,.76)';
+            ctx.font = '800 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(THEME.gateLabel[exit.color], (x1 + x2) / 2, LEVEL.boardY - 22);
+          }
+          if (exit.side === 'down') {
+            const x1 = LEVEL.boardX + exit.from * LEVEL.cell + 8;
+            const x2 = LEVEL.boardX + (exit.to + 1) * LEVEL.cell - 8;
+            ctx.moveTo(x1, LEVEL.boardY + LEVEL.rows * LEVEL.cell + 14);
+            ctx.lineTo(x2, LEVEL.boardY + LEVEL.rows * LEVEL.cell + 14);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,.76)';
+            ctx.font = '800 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(THEME.gateLabel[exit.color], (x1 + x2) / 2, LEVEL.boardY + LEVEL.rows * LEVEL.cell + 30);
+          }
+        }
+      }
+      function drawBlock(block) {
+        const rect = blockRect(block);
+        const meta = colorMeta(block.color);
+        const selected = state.selectedId === block.id;
+        ctx.save();
+        ctx.translate(rect.x, rect.y);
+        ctx.fillStyle = meta.fill;
+        ctx.strokeStyle = selected ? '#ffffff' : meta.edge;
+        ctx.lineWidth = selected ? 4 : 3;
+        ctx.beginPath();
+        ctx.roundRect(6, 6, rect.w - 12, rect.h - 12, 16);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.2)';
+        ctx.fillRect(16, 16, rect.w - 32, 10);
+        ctx.fillStyle = '#081019';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(block.glyph, rect.w / 2, rect.h / 2 + 6);
+        ctx.fillStyle = 'rgba(255,255,255,.9)';
+        ctx.font = '800 10px sans-serif';
+        ctx.fillText(block.label, rect.w / 2, rect.h - 16);
+        ctx.restore();
+      }
+      function render() {
+        drawBackground();
+        drawBoard();
+        activeBlocks().forEach(drawBlock);
+        if (state.mode === 'won') {
+          ctx.fillStyle = 'rgba(6,10,18,.72)';
+          ctx.fillRect(28, 196, 334, 104);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('全部出门', 195, 234);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.note, 195, 264);
+        }
+        document.getElementById('moveText').textContent = THEME.movesLabel + ' ' + state.moves;
+        document.getElementById('leftText').textContent = THEME.leftLabel + ' ' + activeBlocks().length;
+        document.getElementById('statusText').textContent = state.note;
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        const point = pointFromEvent(event);
+        const block = blockFromPoint(point);
+        pointerStart = point;
+        if (block) choose(block);
+      });
+      canvas.addEventListener('pointerup', (event) => {
+        if (!pointerStart) return;
+        const point = pointFromEvent(event);
+        const dx = point.x - pointerStart.x;
+        const dy = point.y - pointerStart.y;
+        pointerStart = null;
+        if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
+        if (Math.abs(dx) > Math.abs(dy)) act(dx > 0 ? 'right' : 'left');
+        else act(dy > 0 ? 'down' : 'up');
+      });
+      document.querySelectorAll('[data-dir]').forEach((button) => {
+        button.addEventListener('click', () => act(button.dataset.dir));
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => render();
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with a 6x6 block board; row increases downward, col increases rightward',
+        mode: state.mode,
+        moves: state.moves,
+        selected: state.selectedId,
+        remaining: activeBlocks().length,
+        blocks: activeBlocks().map((block) => ({
+          id: block.id,
+          label: block.label,
+          row: block.row,
+          col: block.col,
+          w: block.w,
+          h: block.h,
+          exits: Object.fromEntries(Object.keys(DIRS).map((dir) => [dir, outcomeFor(block, dir).type])),
+        })),
+      });
+    `,
+  };
+}
+
+const colorBlockJamBaseGame = createColorBlockJamGame({
+  id: 'color-block-jam-fake',
+  file: 'color-block-jam-fake.html',
+  title: '彩块出门局',
+  sourceGame: 'Color Block Jam 式同色出口滑块解谜',
+  accent: '#62d8ff',
+  summary: '选中彩块后朝任意方向一划，让它一路滑到同色出口，清空整盘即过关。',
+  buttonCopy: '重开这盘',
+  topCopy: 'Color Block Jam 热门复刻 · 把彩块滑到同色门口',
+  hint: '先点中一个彩块，再向四个方向滑动；同色出口贴边后会直接出门。',
+  selectCopy: ' 已选中，接着朝想走的方向一划。',
+  swipeCopy: ' 滑开了 {steps} 格，先给别的块腾路。',
+  blockedCopy: ' 这个方向被墙和别块堵死了。',
+  exitCopy: ' 对准同色门口，直接滑出去了。',
+  winCopy: '整盘彩块都顺利出门了。',
+  movesLabel: '步数',
+  leftLabel: '剩余',
+  gateLabel: { red: '红门', blue: '蓝门', yellow: '黄门', green: '绿门', purple: '紫门', cyan: '青门' },
+  bgTop: '#0f2032',
+  bgBottom: '#071018',
+  boardFill: '#15283d',
+  boardLine: '#3d5f83',
+  slotFill: 'rgba(255,255,255,.05)',
+  wallFill: '#465066',
+  wallEdge: '#97a8cb',
+  colors: {
+    red: { fill: '#ff7b8f', edge: '#ffd6df', gate: 'rgba(255,123,143,.96)' },
+    blue: { fill: '#63c7ff', edge: '#d9f2ff', gate: 'rgba(99,199,255,.96)' },
+    yellow: { fill: '#ffcf62', edge: '#fff0bc', gate: 'rgba(255,207,98,.96)' },
+    green: { fill: '#7ddd86', edge: '#e1ffd8', gate: 'rgba(125,221,134,.96)' },
+    purple: { fill: '#bc8dff', edge: '#efe3ff', gate: 'rgba(188,141,255,.96)' },
+    cyan: { fill: '#58ead7', edge: '#d7fffa', gate: 'rgba(88,234,215,.96)' },
+  },
+  level: {
+    rows: 6,
+    cols: 6,
+    cell: 52,
+    boardX: 39,
+    boardY: 118,
+    exits: [
+      { side: 'right', color: 'red', from: 0, to: 0 },
+      { side: 'up', color: 'blue', from: 2, to: 2 },
+      { side: 'down', color: 'yellow', from: 5, to: 5 },
+      { side: 'left', color: 'green', from: 4, to: 4 },
+      { side: 'right', color: 'purple', from: 3, to: 3 },
+      { side: 'up', color: 'cyan', from: 0, to: 0 },
+    ],
+    walls: [
+      { row: 1, col: 1, w: 1, h: 1, label: '箱' },
+      { row: 1, col: 4, w: 1, h: 1, label: '锁' },
+      { row: 3, col: 1, w: 1, h: 1, label: '箱' },
+      { row: 4, col: 3, w: 1, h: 1, label: '锁' },
+    ],
+    blocks: [
+      { id: 0, row: 0, col: 1, w: 2, h: 1, color: 'red', glyph: '红', label: 'R' },
+      { id: 1, row: 2, col: 2, w: 1, h: 2, color: 'blue', glyph: '蓝', label: 'B' },
+      { id: 2, row: 3, col: 5, w: 1, h: 2, color: 'yellow', glyph: '黄', label: 'Y' },
+      { id: 3, row: 4, col: 2, w: 2, h: 1, color: 'green', glyph: '绿', label: 'G' },
+      { id: 4, row: 2, col: 4, w: 1, h: 1, color: 'purple', glyph: '紫', label: 'P' },
+      { id: 5, row: 2, col: 0, w: 1, h: 1, color: 'cyan', glyph: '青', label: 'C' },
+    ],
+  },
+});
+
+const colorBlockJamOfficeRemixGame = createColorBlockJamGame({
+  id: 'office-folder-jam',
+  file: 'office-folder-jam.html',
+  title: '工位文件归槽',
+  sourceGame: '彩块出门局 Remix',
+  accent: '#8ae8ff',
+  summary: '把彩块改成部门文件夹，往对应收纳槽一路滑走，清空整块工位板就能散场。',
+  buttonCopy: '重开这一层',
+  topCopy: '办公室二创 · 把文件夹滑进同部门收纳槽',
+  hint: '先选中文件夹再划方向；先把大文件夹挪开，后排的小件才有路归槽。',
+  selectCopy: ' 已选中，往目标收纳槽方向推。',
+  swipeCopy: ' 挪开了 {steps} 格，先把走道腾出来了。',
+  blockedCopy: ' 这个方向被柜子和别的文件夹堵住了。',
+  exitCopy: ' 已经滑进同部门收纳槽。',
+  winCopy: '这一层文件都已经归槽完毕。',
+  movesLabel: '挪动',
+  leftLabel: '待归',
+  gateLabel: { red: '财务', blue: '研发', yellow: '运营', green: '行政', purple: '客服', cyan: '仓配' },
+  bgTop: '#0c1b29',
+  bgBottom: '#050b12',
+  boardFill: '#122436',
+  boardLine: '#36556f',
+  slotFill: 'rgba(255,255,255,.05)',
+  wallFill: '#414b60',
+  wallEdge: '#92a3c7',
+  colors: {
+    red: { fill: '#ff8a9d', edge: '#ffdbe4', gate: 'rgba(255,138,157,.96)' },
+    blue: { fill: '#70cfff', edge: '#d8f3ff', gate: 'rgba(112,207,255,.96)' },
+    yellow: { fill: '#f7c86e', edge: '#fff0bf', gate: 'rgba(247,200,110,.96)' },
+    green: { fill: '#92dd78', edge: '#e5ffd4', gate: 'rgba(146,221,120,.96)' },
+    purple: { fill: '#c495ff', edge: '#f0e3ff', gate: 'rgba(196,149,255,.96)' },
+    cyan: { fill: '#67e5d0', edge: '#d7fff7', gate: 'rgba(103,229,208,.96)' },
+  },
+  level: {
+    rows: 6,
+    cols: 6,
+    cell: 52,
+    boardX: 39,
+    boardY: 118,
+    exits: [
+      { side: 'right', color: 'red', from: 0, to: 0 },
+      { side: 'up', color: 'blue', from: 2, to: 2 },
+      { side: 'down', color: 'yellow', from: 5, to: 5 },
+      { side: 'left', color: 'green', from: 4, to: 4 },
+      { side: 'right', color: 'purple', from: 3, to: 3 },
+      { side: 'up', color: 'cyan', from: 0, to: 0 },
+    ],
+    walls: [
+      { row: 1, col: 1, w: 1, h: 1, label: '柜' },
+      { row: 1, col: 4, w: 1, h: 1, label: '架' },
+      { row: 3, col: 1, w: 1, h: 1, label: '柜' },
+      { row: 4, col: 3, w: 1, h: 1, label: '架' },
+    ],
+    blocks: [
+      { id: 0, row: 0, col: 1, w: 2, h: 1, color: 'red', glyph: '财', label: '报表' },
+      { id: 1, row: 2, col: 2, w: 1, h: 2, color: 'blue', glyph: '研', label: '需求' },
+      { id: 2, row: 3, col: 5, w: 1, h: 2, color: 'yellow', glyph: '运', label: '排期' },
+      { id: 3, row: 4, col: 2, w: 2, h: 1, color: 'green', glyph: '行', label: '审批' },
+      { id: 4, row: 2, col: 4, w: 1, h: 1, color: 'purple', glyph: '客', label: '回复' },
+      { id: 5, row: 2, col: 0, w: 1, h: 1, color: 'cyan', glyph: '仓', label: '拣单' },
+    ],
+  },
+});
+
+function createTapAwayGame(config) {
+  const theme = {
+    topCopy: config.topCopy,
+    hint: config.hint,
+    freeCopy: config.freeCopy,
+    blockedCopy: config.blockedCopy,
+    rotateCopy: config.rotateCopy,
+    winCopy: config.winCopy,
+    buttonCopy: config.buttonCopy,
+    clearedLabel: config.clearedLabel,
+    leftLabel: config.leftLabel,
+    boardLabel: config.boardLabel,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    panelTint: config.panelTint,
+    edge: config.edge,
+    shadow: config.shadow,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '立体解块',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="clearText"></b><span id="leftText"></span></div>
+        <p id="statusText">${theme.hint}</p>
+        <div class="button-row">
+          <button class="choice" id="turnLeftBtn">左转</button>
+          <button class="choice" id="turnRightBtn">右转</button>
+          <button class="primary" id="resetBtn">${theme.buttonCopy}</button>
+        </div>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const LEVEL = ${JSON.stringify(config.level)};
+      const DIRS = {
+        xp: { x: 1, y: 0, z: 0, arrow: '→' },
+        xm: { x: -1, y: 0, z: 0, arrow: '←' },
+        yp: { x: 0, y: 1, z: 0, arrow: '↘' },
+        ym: { x: 0, y: -1, z: 0, arrow: '↖' },
+        zp: { x: 0, y: 0, z: 1, arrow: '↑' },
+        zm: { x: 0, y: 0, z: -1, arrow: '↓' },
+      };
+      const state = { blocks: [], yaw: 0, cleared: 0, mode: 'playing', note: THEME.hint };
+      function rotateXY(x, y, turns) {
+        const step = ((turns % 4) + 4) % 4;
+        if (step === 0) return { x, y };
+        if (step === 1) return { x: y, y: -x };
+        if (step === 2) return { x: -x, y: -y };
+        return { x: -y, y: x };
+      }
+      function rotatedBlock(block) {
+        const centered = rotateXY(block.x - 1, block.y - 1, state.yaw);
+        return { x: centered.x, y: centered.y, z: block.z - 1 };
+      }
+      function screenPoint(block) {
+        const r = rotatedBlock(block);
+        return {
+          x: 195 + (r.x - r.y) * 38,
+          y: 270 + (r.x + r.y) * 20 - r.z * 42,
+          depth: (r.x + r.y) * 10 + r.z * 18,
+        };
+      }
+      function facePolys(block) {
+        const p = screenPoint(block);
+        const top = [
+          { x: p.x, y: p.y - 28 },
+          { x: p.x + 32, y: p.y - 12 },
+          { x: p.x, y: p.y + 4 },
+          { x: p.x - 32, y: p.y - 12 },
+        ];
+        const left = [
+          { x: p.x - 32, y: p.y - 12 },
+          { x: p.x, y: p.y + 4 },
+          { x: p.x, y: p.y + 42 },
+          { x: p.x - 32, y: p.y + 26 },
+        ];
+        const right = [
+          { x: p.x + 32, y: p.y - 12 },
+          { x: p.x, y: p.y + 4 },
+          { x: p.x, y: p.y + 42 },
+          { x: p.x + 32, y: p.y + 26 },
+        ];
+        return { top, left, right, center: p };
+      }
+      function drawPoly(points, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      function pointInPoly(point, poly) {
+        let inside = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+          const xi = poly[i].x;
+          const yi = poly[i].y;
+          const xj = poly[j].x;
+          const yj = poly[j].y;
+          const intersect = ((yi > point.y) !== (yj > point.y)) && (point.x < ((xj - xi) * (point.y - yi)) / ((yj - yi) || 0.0001) + xi);
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
+      function activeBlocks() {
+        return state.blocks.filter((block) => block.active);
+      }
+      function findBlock(x, y, z, ignoreId) {
+        return state.blocks.find((block) => block.active && block.id !== ignoreId && block.x === x && block.y === y && block.z === z) || null;
+      }
+      function clearPath(block) {
+        const dir = DIRS[block.dir];
+        let x = block.x;
+        let y = block.y;
+        let z = block.z;
+        while (true) {
+          x += dir.x;
+          y += dir.y;
+          z += dir.z;
+          if (x < 0 || x > 2 || y < 0 || y > 2 || z < 0 || z > 2) return true;
+          if (findBlock(x, y, z, block.id)) return false;
+        }
+      }
+      function blockingCopy(block) {
+        const dir = DIRS[block.dir];
+        const meta = THEME.colors[block.color];
+        return meta.label + THEME.blockedCopy.replace('{arrow}', dir.arrow);
+      }
+      function reset() {
+        state.blocks = LEVEL.blocks.map((block) => ({ ...block, active: true }));
+        state.yaw = 0;
+        state.cleared = 0;
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        render();
+      }
+      function turn(delta) {
+        state.yaw = (state.yaw + delta + 4) % 4;
+        if (state.mode === 'playing') state.note = THEME.rotateCopy;
+        render();
+      }
+      function removeBlock(block) {
+        if (state.mode !== 'playing' || !block || !block.active) return;
+        if (!clearPath(block)) {
+          state.note = blockingCopy(block);
+          render();
+          return;
+        }
+        block.active = false;
+        state.cleared += 1;
+        const meta = THEME.colors[block.color];
+        state.note = meta.label + THEME.freeCopy;
+        if (!activeBlocks().length) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+        }
+        render();
+      }
+      function blockFromPoint(point) {
+        return activeBlocks()
+          .map((block) => ({ block, polys: facePolys(block) }))
+          .filter((entry) => pointInPoly(point, entry.polys.top) || pointInPoly(point, entry.polys.left) || pointInPoly(point, entry.polys.right))
+          .sort((a, b) => b.polys.center.depth - a.polys.center.depth || b.polys.center.y - a.polys.center.y)[0]?.block || null;
+      }
+      function pointFromEvent(event) {
+        const box = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - box.left) * canvas.width / box.width,
+          y: (event.clientY - box.top) * canvas.height / box.height,
+        };
+      }
+      function drawScene() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, THEME.bgTop);
+        gradient.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.06)';
+        for (let i = 0; i < 7; i += 1) ctx.fillRect(36 + i * 44, 88 + (i % 2) * 4, 22, 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(${JSON.stringify(config.title)}, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.topCopy, 24, 58);
+        ctx.fillStyle = THEME.panelTint;
+        ctx.strokeStyle = THEME.edge;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(40, 98, 310, 332, 28);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.56)';
+        ctx.font = '800 12px sans-serif';
+        ctx.fillText(THEME.boardLabel, 54, 118);
+        ctx.fillStyle = THEME.shadow;
+        ctx.beginPath();
+        ctx.ellipse(195, 350, 118, 42, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      function drawBlock(block) {
+        const meta = THEME.colors[block.color];
+        const polys = facePolys(block);
+        const free = clearPath(block);
+        drawPoly(polys.left, free ? meta.left : 'rgba(76,84,96,.92)', THEME.edge);
+        drawPoly(polys.right, free ? meta.right : 'rgba(90,96,108,.94)', THEME.edge);
+        drawPoly(polys.top, free ? meta.top : 'rgba(108,114,126,.96)', THEME.edge);
+        ctx.fillStyle = free ? '#081017' : 'rgba(16,18,24,.82)';
+        ctx.font = '900 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(DIRS[block.dir].arrow, polys.center.x, polys.center.y + 2);
+        ctx.font = '800 11px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,.9)';
+        ctx.fillText(meta.glyph, polys.center.x, polys.center.y + 19);
+      }
+      function render() {
+        drawScene();
+        activeBlocks()
+          .slice()
+          .sort((a, b) => screenPoint(a).depth - screenPoint(b).depth || screenPoint(a).y - screenPoint(b).y)
+          .forEach(drawBlock);
+        if (state.mode === 'won') {
+          ctx.fillStyle = 'rgba(6,10,18,.76)';
+          ctx.fillRect(38, 188, 314, 110);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('整团拆空', 195, 230);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.note, 195, 258);
+        }
+        document.getElementById('clearText').textContent = THEME.clearedLabel + ' ' + state.cleared;
+        document.getElementById('leftText').textContent = THEME.leftLabel + ' ' + activeBlocks().length;
+        document.getElementById('statusText').textContent = state.note;
+      }
+      let dragStart = null;
+      canvas.addEventListener('pointerdown', (event) => { dragStart = pointFromEvent(event); });
+      canvas.addEventListener('pointerup', (event) => {
+        const point = pointFromEvent(event);
+        if (!dragStart) return;
+        const dx = point.x - dragStart.x;
+        const dy = point.y - dragStart.y;
+        if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy)) {
+          turn(dx > 0 ? 1 : -1);
+        } else if (Math.abs(dy) > 28) {
+          turn(dy > 0 ? 2 : 1);
+        } else {
+          removeBlock(blockFromPoint(point));
+        }
+        dragStart = null;
+      });
+      document.getElementById('turnLeftBtn').addEventListener('click', () => turn(-1));
+      document.getElementById('turnRightBtn').addEventListener('click', () => turn(1));
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') turn(-1);
+        if (event.key === 'ArrowRight') turn(1);
+      });
+      reset();
+      window.advanceTime = () => render();
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with 3x3x3 isometric cube cluster',
+        mode: state.mode,
+        yaw: state.yaw,
+        cleared: state.cleared,
+        remaining: activeBlocks().length,
+        blocks: activeBlocks().map((block) => ({
+          id: block.id,
+          pos: [block.x, block.y, block.z],
+          dir: block.dir,
+          free: clearPath(block)
+        })),
+      });
+    `,
+  };
+}
+
+const tapAwayBaseGame = createTapAwayGame({
+  id: 'tap-away-fake',
+  file: 'tap-away-fake.html',
+  title: '立体箭块局',
+  sourceGame: 'Tap Away / Block Out - Tap Away 式 3D 箭头出块',
+  accent: '#74ddff',
+  summary: '点能顺着箭头飞出去的方块，不通就旋转整团找新角度，把 3D 团块拆空。',
+  buttonCopy: '重开这一团',
+  topCopy: 'Tap Away 热门复刻 · 点掉能沿箭头飞出的立体方块',
+  hint: '先看箭头朝向；点能直接飞出外层的块，不通就左右旋转整团换视角。',
+  freeCopy: ' 顺着箭头弹出去了。',
+  blockedCopy: ' 这面还被别块卡着，先转到别的角度。',
+  rotateCopy: '已经换角度了，继续找外层能直接飞走的箭块。',
+  winCopy: '这团箭块已经全拆空了。',
+  clearedLabel: '已拆',
+  leftLabel: '剩余',
+  boardLabel: '箭块团',
+  bgTop: '#0b2032',
+  bgBottom: '#060d15',
+  panelTint: '#13283a',
+  edge: 'rgba(225,245,255,.82)',
+  shadow: 'rgba(0,0,0,.34)',
+  colors: {
+    cyan: { top: '#8ef3ff', left: '#43bdd3', right: '#67ddec', glyph: '青', label: '青块' },
+    amber: { top: '#ffd980', left: '#cf9638', right: '#f5be56', glyph: '黄', label: '黄块' },
+    pink: { top: '#ff9fc1', left: '#ca587d', right: '#ea789d', glyph: '粉', label: '粉块' },
+    lime: { top: '#bdf48b', left: '#6baa36', right: '#94d65a', glyph: '绿', label: '绿块' },
+    violet: { top: '#ccb0ff', left: '#7f67cc', right: '#a086ef', glyph: '紫', label: '紫块' },
+  },
+  level: {
+    blocks: [
+      { id: 0, x: 0, y: 0, z: 0, dir: 'xm', color: 'cyan' },
+      { id: 1, x: 1, y: 0, z: 0, dir: 'ym', color: 'amber' },
+      { id: 2, x: 2, y: 0, z: 0, dir: 'xp', color: 'pink' },
+      { id: 3, x: 0, y: 1, z: 0, dir: 'xm', color: 'lime' },
+      { id: 4, x: 1, y: 1, z: 0, dir: 'zp', color: 'violet' },
+      { id: 5, x: 2, y: 1, z: 0, dir: 'xp', color: 'cyan' },
+      { id: 6, x: 0, y: 2, z: 0, dir: 'yp', color: 'amber' },
+      { id: 7, x: 1, y: 2, z: 0, dir: 'yp', color: 'pink' },
+      { id: 8, x: 2, y: 2, z: 0, dir: 'xp', color: 'lime' },
+      { id: 9, x: 0, y: 0, z: 1, dir: 'zm', color: 'violet' },
+      { id: 10, x: 2, y: 0, z: 1, dir: 'ym', color: 'cyan' },
+      { id: 11, x: 0, y: 2, z: 1, dir: 'xp', color: 'amber' },
+      { id: 12, x: 2, y: 2, z: 1, dir: 'xm', color: 'pink' },
+      { id: 13, x: 1, y: 1, z: 1, dir: 'zp', color: 'lime' },
+      { id: 14, x: 1, y: 1, z: 2, dir: 'zp', color: 'violet' },
+    ],
+  },
+});
+
+const tapAwayWarehouseRemixGame = createTapAwayGame({
+  id: 'night-shift-crate-out',
+  file: 'night-shift-crate-out.html',
+  title: '夜班货架出箱',
+  sourceGame: '立体箭块局 Remix',
+  accent: '#8ef6d8',
+  summary: '把彩色箭块改成夜班货箱：顺着贴纸方向把外层箱子先推出去，再慢慢拆空整架。',
+  buttonCopy: '重开这架',
+  topCopy: '仓储二创 · 先推出外层货箱，再把中层箱位一点点拆空',
+  hint: '先清掉露在外侧的货箱；看贴纸方向判断能不能直接出架，不通就转架子。',
+  freeCopy: ' 顺着货道被推出去了。',
+  blockedCopy: ' 这条货道还被其他箱子堵住。',
+  rotateCopy: '货架角度换好了，继续找现在能直接出架的箱子。',
+  winCopy: '这架夜班货箱已经全部出完。',
+  clearedLabel: '已出',
+  leftLabel: '待出',
+  boardLabel: '夜班货架',
+  bgTop: '#081d22',
+  bgBottom: '#041014',
+  panelTint: '#0f2529',
+  edge: 'rgba(213,255,241,.84)',
+  shadow: 'rgba(0,0,0,.38)',
+  colors: {
+    cyan: { top: '#8bf0de', left: '#3b9a8b', right: '#61c8b7', glyph: '冷', label: '冷链箱' },
+    amber: { top: '#ffd98b', left: '#c18b35', right: '#ebb75b', glyph: '急', label: '急件箱' },
+    pink: { top: '#ffa9b7', left: '#c05f72', right: '#df7f92', glyph: '退', label: '退件箱' },
+    lime: { top: '#b7f28d', left: '#6f9d3b', right: '#92cb58', glyph: '补', label: '补货箱' },
+    violet: { top: '#ccb9ff', left: '#7e6abf', right: '#a18de8', glyph: '夜', label: '夜配箱' },
+  },
+  level: {
+    blocks: [
+      { id: 0, x: 0, y: 0, z: 0, dir: 'xm', color: 'cyan' },
+      { id: 1, x: 1, y: 0, z: 0, dir: 'ym', color: 'amber' },
+      { id: 2, x: 2, y: 0, z: 0, dir: 'xp', color: 'pink' },
+      { id: 3, x: 0, y: 1, z: 0, dir: 'xm', color: 'lime' },
+      { id: 4, x: 1, y: 1, z: 0, dir: 'zp', color: 'violet' },
+      { id: 5, x: 2, y: 1, z: 0, dir: 'xp', color: 'cyan' },
+      { id: 6, x: 0, y: 2, z: 0, dir: 'yp', color: 'amber' },
+      { id: 7, x: 1, y: 2, z: 0, dir: 'yp', color: 'pink' },
+      { id: 8, x: 2, y: 2, z: 0, dir: 'xp', color: 'lime' },
+      { id: 9, x: 0, y: 0, z: 1, dir: 'zm', color: 'violet' },
+      { id: 10, x: 2, y: 0, z: 1, dir: 'ym', color: 'cyan' },
+      { id: 11, x: 0, y: 2, z: 1, dir: 'xp', color: 'amber' },
+      { id: 12, x: 2, y: 2, z: 1, dir: 'xm', color: 'pink' },
+      { id: 13, x: 1, y: 1, z: 1, dir: 'zp', color: 'lime' },
+      { id: 14, x: 1, y: 1, z: 2, dir: 'zp', color: 'violet' },
+    ],
+  },
+});
+
+function createParkingJamGame(config) {
+  const theme = {
+    topCopy: config.topCopy,
+    hint: config.hint,
+    moveCopy: config.moveCopy,
+    blockedCopy: config.blockedCopy,
+    exitCopy: config.exitCopy,
+    winCopy: config.winCopy,
+    buttonCopy: config.buttonCopy,
+    movesLabel: config.movesLabel,
+    leftLabel: config.leftLabel,
+    boardLabel: config.boardLabel,
+    exitLabel: config.exitLabel,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    lotFill: config.lotFill,
+    lotLine: config.lotLine,
+    slotFill: config.slotFill,
+    exitGlow: config.exitGlow,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '停车解堵',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="moveText">${config.movesLabel} 0</b><span id="leftText">${config.leftLabel} 0</span></div>
+        <p id="statusText">${theme.hint}</p>
+        <button class="primary" id="resetBtn">${theme.buttonCopy}</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const LEVEL = ${JSON.stringify(config.level)};
+      const DIRS = {
+        up: { dr: -1, dc: 0, arrow: '↑' },
+        right: { dr: 0, dc: 1, arrow: '→' },
+        down: { dr: 1, dc: 0, arrow: '↓' },
+        left: { dr: 0, dc: -1, arrow: '←' },
+      };
+      const state = { cars: [], selectedId: null, moves: 0, escaped: 0, mode: 'playing', note: THEME.hint };
+      function cloneCars() {
+        return LEVEL.cars.map((car) => ({ ...car, active: true }));
+      }
+      function activeCars() {
+        return state.cars.filter((car) => car.active);
+      }
+      function cellsFor(car, row = car.row, col = car.col) {
+        const cells = [];
+        for (let step = 0; step < car.len; step += 1) {
+          cells.push(car.axis === 'h' ? { row, col: col + step } : { row: row + step, col });
+        }
+        return cells;
+      }
+      function occupies(row, col, ignoreId) {
+        return state.cars.some((car) => car.active && car.id !== ignoreId && cellsFor(car).some((cell) => cell.row === row && cell.col === col));
+      }
+      function outcomeFor(car) {
+        const dir = DIRS[car.dir];
+        let row = car.row;
+        let col = car.col;
+        let distance = 0;
+        while (true) {
+          const nextRow = row + dir.dr;
+          const nextCol = col + dir.dc;
+          const nextCells = cellsFor(car, nextRow, nextCol);
+          const outside = nextCells.filter((cell) => cell.row < 0 || cell.row >= LEVEL.rows || cell.col < 0 || cell.col >= LEVEL.cols);
+          if (outside.length) {
+            return distance >= 0 ? { type: 'exit', row, col, distance: distance + 1 } : { type: 'blocked', row: car.row, col: car.col, distance: 0 };
+          }
+          if (nextCells.some((cell) => occupies(cell.row, cell.col, car.id))) {
+            return distance > 0 ? { type: 'slide', row, col, distance } : { type: 'blocked', row: car.row, col: car.col, distance: 0 };
+          }
+          row = nextRow;
+          col = nextCol;
+          distance += 1;
+        }
+      }
+      function reset() {
+        state.cars = cloneCars();
+        state.selectedId = null;
+        state.moves = 0;
+        state.escaped = 0;
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        render();
+      }
+      function carRect(car) {
+        const x = LEVEL.boardX + car.col * LEVEL.cell + 6;
+        const y = LEVEL.boardY + car.row * LEVEL.cell + 6;
+        return car.axis === 'h'
+          ? { x, y, w: car.len * LEVEL.cell - 12, h: LEVEL.cell - 12 }
+          : { x, y, w: LEVEL.cell - 12, h: car.len * LEVEL.cell - 12 };
+      }
+      function pointFromEvent(event) {
+        const box = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - box.left) * canvas.width / box.width,
+          y: (event.clientY - box.top) * canvas.height / box.height,
+        };
+      }
+      function carFromPoint(point) {
+        return activeCars()
+          .filter((car) => {
+            const rect = carRect(car);
+            return point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h;
+          })
+          .sort((a, b) => b.len - a.len)[0] || null;
+      }
+      function actOnCar(car) {
+        if (!car || state.mode !== 'playing') return;
+        state.selectedId = car.id;
+        const outcome = outcomeFor(car);
+        if (outcome.type === 'blocked') {
+          state.note = car.label + THEME.blockedCopy;
+          render();
+          return;
+        }
+        state.moves += 1;
+        if (outcome.type === 'slide') {
+          car.row = outcome.row;
+          car.col = outcome.col;
+          state.note = car.label + THEME.moveCopy;
+        } else {
+          car.active = false;
+          state.escaped += 1;
+          state.note = car.label + THEME.exitCopy;
+        }
+        if (!activeCars().length) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+        }
+        render();
+      }
+      function drawBoard() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, THEME.bgTop);
+        gradient.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(${JSON.stringify(config.title)}, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.topCopy, 24, 58);
+        const boardW = LEVEL.cols * LEVEL.cell;
+        const boardH = LEVEL.rows * LEVEL.cell;
+        ctx.fillStyle = THEME.lotFill;
+        ctx.strokeStyle = THEME.lotLine;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(LEVEL.boardX - 10, LEVEL.boardY - 10, boardW + 20, boardH + 20, 28);
+        ctx.fill();
+        ctx.stroke();
+        for (let row = 0; row < LEVEL.rows; row += 1) {
+          for (let col = 0; col < LEVEL.cols; col += 1) {
+            const x = LEVEL.boardX + col * LEVEL.cell;
+            const y = LEVEL.boardY + row * LEVEL.cell;
+            ctx.fillStyle = THEME.slotFill;
+            ctx.beginPath();
+            ctx.roundRect(x + 4, y + 4, LEVEL.cell - 8, LEVEL.cell - 8, 12);
+            ctx.fill();
+          }
+        }
+        LEVEL.exits.forEach((exit) => {
+          const gradient = ctx.createLinearGradient(exit.x1, exit.y1, exit.x2, exit.y2);
+          gradient.addColorStop(0, 'rgba(255,255,255,0)');
+          gradient.addColorStop(1, THEME.exitGlow);
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = 12;
+          ctx.beginPath();
+          ctx.moveTo(exit.x1, exit.y1);
+          ctx.lineTo(exit.x2, exit.y2);
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,.78)';
+          ctx.font = '800 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(THEME.exitLabel, exit.lx, exit.ly);
+        });
+        ctx.fillStyle = 'rgba(255,255,255,.62)';
+        ctx.font = '800 12px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(THEME.boardLabel, LEVEL.boardX - 2, LEVEL.boardY - 18);
+      }
+      function drawCar(car) {
+        const rect = carRect(car);
+        const meta = THEME.colors[car.color];
+        const selected = state.selectedId === car.id;
+        ctx.save();
+        ctx.translate(rect.x, rect.y);
+        ctx.fillStyle = meta.fill;
+        ctx.strokeStyle = selected ? '#ffffff' : meta.edge;
+        ctx.lineWidth = selected ? 3.5 : 3;
+        ctx.beginPath();
+        ctx.roundRect(0, 0, rect.w, rect.h, 16);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.22)';
+        if (car.axis === 'h') {
+          ctx.fillRect(12, 8, rect.w - 24, 12);
+          ctx.fillRect(12, rect.h - 20, rect.w - 24, 8);
+        } else {
+          ctx.fillRect(8, 12, 12, rect.h - 24);
+          ctx.fillRect(rect.w - 20, 12, 8, rect.h - 24);
+        }
+        ctx.fillStyle = '#071018';
+        ctx.font = '900 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(DIRS[car.dir].arrow, rect.w / 2, rect.h / 2 + 6);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '800 10px sans-serif';
+        ctx.fillText(car.label, rect.w / 2, rect.h / 2 - 12);
+        ctx.restore();
+      }
+      function render() {
+        drawBoard();
+        activeCars().forEach(drawCar);
+        if (state.mode === 'won') {
+          ctx.fillStyle = 'rgba(6,10,18,.74)';
+          ctx.fillRect(34, 198, 322, 108);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('整场通车', 195, 240);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.note, 195, 268);
+        }
+        document.getElementById('moveText').textContent = THEME.movesLabel + ' ' + state.moves;
+        document.getElementById('leftText').textContent = THEME.leftLabel + ' ' + activeCars().length;
+        document.getElementById('statusText').textContent = state.note;
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        actOnCar(carFromPoint(pointFromEvent(event)));
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => render();
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with a 6x6 parking lot grid',
+        mode: state.mode,
+        moves: state.moves,
+        escaped: state.escaped,
+        remaining: activeCars().length,
+        cars: activeCars().map((car) => ({ id: car.id, row: car.row, col: car.col, len: car.len, axis: car.axis, dir: car.dir, next: outcomeFor(car).type })),
+      });
+    `,
+  };
+}
+
+const parkingJamBaseGame = createParkingJamGame({
+  id: 'parking-jam-fake',
+  file: 'parking-jam-fake.html',
+  title: '停车场解堵局',
+  sourceGame: 'Parking Jam 3D 式停车场解堵',
+  accent: '#7edcff',
+  summary: '点车让它沿车头方向滑到尽头或直接出库，先清挡路车，再把整面停车场慢慢疏通。',
+  buttonCopy: '重开这层车位',
+  topCopy: 'Parking Jam 热门复刻 · 点车沿车头方向滑出通道',
+  hint: '先送走出口边的短车，给后排长车腾道；每辆车只会沿车头方向往前滑。',
+  moveCopy: ' 先往前蹭出了一截车位。',
+  blockedCopy: ' 车头前还堵着，先挪开挡路车。',
+  exitCopy: ' 已经顺着出口开出去了。',
+  winCopy: '整面停车场已经被你疏通干净了。',
+  movesLabel: '挪车',
+  leftLabel: '待出',
+  boardLabel: '车位区',
+  exitLabel: '出口',
+  bgTop: '#0d2030',
+  bgBottom: '#08121a',
+  lotFill: '#172838',
+  lotLine: '#40627e',
+  slotFill: 'rgba(255,255,255,.06)',
+  exitGlow: 'rgba(126,220,255,.86)',
+  colors: {
+    coral: { fill: '#ff8f8f', edge: '#ffd4d4' },
+    cyan: { fill: '#78dfff', edge: '#d7f5ff' },
+    amber: { fill: '#ffc96f', edge: '#ffebbe' },
+    lime: { fill: '#a9e46d', edge: '#e8ffcf' },
+    violet: { fill: '#c9b2ff', edge: '#efe6ff' },
+    pink: { fill: '#ff9bc2', edge: '#ffe1ef' },
+  },
+  level: {
+    rows: 6,
+    cols: 6,
+    cell: 46,
+    boardX: 57,
+    boardY: 128,
+    cars: [
+      { id: 0, row: 0, col: 0, len: 2, axis: 'h', dir: 'right', color: 'coral', label: 'A1' },
+      { id: 1, row: 0, col: 3, len: 2, axis: 'v', dir: 'down', color: 'cyan', label: 'B2' },
+      { id: 2, row: 1, col: 1, len: 3, axis: 'h', dir: 'right', color: 'amber', label: 'C3' },
+      { id: 3, row: 1, col: 5, len: 2, axis: 'v', dir: 'down', color: 'pink', label: 'D4' },
+      { id: 4, row: 2, col: 0, len: 2, axis: 'v', dir: 'up', color: 'lime', label: 'E5' },
+      { id: 5, row: 2, col: 2, len: 2, axis: 'h', dir: 'right', color: 'violet', label: 'F6' },
+      { id: 6, row: 3, col: 1, len: 3, axis: 'v', dir: 'down', color: 'coral', label: 'G7' },
+      { id: 7, row: 3, col: 3, len: 2, axis: 'h', dir: 'left', color: 'cyan', label: 'H8' },
+      { id: 8, row: 4, col: 4, len: 2, axis: 'v', dir: 'down', color: 'amber', label: 'J9' },
+      { id: 9, row: 5, col: 2, len: 2, axis: 'h', dir: 'left', color: 'lime', label: 'K1' },
+    ],
+    exits: [
+      { x1: 57, y1: 243, x2: 39, y2: 243, lx: 30, ly: 247 },
+      { x1: 333, y1: 335, x2: 351, y2: 335, lx: 360, ly: 339 },
+      { x1: 218, y1: 404, x2: 218, y2: 426, lx: 218, ly: 440 },
+    ],
+  },
+});
+
+const parkingJamOfficeRemixGame = createParkingJamGame({
+  id: 'overtime-carpool-jam',
+  file: 'overtime-carpool-jam.html',
+  title: '下班拼车出库',
+  sourceGame: '停车场解堵局 Remix',
+  accent: '#9be9d4',
+  summary: '把普通车位改成夜班园区拼车口：先放走门口短车，再把后排长车一台台挪出园区。',
+  buttonCopy: '重开这一层',
+  topCopy: '办公室二创 · 点亮车头，把下班拼车一台台挪出库',
+  hint: '先让出口旁的小车先走，后排大车才有路；每台车都只会顺着自己的车头往前开。',
+  moveCopy: ' 已经往前蹭出一个车位。',
+  blockedCopy: ' 车头前还压着别的班车，先处理前排。',
+  exitCopy: ' 已经从园区口顺利出库。',
+  winCopy: '这一层下班拼车已经全部放完了。',
+  movesLabel: '放车',
+  leftLabel: '待放',
+  boardLabel: '园区车位',
+  exitLabel: '闸口',
+  bgTop: '#091c20',
+  bgBottom: '#051012',
+  lotFill: '#103033',
+  lotLine: '#3f726d',
+  slotFill: 'rgba(255,255,255,.05)',
+  exitGlow: 'rgba(155,233,212,.88)',
+  colors: {
+    coral: { fill: '#ff9b92', edge: '#ffd8d3' },
+    cyan: { fill: '#85e4f2', edge: '#ddfdff' },
+    amber: { fill: '#ffd084', edge: '#fff0ce' },
+    lime: { fill: '#b4ea86', edge: '#edffd8' },
+    violet: { fill: '#d0bcff', edge: '#f1e9ff' },
+    pink: { fill: '#ffadc8', edge: '#ffe7ef' },
+  },
+  level: {
+    rows: 6,
+    cols: 6,
+    cell: 46,
+    boardX: 57,
+    boardY: 128,
+    cars: [
+      { id: 0, row: 0, col: 1, len: 2, axis: 'h', dir: 'right', color: 'coral', label: '研组' },
+      { id: 1, row: 0, col: 4, len: 2, axis: 'v', dir: 'down', color: 'cyan', label: '包组' },
+      { id: 2, row: 1, col: 0, len: 3, axis: 'v', dir: 'up', color: 'amber', label: '客组' },
+      { id: 3, row: 1, col: 2, len: 2, axis: 'h', dir: 'right', color: 'violet', label: '运组' },
+      { id: 4, row: 2, col: 3, len: 3, axis: 'v', dir: 'down', color: 'lime', label: '仓组' },
+      { id: 5, row: 2, col: 5, len: 2, axis: 'v', dir: 'down', color: 'pink', label: '法组' },
+      { id: 6, row: 3, col: 1, len: 2, axis: 'h', dir: 'left', color: 'coral', label: '研组' },
+      { id: 7, row: 4, col: 0, len: 2, axis: 'h', dir: 'left', color: 'cyan', label: '包组' },
+      { id: 8, row: 4, col: 4, len: 2, axis: 'h', dir: 'right', color: 'amber', label: '客组' },
+      { id: 9, row: 5, col: 2, len: 2, axis: 'h', dir: 'left', color: 'pink', label: '法组' },
+    ],
+    exits: [
+      { x1: 57, y1: 335, x2: 39, y2: 335, lx: 30, ly: 339 },
+      { x1: 333, y1: 243, x2: 351, y2: 243, lx: 360, ly: 247 },
+      { x1: 241, y1: 404, x2: 241, y2: 426, lx: 241, ly: 440 },
+    ],
+  },
+});
+
+const trafficBoltJamBaseGame = createParkingJamGame({
+  id: 'traffic-bolt-jam',
+  file: 'traffic-bolt-jam.html',
+  title: '挪车打螺丝',
+  sourceGame: '挪车打螺丝 / Parking Jam 式停车解堵',
+  accent: '#8be7ff',
+  summary: '沿着车头方向一点点挪开堵路车，把卡在厂区出钉通道里的车队整层疏通。',
+  buttonCopy: '重开这层通道',
+  topCopy: '今日热词复刻 · 先挪门口短车，再放后排长车穿过出钉口',
+  hint: '出口附近的小车先走，给后排长车和竖停车让路；每台车都只会顺着自己的车头往前开。',
+  moveCopy: ' 已经往前蹭出一段通道。',
+  blockedCopy: ' 车头前还压着别的车，先挪开挡路位。',
+  exitCopy: ' 已经顺着出钉口滑出去了。',
+  winCopy: '这一层挪车打钉通道已经被你彻底疏通了。',
+  movesLabel: '挪车',
+  leftLabel: '待走',
+  boardLabel: '厂区车道',
+  exitLabel: '出钉口',
+  bgTop: '#0a1f2c',
+  bgBottom: '#050d14',
+  lotFill: '#153043',
+  lotLine: '#4e7891',
+  slotFill: 'rgba(255,255,255,.05)',
+  exitGlow: 'rgba(139,231,255,.88)',
+  colors: {
+    coral: { fill: '#ff9d87', edge: '#ffd9cf' },
+    cyan: { fill: '#7ce0ff', edge: '#dbf7ff' },
+    amber: { fill: '#ffc970', edge: '#ffeec2' },
+    lime: { fill: '#afe478', edge: '#ecffd5' },
+    violet: { fill: '#cdb6ff', edge: '#f2ebff' },
+    pink: { fill: '#ff9ec8', edge: '#ffe3ef' },
+  },
+  level: {
+    rows: 6,
+    cols: 6,
+    cell: 46,
+    boardX: 57,
+    boardY: 128,
+    cars: [
+      { id: 0, row: 0, col: 0, len: 2, axis: 'h', dir: 'right', color: 'coral', label: '钉A' },
+      { id: 1, row: 0, col: 4, len: 2, axis: 'v', dir: 'down', color: 'cyan', label: '箱B' },
+      { id: 2, row: 1, col: 1, len: 3, axis: 'h', dir: 'right', color: 'amber', label: '钉C' },
+      { id: 3, row: 1, col: 5, len: 2, axis: 'v', dir: 'down', color: 'pink', label: '栈D' },
+      { id: 4, row: 2, col: 0, len: 2, axis: 'v', dir: 'up', color: 'lime', label: '盒E' },
+      { id: 5, row: 2, col: 2, len: 2, axis: 'h', dir: 'right', color: 'violet', label: '钉F' },
+      { id: 6, row: 3, col: 1, len: 3, axis: 'v', dir: 'down', color: 'coral', label: '箱G' },
+      { id: 7, row: 3, col: 4, len: 2, axis: 'v', dir: 'down', color: 'cyan', label: '钉H' },
+      { id: 8, row: 4, col: 2, len: 2, axis: 'h', dir: 'left', color: 'amber', label: '栈J' },
+      { id: 9, row: 5, col: 0, len: 2, axis: 'h', dir: 'right', color: 'lime', label: '盒K' },
+    ],
+    exits: [
+      { x1: 57, y1: 243, x2: 39, y2: 243, lx: 30, ly: 247 },
+      { x1: 333, y1: 335, x2: 351, y2: 335, lx: 360, ly: 339 },
+      { x1: 241, y1: 404, x2: 241, y2: 426, lx: 241, ly: 440 },
+    ],
+  },
+});
+
+const factoryBoltJamRemixGame = createParkingJamGame({
+  id: 'factory-bolt-jam',
+  file: 'factory-bolt-jam.html',
+  title: '夜班进厂通车',
+  sourceGame: '挪车打螺丝 Remix',
+  accent: '#9ce8c4',
+  summary: '把热词盘改成夜班进厂主题：先腾开闸口小车，再把后排班车一辆辆送进厂门。',
+  buttonCopy: '重开这一班',
+  topCopy: '进厂二创 · 点亮车头，把堵在厂门前的班车一台台放进去',
+  hint: '先处理闸口边的小车，后排长车才有路；每台车都只会顺着自己的车头往前滑。',
+  moveCopy: ' 已经往前挪出一格厂门通道。',
+  blockedCopy: ' 厂门前还堵着别的班车，先挪前排。',
+  exitCopy: ' 已经顺着闸口开进去了。',
+  winCopy: '这一班车已经全部顺进厂门了。',
+  movesLabel: '进车',
+  leftLabel: '待进',
+  boardLabel: '厂门车道',
+  exitLabel: '闸口',
+  bgTop: '#081b1d',
+  bgBottom: '#041012',
+  lotFill: '#123033',
+  lotLine: '#4d7c72',
+  slotFill: 'rgba(255,255,255,.05)',
+  exitGlow: 'rgba(156,232,196,.9)',
+  colors: {
+    coral: { fill: '#ff9e8d', edge: '#ffddd6' },
+    cyan: { fill: '#83def0', edge: '#dbfbff' },
+    amber: { fill: '#ffd088', edge: '#fff1d3' },
+    lime: { fill: '#b6e88d', edge: '#efffde' },
+    violet: { fill: '#cfbeff', edge: '#f4edff' },
+    pink: { fill: '#ffabc7', edge: '#ffe6ef' },
+  },
+  level: {
+    rows: 6,
+    cols: 6,
+    cell: 46,
+    boardX: 57,
+    boardY: 128,
+    cars: [
+      { id: 0, row: 0, col: 1, len: 2, axis: 'h', dir: 'right', color: 'coral', label: '夜A' },
+      { id: 1, row: 0, col: 4, len: 2, axis: 'v', dir: 'down', color: 'cyan', label: '包B' },
+      { id: 2, row: 1, col: 0, len: 3, axis: 'v', dir: 'up', color: 'amber', label: '仓C' },
+      { id: 3, row: 1, col: 2, len: 2, axis: 'h', dir: 'right', color: 'pink', label: '研D' },
+      { id: 4, row: 2, col: 4, len: 2, axis: 'v', dir: 'down', color: 'lime', label: '客E' },
+      { id: 5, row: 3, col: 1, len: 3, axis: 'h', dir: 'left', color: 'violet', label: '夜F' },
+      { id: 6, row: 3, col: 5, len: 2, axis: 'v', dir: 'down', color: 'coral', label: '厂G' },
+      { id: 7, row: 4, col: 2, len: 2, axis: 'h', dir: 'left', color: 'cyan', label: '包H' },
+      { id: 8, row: 4, col: 0, len: 2, axis: 'v', dir: 'up', color: 'amber', label: '仓J' },
+      { id: 9, row: 5, col: 3, len: 2, axis: 'h', dir: 'right', color: 'lime', label: '客K' },
+    ],
+    exits: [
+      { x1: 57, y1: 197, x2: 39, y2: 197, lx: 30, ly: 201 },
+      { x1: 333, y1: 381, x2: 351, y2: 381, lx: 360, ly: 385 },
+      { x1: 195, y1: 404, x2: 195, y2: 426, lx: 195, ly: 440 },
+    ],
+  },
+});
+
+function createHexaSortGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    hint: config.hint,
+    winCopy: config.winCopy,
+    moveCopy: config.moveCopy,
+    blockedCopy: config.blockedCopy,
+    clearCopy: config.clearCopy,
+    buttonCopy: config.buttonCopy,
+    deckLabel: config.deckLabel,
+    colors: config.colors,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    boardFill: config.boardFill,
+    boardEdge: config.boardEdge,
+    slotFill: config.slotFill,
+    shadow: config.shadow,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '六角分拣',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="goalText"></b><span id="moveText"></span></div>
+        <p id="statusText">${theme.hint}</p>
+        <button class="primary" id="resetBtn">${theme.buttonCopy}</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const LEVEL = ${JSON.stringify(config.level)};
+      const CAPACITY = LEVEL.capacity;
+      const SLOT_POINTS = LEVEL.slots;
+      const state = { columns: [], selected: -1, moves: 0, cleared: [], mode: 'playing', note: THEME.hint, pulse: 0 };
+      function cloneColumns() {
+        return LEVEL.columns.map((column) => column.slice());
+      }
+      function topColor(index) {
+        const column = state.columns[index];
+        return column.length ? column[column.length - 1] : null;
+      }
+      function contiguousTopCount(index) {
+        const column = state.columns[index];
+        if (!column.length) return 0;
+        const color = column[column.length - 1];
+        let count = 1;
+        for (let i = column.length - 2; i >= 0; i -= 1) {
+          if (column[i] !== color) break;
+          count += 1;
+        }
+        return count;
+      }
+      function isUniform(column) {
+        return column.length === CAPACITY && column.every((color) => color === column[0]);
+      }
+      function checkClear(index) {
+        const column = state.columns[index];
+        if (!isUniform(column)) return false;
+        const color = column[0];
+        state.columns[index] = [];
+        state.cleared.push(color);
+        const meta = THEME.colors[color];
+        state.note = meta.label + THEME.clearCopy;
+        state.pulse = 1;
+        return true;
+      }
+      function reset() {
+        state.columns = cloneColumns();
+        state.selected = -1;
+        state.moves = 0;
+        state.cleared = [];
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        state.pulse = 0;
+        render();
+      }
+      function won() {
+        return state.columns.every((column) => column.length === 0);
+      }
+      function canMove(from, to) {
+        if (from === to || from < 0 || to < 0) return false;
+        const source = state.columns[from];
+        const target = state.columns[to];
+        if (!source.length || target.length >= CAPACITY) return false;
+        const color = source[source.length - 1];
+        if (target.length && target[target.length - 1] !== color) return false;
+        return true;
+      }
+      function moveCount(from, to) {
+        if (!canMove(from, to)) return 0;
+        const available = CAPACITY - state.columns[to].length;
+        return Math.min(contiguousTopCount(from), available);
+      }
+      function tryMove(from, to) {
+        if (!canMove(from, to)) {
+          state.note = THEME.blockedCopy;
+          state.selected = to;
+          render();
+          return false;
+        }
+        const count = moveCount(from, to);
+        if (!count) return false;
+        const source = state.columns[from];
+        const target = state.columns[to];
+        const moved = source.splice(source.length - count, count);
+        target.push(...moved);
+        state.moves += 1;
+        const meta = THEME.colors[moved[0]];
+        state.note = meta.label + THEME.moveCopy;
+        state.selected = -1;
+        checkClear(to);
+        if (won()) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+        }
+        render();
+        return true;
+      }
+      function handleSlot(index) {
+        if (state.mode !== 'playing') return;
+        if (state.selected === -1) {
+          if (!state.columns[index].length) return;
+          state.selected = index;
+          const meta = THEME.colors[topColor(index)];
+          state.note = THEME.deckLabel + meta.label;
+          render();
+          return;
+        }
+        if (state.selected === index) {
+          state.selected = -1;
+          state.note = THEME.hint;
+          render();
+          return;
+        }
+        tryMove(state.selected, index);
+      }
+      function pointFromEvent(event) {
+        const box = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - box.left) * canvas.width / box.width,
+          y: (event.clientY - box.top) * canvas.height / box.height,
+        };
+      }
+      function slotFromPoint(point) {
+        return SLOT_POINTS.findIndex((slot) => Math.hypot(point.x - slot.x, point.y - slot.y) <= 42);
+      }
+      function drawHex(x, y, fill, stroke, label, selected, alpha) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.moveTo(x, y - 18);
+        ctx.lineTo(x + 16, y - 9);
+        ctx.lineTo(x + 16, y + 9);
+        ctx.lineTo(x, y + 18);
+        ctx.lineTo(x - 16, y + 9);
+        ctx.lineTo(x - 16, y - 9);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.strokeStyle = selected ? '#ffffff' : stroke;
+        ctx.lineWidth = selected ? 3 : 2;
+        ctx.stroke();
+        ctx.fillStyle = '#081017';
+        ctx.font = '900 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x, y + 4);
+        ctx.restore();
+      }
+      function drawBoard() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, THEME.bgTop);
+        gradient.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 21px sans-serif';
+        ctx.fillText(${JSON.stringify(config.title)}, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.subheading, 24, 58);
+        ctx.fillStyle = THEME.boardFill;
+        ctx.strokeStyle = THEME.boardEdge;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(26, 84, 338, 360, 28);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        for (let i = 0; i < SLOT_POINTS.length; i += 1) {
+          const slot = SLOT_POINTS[i];
+          ctx.beginPath();
+          ctx.arc(slot.x, slot.y + 10, 28, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      function drawColumns() {
+        SLOT_POINTS.forEach((slot, index) => {
+          ctx.fillStyle = THEME.slotFill;
+          ctx.beginPath();
+          ctx.roundRect(slot.x - 24, slot.y + 8, 48, 108, 18);
+          ctx.fill();
+          ctx.fillStyle = THEME.shadow;
+          ctx.beginPath();
+          ctx.ellipse(slot.x, slot.y + 110, 24, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          const column = state.columns[index];
+          column.forEach((color, depth) => {
+            const meta = THEME.colors[color];
+            const raised = state.selected === index ? 8 + state.pulse * 3 : 0;
+            drawHex(
+              slot.x,
+              slot.y + 90 - depth * 24 - raised,
+              meta.fill,
+              meta.edge,
+              meta.glyph,
+              state.selected === index && depth === column.length - 1,
+              1
+            );
+          });
+          ctx.fillStyle = 'rgba(255,255,255,.62)';
+          ctx.font = '800 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(index + 1), slot.x, slot.y + 136);
+        });
+        ctx.textAlign = 'left';
+      }
+      function render() {
+        state.pulse = Math.max(0, state.pulse - 0.08);
+        drawBoard();
+        drawColumns();
+        if (state.mode === 'won') {
+          ctx.fillStyle = 'rgba(5,8,14,.72)';
+          ctx.fillRect(42, 202, 306, 92);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('全部归并', 195, 238);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.note, 195, 264);
+          ctx.textAlign = 'left';
+        }
+        document.getElementById('goalText').textContent = '已清 ' + state.cleared.length + ' / ' + LEVEL.targetClears;
+        document.getElementById('moveText').textContent = '步数 ' + state.moves;
+        document.getElementById('statusText').textContent = state.note;
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        const index = slotFromPoint(pointFromEvent(event));
+        if (index >= 0) handleSlot(index);
+      });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => render();
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with honeycomb stack board',
+        mode: state.mode,
+        selected: state.selected,
+        moves: state.moves,
+        cleared: state.cleared,
+        columns: state.columns,
+        top: state.columns.map((column) => column.length ? column[column.length - 1] : null),
+        capacity: CAPACITY,
+      });
+    `,
+  };
+}
+
+const hexaSortLevel = {
+  capacity: 4,
+  targetClears: 5,
+  slots: [
+    { x: 110, y: 138 },
+    { x: 195, y: 138 },
+    { x: 280, y: 138 },
+    { x: 68, y: 266 },
+    { x: 153, y: 266 },
+    { x: 238, y: 266 },
+    { x: 323, y: 266 },
+  ],
+  columns: [
+    ['cyan', 'pink', 'amber', 'cyan'],
+    ['lime', 'violet', 'amber', 'pink'],
+    ['violet', 'lime', 'cyan', 'amber'],
+    ['pink', 'amber', 'lime', 'violet'],
+    ['cyan', 'lime', 'pink', 'violet'],
+    [],
+    [],
+  ],
+};
+
+const hexaSortBaseGame = createHexaSortGame({
+  id: 'hexa-sort-fake',
+  file: 'hexa-sort-fake.html',
+  title: '六角叠色局',
+  sourceGame: 'Hexa Sort 式六角堆叠分色消层',
+  accent: '#7cf0ff',
+  summary: '点列子把顶层同色六角块倒去空列或同色列，凑满整列就整柱清空。',
+  heading: 'Hexa Sort 热门复刻',
+  subheading: '六角堆叠排序 · 只搬运顶层连续同色块 · 满列即清空',
+  hint: '先点一列，再点空列或同色顶层列；顶层连续同色会整段一起搬过去。',
+  winCopy: '整块六角盘已经整理干净了。',
+  moveCopy: ' 顺着槽位并过去了。',
+  blockedCopy: '目标列不匹配，必须倒进空列或同色顶层列。',
+  clearCopy: ' 凑满一整柱，已经整列消掉。',
+  buttonCopy: '重开这盘',
+  deckLabel: '已选 ',
+  bgTop: '#081726',
+  bgBottom: '#040c14',
+  boardFill: '#102536',
+  boardEdge: 'rgba(219,246,255,.78)',
+  slotFill: 'rgba(255,255,255,.08)',
+  shadow: 'rgba(0,0,0,.32)',
+  colors: {
+    cyan: { fill: '#7feeff', edge: '#ddfbff', glyph: '青', label: '青块' },
+    pink: { fill: '#ff9ec7', edge: '#ffe0ef', glyph: '粉', label: '粉块' },
+    amber: { fill: '#ffd36b', edge: '#fff0c2', glyph: '黄', label: '黄块' },
+    lime: { fill: '#b5f574', edge: '#e7ffd0', glyph: '绿', label: '绿块' },
+    violet: { fill: '#c8b2ff', edge: '#efe5ff', glyph: '紫', label: '紫块' },
+  },
+  level: hexaSortLevel,
+});
+
+const hexaSortOfficeRemixGame = createHexaSortGame({
+  id: 'office-badge-stack',
+  file: 'office-badge-stack.html',
+  title: '工牌六角归档',
+  sourceGame: '六角叠色局 Remix',
+  accent: '#9ff0d1',
+  summary: '把六角色块改成部门工牌：先给空槽腾位，再把同部门牌叠满一柱整批归档。',
+  heading: '办公室六角归档',
+  subheading: '工牌分栏二创 · 顶层连续同部门整段搬运 · 满列整批收走',
+  hint: '先选一列工牌，再点空列或同部门顶牌列；同部门连在一起会整段搬走。',
+  winCopy: '所有部门工牌都已经归档完了。',
+  moveCopy: ' 已经整段挪去那一栏。',
+  blockedCopy: '归档栏不匹配，只能挪到空栏或同部门顶牌栏。',
+  clearCopy: ' 叠满一整栏，已经整批归档。',
+  buttonCopy: '重开这一栏',
+  deckLabel: '锁定 ',
+  bgTop: '#0a1b1b',
+  bgBottom: '#051010',
+  boardFill: '#10302d',
+  boardEdge: 'rgba(220,255,247,.78)',
+  slotFill: 'rgba(255,255,255,.08)',
+  shadow: 'rgba(0,0,0,.34)',
+  colors: {
+    cyan: { fill: '#88efe8', edge: '#e2fffc', glyph: '产', label: '产品牌' },
+    pink: { fill: '#ffadbc', edge: '#ffe4eb', glyph: '市', label: '市场牌' },
+    amber: { fill: '#ffd486', edge: '#fff1cf', glyph: '运', label: '运营牌' },
+    lime: { fill: '#b8f08d', edge: '#ecffd7', glyph: '技', label: '技术牌' },
+    violet: { fill: '#cfbdff', edge: '#f2eaff', glyph: '客', label: '客服牌' },
+  },
+  level: hexaSortLevel,
+});
+
+function createTripleMatchGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    hint: config.hint,
+    trayLabel: config.trayLabel,
+    winCopy: config.winCopy,
+    loseCopy: config.loseCopy,
+    clearCopy: config.clearCopy,
+    blockedCopy: config.blockedCopy,
+    buttonCopy: config.buttonCopy,
+    timerLabel: config.timerLabel,
+    targetLabel: config.targetLabel,
+    boardTop: config.boardTop,
+    boardBottom: config.boardBottom,
+    pileGlow: config.pileGlow,
+    trayGlow: config.trayGlow,
+    chipBg: config.chipBg,
+    chipEdge: config.chipEdge,
+    types: config.types,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '三连清堆物',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    markup: `
+      <section class="panel compact">
+        <div class="row"><b id="goalText"></b><span id="timeText"></span></div>
+        <p id="statusText">${theme.hint}</p>
+      </section>
+      <section class="panel compact triple-playfield">
+        <div class="triple-targets" id="targetGrid"></div>
+        <div class="triple-board" id="tripleBoard" aria-label="堆物盘面"></div>
+        <div class="triple-tray-head"><b>${theme.trayLabel}</b><span id="trayCountText"></span></div>
+        <div class="triple-tray" id="tray"></div>
+      </section>
+      <button class="primary" id="resetBtn">${theme.buttonCopy}</button>
+    `,
+    script: `
+      const THEME = ${JSON.stringify(theme)};
+      const LEVEL = ${JSON.stringify(config.level)};
+      const board = document.getElementById('tripleBoard');
+      const targetGrid = document.getElementById('targetGrid');
+      const trayEl = document.getElementById('tray');
+      board.style.setProperty('--board-top', THEME.boardTop);
+      board.style.setProperty('--board-bottom', THEME.boardBottom);
+      board.style.setProperty('--pile-glow', THEME.pileGlow);
+      trayEl.style.setProperty('--tray-glow', THEME.trayGlow);
+      const goalText = document.getElementById('goalText');
+      const timeText = document.getElementById('timeText');
+      const trayCountText = document.getElementById('trayCountText');
+      const statusText = document.getElementById('statusText');
+      const state = { items: [], tray: [], remaining: {}, mode: 'playing', note: THEME.hint, matched: 0, timeLeft: LEVEL.timeLimit, lastStamp: 0, raf: 0 };
+      function cloneItems() {
+        return LEVEL.items.map((item, index) => ({ ...item, id: index, active: true }));
+      }
+      function buildRemaining() {
+        const counts = {};
+        Object.keys(THEME.types).forEach((key) => { counts[key] = 0; });
+        LEVEL.items.forEach((item) => { counts[item.type] += 1; });
+        return counts;
+      }
+      function overlap(a, b) {
+        return Math.abs(a.x - b.x) < 58 && Math.abs(a.y - b.y) < 52;
+      }
+      function exposed(item) {
+        if (!item.active) return false;
+        return !state.items.some((other) => other.active && other.layer > item.layer && overlap(item, other));
+      }
+      function formatTime(value) {
+        return value.toFixed(1).replace(/\\.0$/, '') + 's';
+      }
+      function reset() {
+        state.items = cloneItems();
+        state.tray = [];
+        state.remaining = buildRemaining();
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        state.matched = 0;
+        state.timeLeft = LEVEL.timeLimit;
+        state.lastStamp = 0;
+        if (state.raf) cancelAnimationFrame(state.raf);
+        render();
+        state.raf = requestAnimationFrame(loop);
+      }
+      function resolveTriples(type) {
+        const hits = [];
+        state.tray.forEach((entry, index) => {
+          if (entry.type === type) hits.push(index);
+        });
+        if (hits.length < 3) return false;
+        const removed = new Set(hits.slice(0, 3));
+        state.tray = state.tray.filter((_, index) => !removed.has(index));
+        state.remaining[type] = Math.max(0, state.remaining[type] - 3);
+        state.matched += 3;
+        state.note = THEME.types[type].label + THEME.clearCopy;
+        if (state.matched >= LEVEL.items.length) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+        }
+        return true;
+      }
+      function pick(id) {
+        if (state.mode !== 'playing') return;
+        const item = state.items.find((entry) => entry.id === id);
+        if (!item) return;
+        if (!exposed(item)) {
+          state.note = THEME.blockedCopy;
+          render();
+          return;
+        }
+        item.active = false;
+        state.tray.push({ type: item.type, id: item.id });
+        resolveTriples(item.type);
+        if (state.mode === 'playing' && state.tray.length >= LEVEL.traySize) {
+          state.mode = 'lost';
+          state.note = THEME.loseCopy;
+        }
+        render();
+      }
+      function step(ms) {
+        if (state.mode !== 'playing') return;
+        state.timeLeft = Math.max(0, state.timeLeft - ms / 1000);
+        if (state.timeLeft <= 0) {
+          state.mode = 'lost';
+          state.note = THEME.timerLabel + '耗尽了。';
+        }
+      }
+      function loop(stamp) {
+        if (!state.lastStamp) state.lastStamp = stamp;
+        const delta = stamp - state.lastStamp;
+        state.lastStamp = stamp;
+        step(delta);
+        render();
+        if (state.mode === 'playing') state.raf = requestAnimationFrame(loop);
+      }
+      function boardItemMarkup(item) {
+        const meta = THEME.types[item.type];
+        const top = exposed(item);
+        const yShift = item.layer * 8;
+        return '<button class="triple-item' + (top ? ' top' : ' locked') + '" type="button" data-id="' + item.id + '" style="left:' + item.x + 'px; top:' + (item.y - yShift) + 'px; z-index:' + (item.layer + 1) + ';">' +
+          '<span class="triple-item-glyph" style="background:' + meta.fill + '; border-color:' + meta.edge + '; color:' + meta.ink + ';">' + meta.glyph + '</span>' +
+          '<span class="triple-item-tag">' + meta.short + '</span>' +
+        '</button>';
+      }
+      function renderTargets() {
+        targetGrid.innerHTML = Object.entries(THEME.types).map(([key, meta]) => {
+          const left = state.remaining[key];
+          return '<span class="triple-chip" style="--chip-fill:' + meta.fill + '; --chip-edge:' + meta.edge + '; --chip-ink:' + meta.ink + ';"><b>' + meta.glyph + '</b><i>' + meta.short + '</i><u>' + left + '</u></span>';
+        }).join('');
+      }
+      function renderBoard() {
+        const active = state.items.filter((item) => item.active).sort((a, b) => a.layer - b.layer || a.id - b.id);
+        board.innerHTML = active.map(boardItemMarkup).join('');
+        board.querySelectorAll('[data-id]').forEach((node) => {
+          node.addEventListener('click', () => pick(Number(node.dataset.id)));
+        });
+      }
+      function renderTray() {
+        const cells = [];
+        for (let i = 0; i < LEVEL.traySize; i += 1) {
+          const entry = state.tray[i];
+          if (!entry) {
+            cells.push('<span class="triple-slot empty"></span>');
+            continue;
+          }
+          const meta = THEME.types[entry.type];
+          cells.push('<span class="triple-slot filled" style="background:' + meta.fill + '; border-color:' + meta.edge + '; color:' + meta.ink + ';">' + meta.glyph + '</span>');
+        }
+        trayEl.innerHTML = cells.join('');
+      }
+      function render() {
+        renderTargets();
+        renderBoard();
+        renderTray();
+        goalText.textContent = THEME.targetLabel + ' ' + state.matched + ' / ' + LEVEL.items.length;
+        timeText.textContent = THEME.timerLabel + ' ' + formatTime(state.timeLeft);
+        trayCountText.textContent = state.tray.length + ' / ' + LEVEL.traySize;
+        statusText.textContent = state.note;
+        board.dataset.mode = state.mode;
+      }
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = (ms = 0) => {
+        step(ms);
+        render();
+      };
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'DOM pile board with layered absolute-positioned clutter',
+        mode: state.mode,
+        matched: state.matched,
+        tray: state.tray.map((entry) => entry.type),
+        remaining: state.remaining,
+        time_left: Number(state.timeLeft.toFixed(2)),
+        exposed: state.items.filter((item) => exposed(item)).map((item) => ({ id: item.id, type: item.type })),
+        active_count: state.items.filter((item) => item.active).length,
+      });
+    `,
+  };
+}
+
+const tripleMatchLevel = {
+  traySize: 7,
+  timeLimit: 75,
+  items: [
+    { type: 'toy', x: 78, y: 118, layer: 0 },
+    { type: 'phone', x: 150, y: 126, layer: 0 },
+    { type: 'snack', x: 226, y: 120, layer: 0 },
+    { type: 'soap', x: 298, y: 132, layer: 0 },
+    { type: 'cup', x: 112, y: 194, layer: 0 },
+    { type: 'headset', x: 190, y: 192, layer: 0 },
+    { type: 'toy', x: 270, y: 198, layer: 0 },
+    { type: 'phone', x: 92, y: 258, layer: 1 },
+    { type: 'snack', x: 166, y: 250, layer: 1 },
+    { type: 'soap', x: 244, y: 258, layer: 1 },
+    { type: 'cup', x: 312, y: 248, layer: 1 },
+    { type: 'headset', x: 126, y: 314, layer: 1 },
+    { type: 'toy', x: 208, y: 318, layer: 1 },
+    { type: 'phone', x: 286, y: 312, layer: 1 },
+    { type: 'snack', x: 148, y: 164, layer: 2 },
+    { type: 'soap', x: 226, y: 172, layer: 2 },
+    { type: 'cup', x: 184, y: 236, layer: 2 },
+    { type: 'headset', x: 208, y: 110, layer: 3 },
+  ],
+};
+
+const tripleMatchBaseGame = createTripleMatchGame({
+  id: 'triple-match-fake',
+  file: 'triple-match-fake.html',
+  title: '杂物三连清',
+  sourceGame: 'Triple Match 3D / Match Factory 式堆物三连消',
+  accent: '#7dd6ff',
+  summary: '从杂乱堆物里只点最上层可见物，送进七格托盘，凑成三件同类立刻清走。',
+  heading: 'Triple Match 热门复刻',
+  subheading: '堆物找三连 · 上层遮挡 · 七格托盘爆掉就输',
+  hint: '只点当前露在最上层的东西；托盘里三件同类会立刻配成一组三连清掉。',
+  trayLabel: '收纳托盘',
+  winCopy: '这一堆杂物已经被你清干净了。',
+  loseCopy: '托盘被杂物塞满，先整理出三连再继续。',
+  clearCopy: ' 已经凑成三连清掉。',
+  blockedCopy: '这件还压在别的杂物下面，得先把上层拿开。',
+  buttonCopy: '重开这一堆',
+  timerLabel: '倒计时',
+  targetLabel: '已清',
+  boardTop: '#0a1625',
+  boardBottom: '#08101a',
+  pileGlow: 'rgba(125,214,255,.18)',
+  trayGlow: 'rgba(255,255,255,.08)',
+  chipBg: 'rgba(255,255,255,.08)',
+  chipEdge: 'rgba(255,255,255,.14)',
+  types: {
+    toy: { glyph: '熊', short: '玩具', label: '玩具熊', fill: '#ffb5ca', edge: '#ffe5ee', ink: '#3b0c1d' },
+    phone: { glyph: '机', short: '手机', label: '手机壳', fill: '#89e6ff', edge: '#e4fbff', ink: '#082533' },
+    snack: { glyph: '饼', short: '零食', label: '零食袋', fill: '#ffd67e', edge: '#fff1ca', ink: '#392100' },
+    soap: { glyph: '泡', short: '清洁', label: '泡泡瓶', fill: '#c8b9ff', edge: '#f1eaff', ink: '#241241' },
+    cup: { glyph: '杯', short: '杯子', label: '饮料杯', fill: '#9cf0c4', edge: '#e6ffef', ink: '#082d1e' },
+    headset: { glyph: '机', short: '耳机', label: '头戴耳机', fill: '#ff9b8d', edge: '#ffe0da', ink: '#3a110d' },
+  },
+  level: tripleMatchLevel,
+});
+
+const tripleMatchOfficeRemixGame = createTripleMatchGame({
+  id: 'desk-clutter-triples',
+  file: 'desk-clutter-triples.html',
+  title: '工位清台局',
+  sourceGame: '杂物三连清 Remix',
+  accent: '#92f0d9',
+  summary: '把大众杂物改成工位杂件：只拿最上层可见工牌、鼠标、咖啡和便签，三件同类立刻归盒。',
+  heading: '办公室清台二创',
+  subheading: '桌面清理主题 · 露头先拿 · 七格暂存溢出就堵台',
+  hint: '先把压在最上层的工位杂件拿走；同类凑三件就会立刻整盒归档。',
+  trayLabel: '待归档盒',
+  winCopy: '这一张工位桌面已经被你清台完成了。',
+  loseCopy: '待归档盒爆满了，先凑出三件同类再继续。',
+  clearCopy: ' 已经整盒归档。',
+  blockedCopy: '这件工位杂件还被压着，得先清掉上面那层。',
+  buttonCopy: '重开这张桌',
+  timerLabel: '剩余',
+  targetLabel: '已归档',
+  boardTop: '#071917',
+  boardBottom: '#05100f',
+  pileGlow: 'rgba(146,240,217,.18)',
+  trayGlow: 'rgba(255,255,255,.08)',
+  chipBg: 'rgba(255,255,255,.08)',
+  chipEdge: 'rgba(255,255,255,.14)',
+  types: {
+    toy: { glyph: '牌', short: '工牌', label: '工牌夹', fill: '#91efe6', edge: '#e8fffd', ink: '#072523' },
+    phone: { glyph: '鼠', short: '鼠标', label: '鼠标', fill: '#ffd39c', edge: '#fff0da', ink: '#3b2103' },
+    snack: { glyph: '签', short: '便签', label: '便签纸', fill: '#ffe989', edge: '#fff7d6', ink: '#423100' },
+    soap: { glyph: '杯', short: '咖啡', label: '咖啡杯', fill: '#c9b7ff', edge: '#f1eaff', ink: '#241241' },
+    cup: { glyph: '线', short: '充电线', label: '充电线', fill: '#9fe8b2', edge: '#ebfff0', ink: '#112a0f' },
+    headset: { glyph: '夹', short: '长尾夹', label: '长尾夹', fill: '#ffb4c2', edge: '#ffe7ee', ink: '#38101f' },
+  },
+  level: tripleMatchLevel,
+});
+
+function createGoodsSortGame(config) {
+  const theme = {
+    heading: config.heading,
+    subheading: config.subheading,
+    hint: config.hint,
+    trayLabel: config.trayLabel,
+    winCopy: config.winCopy,
+    loseCopy: config.loseCopy,
+    clearCopy: config.clearCopy,
+    targetLabel: config.targetLabel,
+    shelfLabel: config.shelfLabel,
+    buttonCopy: config.buttonCopy,
+    shelves: config.shelves,
+    laneGlow: config.laneGlow,
+    trayGlow: config.trayGlow,
+    types: config.types,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '货架三连',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    markup: `
+      <section class="panel compact">
+        <div class="row"><b id="goodsGoalText"></b><span id="goodsTrayText"></span></div>
+        <p id="goodsStatusText">${theme.hint}</p>
+      </section>
+      <section class="panel compact">
+        <div class="triple-targets goods-targets" id="goodsTargetGrid"></div>
+        <div class="goods-shelves" id="goodsShelves"></div>
+        <div class="triple-tray-head"><b>${theme.trayLabel}</b><span id="goodsShelfText"></span></div>
+        <div class="triple-tray" id="goodsTray"></div>
+      </section>
+      <button class="primary" id="goodsResetBtn">${theme.buttonCopy}</button>
+    `,
+    script: `
+      const THEME = ${JSON.stringify(theme)};
+      const LEVEL = ${JSON.stringify(config.level)};
+      const targetGrid = document.getElementById('goodsTargetGrid');
+      const shelvesEl = document.getElementById('goodsShelves');
+      const trayEl = document.getElementById('goodsTray');
+      const goalText = document.getElementById('goodsGoalText');
+      const trayText = document.getElementById('goodsTrayText');
+      const shelfText = document.getElementById('goodsShelfText');
+      const statusText = document.getElementById('goodsStatusText');
+      const state = { lanes: [], tray: [], remaining: {}, mode: 'playing', note: THEME.hint, cleared: 0 };
+      function cloneLanes() {
+        return LEVEL.lanes.map((lane, index) => ({ id: index, shelf: lane.shelf, items: lane.items.slice() }));
+      }
+      function buildRemaining() {
+        const counts = {};
+        Object.keys(THEME.types).forEach((key) => { counts[key] = 0; });
+        LEVEL.lanes.forEach((lane) => {
+          lane.items.forEach((type) => { counts[type] += 1; });
+        });
+        return counts;
+      }
+      function resolveTriples(type) {
+        const hits = [];
+        state.tray.forEach((entry, index) => {
+          if (entry.type === type) hits.push(index);
+        });
+        if (hits.length < 3) return false;
+        const removed = new Set(hits.slice(0, 3));
+        state.tray = state.tray.filter((_, index) => !removed.has(index));
+        state.remaining[type] = Math.max(0, state.remaining[type] - 3);
+        state.cleared += 3;
+        state.note = THEME.types[type].label + THEME.clearCopy;
+        if (state.cleared >= LEVEL.totalItems) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+        }
+        return true;
+      }
+      function pick(laneId) {
+        if (state.mode !== 'playing') return;
+        const lane = state.lanes.find((entry) => entry.id === laneId);
+        if (!lane || !lane.items.length) return;
+        const type = lane.items.shift();
+        state.tray.push({ type, laneId });
+        resolveTriples(type);
+        if (state.mode === 'playing' && state.tray.length >= LEVEL.traySize) {
+          state.mode = 'lost';
+          state.note = THEME.loseCopy;
+        }
+        render();
+      }
+      function reset() {
+        state.lanes = cloneLanes();
+        state.tray = [];
+        state.remaining = buildRemaining();
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        state.cleared = 0;
+        render();
+      }
+      function shelfMarkup(shelfIndex) {
+        const lanes = state.lanes.filter((lane) => lane.shelf === shelfIndex);
+        return '<section class="goods-shelf"><div class="goods-shelf-head"><b>' + THEME.shelfLabel + ' ' + (shelfIndex + 1) + '</b><span>' + lanes.filter((lane) => lane.items.length).length + ' / ' + lanes.length + '</span></div><div class="goods-lane-grid">' +
+          lanes.map((lane) => {
+            const front = lane.items[0];
+            const meta = front ? THEME.types[front] : null;
+            const backCount = Math.max(0, lane.items.length - 1);
+            return '<button class="goods-lane' + (front ? '' : ' empty') + '" type="button" data-lane-id="' + lane.id + '" style="--lane-glow:' + (meta ? meta.fill : THEME.laneGlow) + ';">' +
+              (front ? '<span class="goods-backdrop"></span><span class="goods-item" style="background:' + meta.fill + '; border-color:' + meta.edge + '; color:' + meta.ink + ';"><b>' + meta.glyph + '</b><i>' + meta.short + '</i></span><u>' + (backCount ? '后排 +' + backCount : '前排') + '</u>' : '<span class="goods-empty-copy">清空</span>') +
+            '</button>';
+          }).join('') +
+        '</div></section>';
+      }
+      function renderTargets() {
+        targetGrid.innerHTML = Object.entries(THEME.types).map(([key, meta]) => {
+          return '<span class="triple-chip" style="--chip-fill:' + meta.fill + '; --chip-edge:' + meta.edge + '; --chip-ink:' + meta.ink + ';"><b>' + meta.glyph + '</b><i>' + meta.short + '</i><u>' + state.remaining[key] + '</u></span>';
+        }).join('');
+      }
+      function renderShelves() {
+        shelvesEl.innerHTML = THEME.shelves.map((_, shelfIndex) => shelfMarkup(shelfIndex)).join('');
+        shelvesEl.querySelectorAll('[data-lane-id]').forEach((node) => {
+          node.addEventListener('click', () => pick(Number(node.dataset.laneId)));
+        });
+      }
+      function renderTray() {
+        const cells = [];
+        for (let i = 0; i < LEVEL.traySize; i += 1) {
+          const entry = state.tray[i];
+          if (!entry) {
+            cells.push('<span class="triple-slot empty"></span>');
+            continue;
+          }
+          const meta = THEME.types[entry.type];
+          cells.push('<span class="triple-slot filled" style="background:' + meta.fill + '; border-color:' + meta.edge + '; color:' + meta.ink + ';">' + meta.glyph + '</span>');
+        }
+        trayEl.innerHTML = cells.join('');
+      }
+      function render() {
+        renderTargets();
+        renderShelves();
+        renderTray();
+        goalText.textContent = THEME.targetLabel + ' ' + state.cleared + ' / ' + LEVEL.totalItems;
+        trayText.textContent = '暂存 ' + state.tray.length + ' / ' + LEVEL.traySize;
+        shelfText.textContent = '剩余前排 ' + state.lanes.filter((lane) => lane.items.length).length;
+        statusText.textContent = state.note;
+        shelvesEl.dataset.mode = state.mode;
+      }
+      document.getElementById('goodsResetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'DOM shelves with front-item picking and 7-slot tray',
+        mode: state.mode,
+        cleared: state.cleared,
+        tray: state.tray.map((entry) => entry.type),
+        remaining: state.remaining,
+        lanes: state.lanes.map((lane) => ({ shelf: lane.shelf, front: lane.items[0] || null, depth: lane.items.length })),
+      });
+    `,
+  };
+}
+
+const goodsSortLevel = {
+  traySize: 7,
+  totalItems: 18,
+  lanes: [
+    { shelf: 0, items: ['cola', 'bread'] },
+    { shelf: 0, items: ['cola', 'milk'] },
+    { shelf: 0, items: ['cola', 'soap'] },
+    { shelf: 1, items: ['bread', 'ramen'] },
+    { shelf: 1, items: ['bread', 'chips'] },
+    { shelf: 1, items: ['milk', 'ramen'] },
+    { shelf: 2, items: ['milk', 'soap'] },
+    { shelf: 2, items: ['soap', 'chips'] },
+    { shelf: 2, items: ['ramen', 'chips'] },
+  ],
+};
+
+const goodsSortBaseGame = createGoodsSortGame({
+  id: 'goods-sort-fake',
+  file: 'goods-sort-fake.html',
+  title: '货架清货局',
+  sourceGame: 'Goods Sort / 货架理货式前排取货三连清',
+  accent: '#78e9ff',
+  summary: '只点每条货道最前排的商品送进七格暂存，三件同类立刻清货，后排商品会往前露出。',
+  heading: 'Goods Sort 热门复刻',
+  subheading: '前排理货 · 七格暂存 · 同类三件立刻清掉',
+  hint: '先拿每条货道最前排那件；同类凑三件会立刻整批清货，后排商品才会补到前面。',
+  trayLabel: '收银暂存',
+  winCopy: '整面货架已经被你清空了。',
+  loseCopy: '暂存台塞满了，先凑出三件同类再继续。',
+  clearCopy: ' 已经凑成三件清货。',
+  targetLabel: '已清',
+  shelfLabel: '货架',
+  buttonCopy: '重开这面货架',
+  shelves: ['饮料', '零食', '日用'],
+  laneGlow: 'rgba(120,233,255,.18)',
+  trayGlow: 'rgba(255,255,255,.08)',
+  types: {
+    cola: { glyph: '汽', short: '汽水', label: '汽水瓶', fill: '#8fe5ff', edge: '#ebfbff', ink: '#082634' },
+    bread: { glyph: '包', short: '面包', label: '面包袋', fill: '#ffd08a', edge: '#fff0d6', ink: '#402300' },
+    milk: { glyph: '奶', short: '牛奶', label: '牛奶盒', fill: '#f5f1ff', edge: '#ffffff', ink: '#34294b' },
+    soap: { glyph: '皂', short: '香皂', label: '香皂盒', fill: '#c9bbff', edge: '#f1ebff', ink: '#24153f' },
+    ramen: { glyph: '面', short: '泡面', label: '泡面杯', fill: '#ffb299', edge: '#ffe4db', ink: '#3d130c' },
+    chips: { glyph: '片', short: '薯片', label: '薯片桶', fill: '#9ce7b0', edge: '#e7fff0', ink: '#10301c' },
+  },
+  level: goodsSortLevel,
+});
+
+const goodsSortOfficeRemixGame = createGoodsSortGame({
+  id: 'office-snack-stock',
+  file: 'office-snack-stock.html',
+  title: '茶水间补货局',
+  sourceGame: '货架清货局 Remix',
+  accent: '#9df0d4',
+  summary: '把超市货架换成办公室茶水间：前排先拿咖啡、饼干、杯面和酸奶，三件同类立刻整盒补走。',
+  heading: '茶水间理货二创',
+  subheading: '办公室零食柜 · 前排先取 · 三件同类整盒补货',
+  hint: '先从每条茶水间货道的前排拿起；同类凑三件就会整盒补走，后排库存自然补位。',
+  trayLabel: '补货暂存',
+  winCopy: '这面茶水间柜已经被你理顺了。',
+  loseCopy: '补货暂存台爆满了，先整走三件同类再继续。',
+  clearCopy: ' 已经整盒补走。',
+  targetLabel: '已补',
+  shelfLabel: '柜层',
+  buttonCopy: '重开这面柜',
+  shelves: ['咖啡层', '零食层', '冷藏层'],
+  laneGlow: 'rgba(157,240,212,.18)',
+  trayGlow: 'rgba(255,255,255,.08)',
+  types: {
+    cola: { glyph: '啡', short: '咖啡', label: '冷萃咖啡', fill: '#9ae7df', edge: '#ebfffc', ink: '#082826' },
+    bread: { glyph: '干', short: '饼干', label: '曲奇盒', fill: '#ffd89b', edge: '#fff3dd', ink: '#3c2505' },
+    milk: { glyph: '奶', short: '酸奶', label: '酸奶杯', fill: '#f4f0ff', edge: '#ffffff', ink: '#34294b' },
+    soap: { glyph: '茶', short: '茶包', label: '茶包盒', fill: '#cbbdff', edge: '#f3edff', ink: '#24153f' },
+    ramen: { glyph: '面', short: '杯面', label: '杯面桶', fill: '#ffb9a0', edge: '#ffe6dd', ink: '#43160f' },
+    chips: { glyph: '汽', short: '气泡水', label: '气泡水罐', fill: '#a5ecbf', edge: '#edfff2', ink: '#0f2f19' },
+  },
+  level: goodsSortLevel,
+});
+
+function createLoopSortGame(config) {
+  const theme = {
+    topCopy: config.topCopy,
+    hint: config.hint,
+    injectCopy: config.injectCopy,
+    blockedCopy: config.blockedCopy,
+    emptyCopy: config.emptyCopy,
+    clearCopy: config.clearCopy,
+    jamCopy: config.jamCopy,
+    winCopy: config.winCopy,
+    stepCopy: config.stepCopy,
+    buttonCopy: config.buttonCopy,
+    stepLabel: config.stepLabel,
+    clearedLabel: config.clearedLabel,
+    queueLabel: config.queueLabel,
+    loopLabel: config.loopLabel,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    panelTint: config.panelTint,
+    beltFill: config.beltFill,
+    beltEdge: config.beltEdge,
+    truckFill: config.truckFill,
+    truckEdge: config.truckEdge,
+    shadow: config.shadow,
+    colors: config.colors,
+    trucks: config.trucks,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '环带分拣',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="clearText"></b><span id="queueText"></span></div>
+        <div class="tray" id="truckRack"></div>
+        <p id="statusText">${theme.hint}</p>
+        <div class="button-row">
+          <button class="choice" id="stepBtn">${theme.stepLabel}</button>
+          <button class="primary" id="resetBtn">${theme.buttonCopy}</button>
+        </div>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const LEVEL = ${JSON.stringify(config.level)};
+      const BELT_POINTS = [
+        { x: 126, y: 146 }, { x: 171, y: 146 }, { x: 216, y: 146 }, { x: 261, y: 146 },
+        { x: 291, y: 191 }, { x: 291, y: 236 }, { x: 291, y: 281 },
+        { x: 261, y: 326 }, { x: 216, y: 326 }, { x: 171, y: 326 }, { x: 126, y: 326 },
+        { x: 96, y: 281 }, { x: 96, y: 236 }, { x: 96, y: 191 }
+      ];
+      const TRUCK_POINTS = [
+        { x: 195, y: 76, w: 116, h: 42 },
+        { x: 324, y: 236, w: 42, h: 116 },
+        { x: 195, y: 396, w: 116, h: 42 },
+        { x: 66, y: 236, w: 42, h: 116 }
+      ];
+      const state = { belt: [], trucks: [], cleared: 0, moves: 0, mode: 'playing', note: THEME.hint };
+      function cloneTruck(truck) {
+        return { id: truck.id, entry: truck.entry, queue: truck.queue.slice() };
+      }
+      function cloneLevel() {
+        return {
+          target: LEVEL.target,
+          trucks: LEVEL.trucks.map(cloneTruck),
+        };
+      }
+      function colorMeta(key) {
+        return THEME.colors[key];
+      }
+      function hasQueue() {
+        return state.trucks.some((truck) => truck.queue.length);
+      }
+      function beltFillCount() {
+        return state.belt.filter(Boolean).length;
+      }
+      function checkWinOrJam() {
+        if (!hasQueue() && beltFillCount() === 0) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+          return;
+        }
+        if (hasQueue() && beltFillCount() === BELT_POINTS.length) {
+          state.mode = 'lost';
+          state.note = THEME.jamCopy;
+        }
+      }
+      function markMatches() {
+        const filled = state.belt.map((cell) => cell && cell.color);
+        const marks = new Set();
+        let i = 0;
+        while (i < filled.length) {
+          if (!filled[i]) {
+            i += 1;
+            continue;
+          }
+          let j = i + 1;
+          while (j < filled.length && filled[j] === filled[i]) j += 1;
+          if (j - i >= 3) {
+            for (let k = i; k < j; k += 1) marks.add(k);
+          }
+          i = j;
+        }
+        if (filled[0] && filled[filled.length - 1]) {
+          let head = 0;
+          while (head < filled.length && filled[head] === filled[0]) head += 1;
+          let tail = filled.length - 1;
+          while (tail >= 0 && filled[tail] === filled[0]) tail -= 1;
+          const wrapCount = head + (filled.length - 1 - tail);
+          if (wrapCount >= 3) {
+            for (let k = 0; k < head; k += 1) marks.add(k);
+            for (let k = tail + 1; k < filled.length; k += 1) marks.add(k);
+          }
+        }
+        return marks;
+      }
+      function resolveMatches() {
+        let clearedNow = 0;
+        while (true) {
+          const marks = markMatches();
+          if (!marks.size) break;
+          marks.forEach((index) => {
+            if (state.belt[index]) {
+              state.belt[index] = null;
+              clearedNow += 1;
+              state.cleared += 1;
+            }
+          });
+        }
+        if (clearedNow) state.note = THEME.clearCopy.replace('{count}', String(clearedNow));
+        checkWinOrJam();
+      }
+      function reset() {
+        const level = cloneLevel();
+        state.belt = Array.from({ length: BELT_POINTS.length }, () => null);
+        state.trucks = level.trucks;
+        state.cleared = 0;
+        state.moves = 0;
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        render();
+      }
+      function stepLoop() {
+        if (state.mode !== 'playing') return;
+        state.belt.unshift(state.belt.pop());
+        state.note = THEME.stepCopy;
+        resolveMatches();
+        render();
+      }
+      function inject(index) {
+        if (state.mode !== 'playing') return;
+        const truck = state.trucks[index];
+        if (!truck || !truck.queue.length) {
+          state.note = THEME.emptyCopy;
+          render();
+          return;
+        }
+        if (state.belt[truck.entry]) {
+          state.note = THEME.blockedCopy;
+          render();
+          return;
+        }
+        const color = truck.queue.shift();
+        state.belt[truck.entry] = { color };
+        state.moves += 1;
+        state.note = colorMeta(color).label + THEME.injectCopy;
+        resolveMatches();
+        render();
+      }
+      function drawRounded(x, y, w, h, r, fill, stroke, lineWidth = 2) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+      }
+      function drawBoard() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, THEME.bgTop);
+        bg.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 21px sans-serif';
+        ctx.fillText(${JSON.stringify(config.title)}, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.topCopy, 24, 58);
+        drawRounded(54, 106, 282, 260, 30, THEME.panelTint, THEME.beltEdge, 3);
+        ctx.fillStyle = 'rgba(255,255,255,.56)';
+        ctx.font = '800 12px sans-serif';
+        ctx.fillText(THEME.loopLabel, 68, 126);
+        ctx.fillStyle = THEME.shadow;
+        ctx.beginPath();
+        ctx.ellipse(195, 236, 128, 104, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      function drawCell(index) {
+        const point = BELT_POINTS[index];
+        const cell = state.belt[index];
+        drawRounded(point.x - 18, point.y - 18, 36, 36, 12, cell ? colorMeta(cell.color).fill : THEME.beltFill, cell ? colorMeta(cell.color).edge : THEME.beltEdge);
+        ctx.fillStyle = cell ? colorMeta(cell.color).ink : 'rgba(255,255,255,.16)';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(cell ? colorMeta(cell.color).glyph : '·', point.x, point.y + 1);
+      }
+      function drawConnectors() {
+        ctx.strokeStyle = 'rgba(255,255,255,.22)';
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'round';
+        for (let i = 0; i < BELT_POINTS.length; i += 1) {
+          const a = BELT_POINTS[i];
+          const b = BELT_POINTS[(i + 1) % BELT_POINTS.length];
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+      function drawTruck(index) {
+        const point = TRUCK_POINTS[index];
+        const truck = state.trucks[index];
+        const active = truck && truck.queue.length;
+        drawRounded(point.x - point.w / 2, point.y - point.h / 2, point.w, point.h, 20, active ? THEME.truckFill : 'rgba(255,255,255,.06)', active ? THEME.truckEdge : 'rgba(255,255,255,.12)', active ? 2.5 : 2);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const meta = active ? colorMeta(truck.queue[0]) : null;
+        const label = THEME.trucks[index];
+        if (point.w > point.h) {
+          ctx.fillText(label, point.x - 26, point.y);
+          ctx.fillStyle = meta ? meta.fill : 'rgba(255,255,255,.2)';
+          ctx.beginPath();
+          ctx.arc(point.x + 16, point.y, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = meta ? meta.ink : '#fff';
+          ctx.font = '900 11px sans-serif';
+          ctx.fillText(meta ? meta.glyph : '空', point.x + 16, point.y + 1);
+          ctx.fillStyle = 'rgba(255,255,255,.76)';
+          ctx.font = '800 10px sans-serif';
+          ctx.fillText('x' + (truck ? truck.queue.length : 0), point.x + 42, point.y + 1);
+        } else {
+          ctx.save();
+          ctx.translate(point.x, point.y);
+          ctx.rotate(Math.PI / 2);
+          ctx.fillText(label, -26, 0);
+          ctx.fillStyle = meta ? meta.fill : 'rgba(255,255,255,.2)';
+          ctx.beginPath();
+          ctx.arc(16, 0, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = meta ? meta.ink : '#fff';
+          ctx.font = '900 11px sans-serif';
+          ctx.fillText(meta ? meta.glyph : '空', 16, 1);
+          ctx.fillStyle = 'rgba(255,255,255,.76)';
+          ctx.font = '800 10px sans-serif';
+          ctx.fillText('x' + (truck ? truck.queue.length : 0), 42, 1);
+          ctx.restore();
+        }
+      }
+      function truckButtonMarkup(truck, index) {
+        const meta = truck && truck.queue.length ? colorMeta(truck.queue[0]) : null;
+        return '<button class="chip' + (meta ? '' : ' picked') + '" data-truck-index="' + index + '" style="' + (meta ? '--chip-fill:' + meta.fill + '; --chip-edge:' + meta.edge + '; --chip-ink:' + meta.ink + ';' : '') + '">' +
+          '<b>' + THEME.trucks[index] + '</b><small>' + (meta ? meta.label + ' x' + truck.queue.length : '已空') + '</small></button>';
+      }
+      function renderRack() {
+        const rack = document.getElementById('truckRack');
+        rack.innerHTML = state.trucks.map(truckButtonMarkup).join('');
+        rack.querySelectorAll('[data-truck-index]').forEach((button) => {
+          button.addEventListener('click', () => inject(Number(button.dataset.truckIndex)));
+        });
+      }
+      function render() {
+        drawBoard();
+        drawConnectors();
+        for (let i = 0; i < BELT_POINTS.length; i += 1) drawCell(i);
+        for (let i = 0; i < TRUCK_POINTS.length; i += 1) drawTruck(i);
+        renderRack();
+        document.getElementById('clearText').textContent = THEME.clearedLabel + ' ' + state.cleared + ' / ' + LEVEL.target;
+        document.getElementById('queueText').textContent = THEME.queueLabel + ' ' + state.trucks.reduce((sum, truck) => sum + truck.queue.length, 0);
+        document.getElementById('statusText').textContent = state.note;
+      }
+      document.getElementById('stepBtn').addEventListener('click', stepLoop);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(stepLoop, 900);
+      window.advanceTime = (ms) => {
+        const steps = Math.max(1, Math.round(ms / 900));
+        for (let i = 0; i < steps; i += 1) stepLoop();
+      };
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with 14-slot rectangular conveyor loop and 4 truck injectors',
+        mode: state.mode,
+        cleared: state.cleared,
+        moves: state.moves,
+        queued: state.trucks.reduce((sum, truck) => sum + truck.queue.length, 0),
+        belt: state.belt.map((cell) => cell ? cell.color : null),
+        trucks: state.trucks.map((truck) => ({ entry: truck.entry, next: truck.queue[0] || null, left: truck.queue.length })),
+      });
+    `,
+  };
+}
+
+const loopSortLevel = {
+  target: 12,
+  trucks: [
+    { id: 'north', entry: 1, queue: ['coral', 'mint', 'amber'] },
+    { id: 'east', entry: 5, queue: ['coral', 'violet', 'mint'] },
+    { id: 'south', entry: 8, queue: ['amber', 'coral', 'violet'] },
+    { id: 'west', entry: 12, queue: ['mint', 'amber', 'violet'] },
+  ],
+};
+
+const loopSortBaseGame = createLoopSortGame({
+  id: 'loop-sort-fake',
+  file: 'loop-sort-fake.html',
+  title: '环带理货局',
+  sourceGame: 'Loop Sort 式卡车放货环带三连清',
+  accent: '#86efff',
+  summary: '点四侧卡车把色块送上环形传送带，沿带转一圈后凑成三连立刻清空，别让整圈堵死。',
+  topCopy: 'Loop Sort 热门复刻 · 点车放货，让环带自己转出三连',
+  hint: '先观察哪一侧放出来更容易连成三件；入口被占时先等环带转一步。',
+  injectCopy: ' 已经压上环带入口。',
+  blockedCopy: '这个入口位还被上一块货挡着。',
+  emptyCopy: '这辆车已经没货了。',
+  clearCopy: '环带连成 {count} 格，已经整批清走。',
+  jamCopy: '整圈都堵满了，这轮传送带已经卡死。',
+  winCopy: '四车货都顺完了，整圈传送带也已经清空。',
+  stepCopy: '环带自动前进了一格，继续等三连露头。',
+  buttonCopy: '重开这圈',
+  stepLabel: '传送一步',
+  clearedLabel: '已清',
+  queueLabel: '待放货',
+  loopLabel: '环形传送带',
+  bgTop: '#081c2d',
+  bgBottom: '#040b12',
+  panelTint: '#112537',
+  beltFill: 'rgba(255,255,255,.08)',
+  beltEdge: 'rgba(220,244,255,.72)',
+  truckFill: 'rgba(134,239,255,.14)',
+  truckEdge: 'rgba(134,239,255,.52)',
+  shadow: 'rgba(0,0,0,.34)',
+  trucks: ['北车', '东车', '南车', '西车'],
+  colors: {
+    coral: { fill: '#ff9d7b', edge: '#ffe1d5', ink: '#401308', glyph: '橙', label: '橙箱' },
+    mint: { fill: '#98efc8', edge: '#e8fff3', ink: '#0d2f1e', glyph: '绿', label: '绿箱' },
+    amber: { fill: '#ffd67d', edge: '#fff1cc', ink: '#422700', glyph: '黄', label: '黄箱' },
+    violet: { fill: '#c7b0ff', edge: '#f0e9ff', ink: '#28184a', glyph: '紫', label: '紫箱' },
+  },
+  level: loopSortLevel,
+});
+
+const loopSortOfficeRemixGame = createLoopSortGame({
+  id: 'office-loop-sort',
+  file: 'office-loop-sort.html',
+  title: '夜班传单回路',
+  sourceGame: '环带理货局 Remix',
+  accent: '#9cefd8',
+  summary: '把货箱换成邮件、审批、报销和排班单，还是四侧投件上环带，凑成三件同类就整批清走。',
+  topCopy: '办公室二创 · 四边投单，让夜班回路自己把同类整走',
+  hint: '先找哪一侧投进去能最快凑出三件同类；入口堵住时先让回路转一步。',
+  injectCopy: ' 已经塞进夜班回路入口。',
+  blockedCopy: '这个投递口还堵着旧单据。',
+  emptyCopy: '这条投递线已经暂时清空。',
+  clearCopy: '夜班回路连成 {count} 份，已经整批处理掉。',
+  jamCopy: '整圈回路都被堆单塞满了，这班已经卡死。',
+  winCopy: '所有夜班单据都流完了，整圈回路也已经清空。',
+  stepCopy: '夜班回路又前进了一格，继续等同类单据贴到一起。',
+  buttonCopy: '重开这一圈',
+  stepLabel: '回路一步',
+  clearedLabel: '已处理',
+  queueLabel: '待投单',
+  loopLabel: '夜班回路',
+  bgTop: '#071816',
+  bgBottom: '#030d0c',
+  panelTint: '#102625',
+  beltFill: 'rgba(255,255,255,.08)',
+  beltEdge: 'rgba(218,255,244,.72)',
+  truckFill: 'rgba(156,239,216,.14)',
+  truckEdge: 'rgba(156,239,216,.52)',
+  shadow: 'rgba(0,0,0,.36)',
+  trucks: ['邮件线', '审批线', '报销线', '排班线'],
+  colors: {
+    coral: { fill: '#ffa188', edge: '#ffe4db', ink: '#421208', glyph: '邮', label: '邮件单' },
+    mint: { fill: '#97efc6', edge: '#e9fff3', ink: '#0c2d1c', glyph: '审', label: '审批单' },
+    amber: { fill: '#ffd98a', edge: '#fff3d6', ink: '#412600', glyph: '报', label: '报销单' },
+    violet: { fill: '#cbb6ff', edge: '#f2edff', ink: '#2a194a', glyph: '班', label: '排班单' },
+  },
+  level: loopSortLevel,
+});
+
+function createHexaAwayGame(config) {
+  const theme = {
+    topCopy: config.topCopy,
+    hint: config.hint,
+    freeCopy: config.freeCopy,
+    blockedCopy: config.blockedCopy,
+    rotateCopy: config.rotateCopy,
+    winCopy: config.winCopy,
+    buttonCopy: config.buttonCopy,
+    clearedLabel: config.clearedLabel,
+    leftLabel: config.leftLabel,
+    boardLabel: config.boardLabel,
+    bgTop: config.bgTop,
+    bgBottom: config.bgBottom,
+    panelTint: config.panelTint,
+    edge: config.edge,
+    shadow: config.shadow,
+    colors: config.colors,
+  };
+  return {
+    id: config.id,
+    file: config.file,
+    title: config.title,
+    kind: '六角弹出',
+    sourceGame: config.sourceGame,
+    accent: config.accent,
+    summary: config.summary,
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="clearText"></b><span id="leftText"></span></div>
+        <p id="statusText">${theme.hint}</p>
+        <div class="button-row">
+          <button class="choice" id="turnLeftBtn">左转</button>
+          <button class="choice" id="turnRightBtn">右转</button>
+          <button class="primary" id="resetBtn">${theme.buttonCopy}</button>
+        </div>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = ${JSON.stringify(theme)};
+      const LEVEL = ${JSON.stringify(config.level)};
+      const DIRS = {
+        xp: { q: 1, r: 0, z: 0, arrow: '→' },
+        xm: { q: -1, r: 0, z: 0, arrow: '←' },
+        rp: { q: 0, r: 1, z: 0, arrow: '↘' },
+        rm: { q: 0, r: -1, z: 0, arrow: '↖' },
+        qp: { q: 1, r: -1, z: 0, arrow: '↗' },
+        qm: { q: -1, r: 1, z: 0, arrow: '↙' },
+        zp: { q: 0, r: 0, z: 1, arrow: '↑' },
+      };
+      const state = { tiles: [], yaw: 0, cleared: 0, mode: 'playing', note: THEME.hint };
+      function rotateQR(q, r, turns) {
+        const step = ((turns % 6) + 6) % 6;
+        let cq = q;
+        let cr = r;
+        for (let i = 0; i < step; i += 1) {
+          const nextQ = -cr;
+          const nextR = cq + cr;
+          cq = nextQ;
+          cr = nextR;
+        }
+        return { q: cq, r: cr };
+      }
+      function rotatedTile(tile) {
+        const centered = rotateQR(tile.q, tile.r, state.yaw);
+        return { q: centered.q, r: centered.r, z: tile.z };
+      }
+      function screenPoint(tile) {
+        const r = rotatedTile(tile);
+        return {
+          x: 195 + (r.q * 34 + r.r * 17),
+          y: 286 + r.r * 28 - r.z * 40,
+          depth: r.z * 20 + r.r * 8 + r.q * 4,
+        };
+      }
+      function facePolys(tile) {
+        const p = screenPoint(tile);
+        const top = [
+          { x: p.x, y: p.y - 18 },
+          { x: p.x + 16, y: p.y - 9 },
+          { x: p.x + 16, y: p.y + 9 },
+          { x: p.x, y: p.y + 18 },
+          { x: p.x - 16, y: p.y + 9 },
+          { x: p.x - 16, y: p.y - 9 },
+        ];
+        const left = [
+          { x: p.x - 16, y: p.y - 9 },
+          { x: p.x, y: p.y + 18 },
+          { x: p.x, y: p.y + 42 },
+          { x: p.x - 16, y: p.y + 33 },
+          { x: p.x - 16, y: p.y + 9 },
+        ];
+        const right = [
+          { x: p.x + 16, y: p.y - 9 },
+          { x: p.x + 16, y: p.y + 9 },
+          { x: p.x, y: p.y + 42 },
+          { x: p.x, y: p.y + 18 },
+        ];
+        return { top, left, right, center: p };
+      }
+      function drawPoly(points, fill, stroke) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i += 1) ctx.lineTo(points[i].x, points[i].y);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      function pointInPoly(point, poly) {
+        let inside = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+          const xi = poly[i].x;
+          const yi = poly[i].y;
+          const xj = poly[j].x;
+          const yj = poly[j].y;
+          const intersect = ((yi > point.y) !== (yj > point.y)) && (point.x < ((xj - xi) * (point.y - yi)) / ((yj - yi) || 0.0001) + xi);
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
+      function activeTiles() {
+        return state.tiles.filter((tile) => tile.active);
+      }
+      function findTile(q, r, z, ignoreId) {
+        return state.tiles.find((tile) => tile.active && tile.id !== ignoreId && tile.q === q && tile.r === r && tile.z === z) || null;
+      }
+      function clearPath(tile) {
+        const dir = DIRS[tile.dir];
+        let q = tile.q;
+        let r = tile.r;
+        let z = tile.z;
+        while (true) {
+          q += dir.q;
+          r += dir.r;
+          z += dir.z;
+          if (Math.abs(q) > 2 || Math.abs(r) > 2 || Math.abs(q + r) > 2 || z < 0 || z > 2) return true;
+          if (findTile(q, r, z, tile.id)) return false;
+        }
+      }
+      function blockingCopy(tile) {
+        const dir = DIRS[tile.dir];
+        const meta = THEME.colors[tile.color];
+        return meta.label + THEME.blockedCopy.replace('{arrow}', dir.arrow);
+      }
+      function reset() {
+        state.tiles = LEVEL.tiles.map((tile) => ({ ...tile, active: true }));
+        state.yaw = 0;
+        state.cleared = 0;
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        render();
+      }
+      function turn(delta) {
+        state.yaw = (state.yaw + delta + 6) % 6;
+        if (state.mode === 'playing') state.note = THEME.rotateCopy;
+        render();
+      }
+      function removeTile(tile) {
+        if (state.mode !== 'playing' || !tile || !tile.active) return;
+        if (!clearPath(tile)) {
+          state.note = blockingCopy(tile);
+          render();
+          return;
+        }
+        tile.active = false;
+        state.cleared += 1;
+        const meta = THEME.colors[tile.color];
+        state.note = meta.label + THEME.freeCopy;
+        if (!activeTiles().length) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+        }
+        render();
+      }
+      function tileFromPoint(point) {
+        return activeTiles()
+          .map((tile) => ({ tile, polys: facePolys(tile) }))
+          .filter((entry) => pointInPoly(point, entry.polys.top) || pointInPoly(point, entry.polys.left) || pointInPoly(point, entry.polys.right))
+          .sort((a, b) => b.polys.center.depth - a.polys.center.depth || b.polys.center.y - a.polys.center.y)[0]?.tile || null;
+      }
+      function pointFromEvent(event) {
+        const box = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - box.left) * canvas.width / box.width,
+          y: (event.clientY - box.top) * canvas.height / box.height,
+        };
+      }
+      function drawScene() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, THEME.bgTop);
+        gradient.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 20px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(${JSON.stringify(config.title)}, 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.topCopy, 24, 58);
+        ctx.fillStyle = THEME.panelTint;
+        ctx.strokeStyle = THEME.edge;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(34, 96, 322, 334, 28);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.56)';
+        ctx.font = '800 12px sans-serif';
+        ctx.fillText(THEME.boardLabel, 50, 118);
+        ctx.fillStyle = THEME.shadow;
+        ctx.beginPath();
+        ctx.ellipse(195, 362, 118, 42, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      function drawTile(tile) {
+        const meta = THEME.colors[tile.color];
+        const polys = facePolys(tile);
+        const free = clearPath(tile);
+        drawPoly(polys.left, free ? meta.left : 'rgba(70,78,90,.92)', THEME.edge);
+        drawPoly(polys.right, free ? meta.right : 'rgba(84,92,104,.94)', THEME.edge);
+        drawPoly(polys.top, free ? meta.top : 'rgba(102,110,122,.96)', THEME.edge);
+        ctx.fillStyle = free ? '#081017' : 'rgba(16,18,24,.82)';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(DIRS[tile.dir].arrow, polys.center.x, polys.center.y + 4);
+        ctx.font = '800 10px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,.9)';
+        ctx.fillText(meta.glyph, polys.center.x, polys.center.y + 19);
+      }
+      function render() {
+        drawScene();
+        activeTiles()
+          .slice()
+          .sort((a, b) => screenPoint(a).depth - screenPoint(b).depth || screenPoint(a).r - screenPoint(b).r)
+          .forEach(drawTile);
+        if (state.mode === 'won') {
+          ctx.fillStyle = 'rgba(6,10,18,.76)';
+          ctx.fillRect(38, 198, 314, 110);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('整盘弹空', 195, 240);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.note, 195, 268);
+        }
+        document.getElementById('clearText').textContent = THEME.clearedLabel + ' ' + state.cleared;
+        document.getElementById('leftText').textContent = THEME.leftLabel + ' ' + activeTiles().length;
+        document.getElementById('statusText').textContent = state.note;
+      }
+      let dragStart = null;
+      canvas.addEventListener('pointerdown', (event) => { dragStart = pointFromEvent(event); });
+      canvas.addEventListener('pointerup', (event) => {
+        const point = pointFromEvent(event);
+        if (!dragStart) return;
+        const dx = point.x - dragStart.x;
+        const dy = point.y - dragStart.y;
+        if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy)) {
+          turn(dx > 0 ? 1 : -1);
+        } else if (Math.abs(dy) > 28) {
+          turn(dy > 0 ? 3 : 2);
+        } else {
+          removeTile(tileFromPoint(point));
+        }
+        dragStart = null;
+      });
+      document.getElementById('turnLeftBtn').addEventListener('click', () => turn(-1));
+      document.getElementById('turnRightBtn').addEventListener('click', () => turn(1));
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') turn(-1);
+        if (event.key === 'ArrowRight') turn(1);
+      });
+      reset();
+      window.advanceTime = () => render();
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with axial hex prism cluster',
+        mode: state.mode,
+        yaw: state.yaw,
+        cleared: state.cleared,
+        remaining: activeTiles().length,
+        tiles: activeTiles().map((tile) => ({
+          id: tile.id,
+          pos: [tile.q, tile.r, tile.z],
+          dir: tile.dir,
+          free: clearPath(tile)
+        })),
+      });
+    `,
+  };
+}
+
+const hexaAwayLevel = {
+  tiles: [
+    { id: 0, q: 0, r: 0, z: 2, dir: 'zp', color: 'violet' },
+    { id: 1, q: -1, r: 0, z: 1, dir: 'xm', color: 'cyan' },
+    { id: 2, q: 0, r: -1, z: 1, dir: 'rm', color: 'amber' },
+    { id: 3, q: 1, r: -1, z: 1, dir: 'qp', color: 'pink' },
+    { id: 4, q: 1, r: 0, z: 1, dir: 'xp', color: 'lime' },
+    { id: 5, q: 0, r: 1, z: 1, dir: 'rp', color: 'violet' },
+    { id: 6, q: -1, r: 1, z: 1, dir: 'qm', color: 'cyan' },
+    { id: 7, q: -1, r: 0, z: 0, dir: 'qm', color: 'amber' },
+    { id: 8, q: 0, r: -1, z: 0, dir: 'rm', color: 'lime' },
+    { id: 9, q: 1, r: -1, z: 0, dir: 'qp', color: 'violet' },
+    { id: 10, q: 1, r: 0, z: 0, dir: 'xp', color: 'cyan' },
+    { id: 11, q: 0, r: 1, z: 0, dir: 'rp', color: 'pink' },
+    { id: 12, q: -1, r: 1, z: 0, dir: 'xm', color: 'amber' },
+  ],
+};
+
+const hexaAwayBaseGame = createHexaAwayGame({
+  id: 'hexa-away-fake',
+  file: 'hexa-away-fake.html',
+  title: '六角弹出盘',
+  sourceGame: 'Hexa Away 式六边形箭头弹出解块',
+  accent: '#7cf0ff',
+  summary: '点能顺着箭头直接飞出边界的六角块，不通就转盘换角度，把整团六角块弹空。',
+  buttonCopy: '重开这盘',
+  topCopy: 'Hexa Away 热门复刻 · 点掉能顺着箭头飞走的六角块',
+  hint: '先找边缘能直接弹出的六角块；点不动就左右转盘，换出新的空边。',
+  freeCopy: ' 顺着空边弹走了。',
+  blockedCopy: ' 这条箭路还被别的六角块卡住。',
+  rotateCopy: '六角盘已经转过，继续找新露出的空边。',
+  winCopy: '整盘六角块已经被你弹空了。',
+  clearedLabel: '已弹',
+  leftLabel: '剩余',
+  boardLabel: '六角团',
+  bgTop: '#0b2032',
+  bgBottom: '#050d16',
+  panelTint: '#13283a',
+  edge: 'rgba(225,245,255,.82)',
+  shadow: 'rgba(0,0,0,.34)',
+  colors: {
+    cyan: { top: '#8ef3ff', left: '#43bdd3', right: '#67ddec', glyph: '青', label: '青块' },
+    amber: { top: '#ffd980', left: '#cf9638', right: '#f5be56', glyph: '黄', label: '黄块' },
+    pink: { top: '#ff9fc1', left: '#ca587d', right: '#ea789d', glyph: '粉', label: '粉块' },
+    lime: { top: '#bdf48b', left: '#6baa36', right: '#94d65a', glyph: '绿', label: '绿块' },
+    violet: { top: '#ccb0ff', left: '#7f67cc', right: '#a086ef', glyph: '紫', label: '紫块' },
+  },
+  level: hexaAwayLevel,
+});
+
+const hexaAwayOfficeRemixGame = createHexaAwayGame({
+  id: 'office-stamp-away',
+  file: 'office-stamp-away.html',
+  title: '工单盖章弹出',
+  sourceGame: '六角弹出盘 Remix',
+  accent: '#95efd4',
+  summary: '把六角箭块改成待盖章工单：顺着箭头把外层工单先弹走，再逐层清空审批盘。',
+  buttonCopy: '重开审批盘',
+  topCopy: '办公室二创 · 把能直接流转出去的工单先盖走',
+  hint: '先处理边缘能直接流转的工单；箭路被卡住时，转盘换一个审批角度。',
+  freeCopy: ' 已经顺着流程流转走了。',
+  blockedCopy: ' 这条审批线还被别的工单挡着。',
+  rotateCopy: '审批盘角度换好了，继续找能直接流转的工单。',
+  winCopy: '这一盘待盖章工单已经全部流转完了。',
+  clearedLabel: '已盖',
+  leftLabel: '待盖',
+  boardLabel: '审批盘',
+  bgTop: '#081d21',
+  bgBottom: '#041014',
+  panelTint: '#10272a',
+  edge: 'rgba(215,255,241,.84)',
+  shadow: 'rgba(0,0,0,.38)',
+  colors: {
+    cyan: { top: '#8bf0de', left: '#3b9a8b', right: '#61c8b7', glyph: '采', label: '采购单' },
+    amber: { top: '#ffd98b', left: '#c18b35', right: '#ebb75b', glyph: '差', label: '差旅单' },
+    pink: { top: '#ffa9b7', left: '#c05f72', right: '#df7f92', glyph: '报', label: '报销单' },
+    lime: { top: '#b7f28d', left: '#6f9d3b', right: '#92cb58', glyph: '补', label: '补签单' },
+    violet: { top: '#ccb9ff', left: '#7e6abf', right: '#a18de8', glyph: '审', label: '审批单' },
+  },
+  level: hexaAwayLevel,
+});
+
+const deterministicRemixes = [
+  {
+    game: loopSortOfficeRemixGame,
+    id: 'remix-office-loop-sort',
+    slug: 'office-loop-sort',
+    title: '夜班传单回路',
+    source_file: 'loop-sort-fake.html',
+    parent_slug: 'loop-sort-fake',
+    lineage: ['loop-sort-fake', 'office-loop-sort'],
+    prompt: { text: '把 Loop Sort 式卡车放货环带三连清改成办公室夜班传单主题，货箱换成邮件、审批、报销和排班单，保留四侧投放、环带前进和三件即清。', voice_transcript: '' },
+    summary: '办公室主题的 Loop Sort 二创：把夜班单据从四侧投上回路，等同类三件沿环带贴到一起后整批清走。',
+    accent: '#9cefd8',
+    glyph: '环',
+    agent_description: {
+      one_liner: '办公室主题的 Loop Sort 二创：把夜班单据从四侧投上回路，等同类三件沿环带贴到一起后整批清走。',
+      core_loop: '玩家面对一圈不断前进的夜班传单回路，四侧各有一条投递线；每次点击任意一条投递线，最前面的单据就会压进对应入口格，然后随着整圈回路持续前进；只要三份同类单据在环带上连成一段，就会立刻整批处理掉；如果整圈先被不同单据堵满，这班夜路就算彻底卡死。',
+      controls: '单指点击底部四个投递按钮把对应单据塞进入口；点击“回路一步”手动推进一格；点击“重开这一圈”恢复固定投递序列。',
+      mechanics: [
+        '四侧投递：不是直接拖拽排序，而是从四个入口选择哪一边先把单据送上回路，保留这条玩法最关键的入口判断',
+        '环带自走：单据上带后会沿整圈持续前进，玩家要预判它下一次转到哪一侧时会和谁贴在一起',
+        '三件即清：任意连续三件同类单据会立刻整批处理掉，留下空格继续接下一批',
+        '入口堵塞：如果某个入口格被旧单据占住，这条投递线暂时无法再发，迫使玩家等回路先转开',
+        '短局堵环：12 份固定单据、14 格回路，几十秒就能完整打一轮，也足够制造一两次明显卡顿'
+      ],
+      visual_language: '把糖果色货箱换成冷绿夜班文书，深色玻璃回路板配发光入口，仍保持离线单文件、手机竖屏与轻量画布渲染。',
+      state_model: 'state.belt 记录 14 格回路上当前每格的单据颜色或空位；state.trucks 保存四条投递线剩余序列和入口索引；state.cleared 统计已处理件数；state.moves 统计投递次数；state.mode 在 playing/won/lost 间切换。',
+      share_hook: '“把一整圈夜班堆单顺空了”比普通货箱分拣更贴合办公室梗，也方便继续扩到客服、物流或审批题材。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入第二套投递序列 seed', '加入冰格或门帘这类单个障碍', '加入限步达成文案']
+    },
+  },
+  {
+    game: hexaAwayOfficeRemixGame,
+    id: 'remix-office-stamp-away',
+    slug: 'office-stamp-away',
+    title: '工单盖章弹出',
+    source_file: 'hexa-away-fake.html',
+    parent_slug: 'hexa-away-fake',
+    lineage: ['hexa-away-fake', 'office-stamp-away'],
+    prompt: { text: '把 Hexa Away 式六角箭头弹出盘改成办公室审批主题，六角块换成采购、报销、差旅等工单，保留只能顺箭头流转和转盘换角度。', voice_transcript: '' },
+    summary: '办公室主题的 Hexa Away 二创：先把边缘工单流转走，再逐层清空整张审批盘。',
+    accent: '#95efd4',
+    glyph: '章',
+    agent_description: {
+      one_liner: '办公室主题的 Hexa Away 二创：先把边缘工单流转走，再逐层清空整张审批盘。',
+      core_loop: '玩家面对一团堆叠的六角审批工单，只能点击那些能顺着箭头直接流转出边界的单据；如果某张单据的箭路被其他工单挡住，就要先转动整盘审批视角，换出新的空边；当所有工单都被流转走，这轮审批盘才算彻底清空。',
+      controls: '单指点击可直接流转的六角工单；左右按钮或左右划动旋转整盘；点击“重开审批盘”恢复固定布局。',
+      mechanics: [
+        '顺箭头弹出：每张工单只有在箭头指向的整条路径都畅通时才能直接流转走，复刻这个玩法最关键的判断压力',
+        '转盘换边：玩家需要不断旋转六角团，找出不同视角下新露出的可弹出边缘块',
+        '六角布局：不是立方方块，而是蜂窝式六边形堆叠，视觉上和当前库里的 Tap Away 家族拉开差异',
+        '短局固定盘：十几块工单、一个固定 seed，几十秒就能完整刷完一盘',
+        '逐层露出：外层先走，中心与上层块随后变成可操作目标，维持连锁揭示节奏'
+      ],
+      visual_language: '冷绿夜班办公室配色，把彩色六角块换成不同流程单据，玻璃审批板承接画布场景，继续保持离线单文件和手机竖屏。',
+      state_model: 'state.tiles 记录每张工单的轴坐标、高度、箭头方向和激活状态；state.yaw 记录当前六向旋转；state.cleared 统计已流转工单数；state.mode 在 playing/won 间切换。',
+      share_hook: '“把整盘待审批工单一把盖空了”天然适合办公室二创梗图。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入第二套 hex seed', '加入一步提示按钮', '加入限旋转挑战文案']
+    },
+  },
+  {
+    game: tripleMatchOfficeRemixGame,
+    id: 'remix-desk-clutter-triples',
+    slug: 'desk-clutter-triples',
+    title: '工位清台局',
+    source_file: 'triple-match-fake.html',
+    parent_slug: 'triple-match-fake',
+    lineage: ['triple-match-fake', 'desk-clutter-triples'],
+    prompt: { text: '把 Triple Match 3D / Match Factory 式堆物三连清改成办公室清台主题，杂物换成工牌、鼠标、咖啡、便签和线材，保留顶层遮挡、七格托盘和三件即消。', voice_transcript: '' },
+    summary: '办公室主题的堆物三连清二创：先拿露头杂件，再把同类工位物凑成三件整盒归档。',
+    accent: '#92f0d9',
+    glyph: '台',
+    agent_description: {
+      one_liner: '办公室主题的堆物三连清二创：先拿露头杂件，再把同类工位物凑成三件整盒归档。',
+      core_loop: '玩家面对一团堆在工位桌面的杂件，只能先点当前露在最上层的工牌、鼠标、便签、咖啡杯、线材和长尾夹；每点一件就会掉进下方七格待归档盒，任意同类累计到三件会立刻整盒归档清掉；如果暂存盒先被不同杂件塞满，或者倒计时先归零，这张桌面就算清台失败。',
+      controls: '单指点击当前可见的最上层杂件；点击“重开这张桌”恢复固定堆物布局。',
+      mechanics: [
+        '顶层遮挡：被更高层杂件压住的东西不能直接拿，必须先剥掉上层，保留这个赛道最关键的视觉搜索压力',
+        '七格托盘：所有点击物都会先进七格暂存，三件同类才会立刻消掉，不同类堆太多就直接输',
+        '三件即清：不需要拖拽或交换，只要凑够三件同类就立刻给出很强的整理反馈',
+        '隐藏露出：下层物件随着上层清掉逐渐露头，维持“越清越能看见新东西”的节奏',
+        '短局计时：单局几十秒内必须把整桌清掉，复刻热门堆物三连盘常见的时间压迫'
+      ],
+      visual_language: '把大众生活杂物换成工位清台主题，深青桌面配冷色玻璃盒与高对比标签，继续保持离线单文件、手机竖屏和轻量 DOM 交互。',
+      state_model: 'state.items 记录每件杂件的类型、层级、坐标和是否仍在桌面上；state.tray 保存当前七格待归档盒；state.remaining 保存每个类型还剩多少件未清；state.timeLeft 是本局剩余时间；state.mode 在 playing/won/lost 间切换。',
+      share_hook: '“这张工位桌我一把清台了”比普通日用品更适合办公室梗图和后续同主题扩展。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入第二套堆物 seed', '加入风扇或磁吸类最小辅助道具', '加入连清统计文案']
+    },
+  },
+  {
+    game: goodsSortOfficeRemixGame,
+    id: 'remix-office-snack-stock',
+    slug: 'office-snack-stock',
+    title: '茶水间补货局',
+    source_file: 'goods-sort-fake.html',
+    parent_slug: 'goods-sort-fake',
+    lineage: ['goods-sort-fake', 'office-snack-stock'],
+    prompt: { text: '把 Goods Sort 式货架理货盘改成办公室茶水间补货主题，商品换成冷萃、茶包、饼干、杯面和气泡水，保留前排取货、后排补位和七格三件即清。', voice_transcript: '' },
+    summary: '办公室茶水间主题的货架理货二创：只拿前排零食饮料，三件同类立刻整盒补走。',
+    accent: '#9df0d4',
+    glyph: '柜',
+    agent_description: {
+      one_liner: '办公室茶水间主题的货架理货二创：只拿前排零食饮料，三件同类立刻整盒补走。',
+      core_loop: '玩家面对三层茶水间零食柜，只能点击每条货道最前排可见的一件补给，把它送进下方七格补货暂存台；任意同类累计到三件会立刻整盒补走清空；前排拿走后，后排库存会自动补到最前面；如果暂存台先被不同物件塞满，这面柜就算整理失败。',
+      controls: '单指点击任意货道当前最前排的一件；点击“重开这面柜”恢复固定补货布局。',
+      mechanics: [
+        '前排可拿：每条货道永远只暴露一件前排货，必须先处理近端库存，保留货架理货类最关键的拿取节奏',
+        '后排补位：前排一走，后排自然露出，形成持续的小揭示反馈',
+        '七格暂存：拿起的补给先进七格暂存，三件同类才会整盒补走，不同品类堆太多就会堵台',
+        '三件即清：没有拖拽换位，纯点击选择，尽量用最小交互复刻热门理货盘的短线判断',
+        '短局货架：18 件物品、9 条货道，十几秒到几十秒就能完整刷完一轮'
+      ],
+      visual_language: '把大众超市货架换成夜间办公室茶水间，深色柜体配冷绿灯箱、简化零食饮料图标和玻璃感暂存条，继续保持离线单文件与竖屏 DOM 结构。',
+      state_model: 'state.lanes 记录每条货道所属柜层和从前到后的库存序列；state.tray 保存当前七格补货暂存；state.remaining 保存各品类剩余件数；state.cleared 统计已整盒补走数量；state.mode 在 playing/won/lost 间切换。',
+      share_hook: '“把茶水间零食柜一把理顺了”比普通商超货架更适合办公室梗图和后续同题材二创。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入第二套货道 seed', '加入限步目标', '加入补货连击文案']
+    },
+  },
+  {
+    game: hexaSortOfficeRemixGame,
+    id: 'remix-office-badge-stack',
+    slug: 'office-badge-stack',
+    title: '工牌六角归档',
+    source_file: 'hexa-sort-fake.html',
+    parent_slug: 'hexa-sort-fake',
+    lineage: ['hexa-sort-fake', 'office-badge-stack'],
+    prompt: { text: '把 Hexa Sort 式六角堆叠分色盘改成办公室归档主题，六角块换成不同部门工牌，保留整段搬运和满柱整批清空。', voice_transcript: '' },
+    summary: '办公室主题的 Hexa Sort 二创：先腾空归档栏，再把同部门工牌叠满一柱整批收走。',
+    accent: '#9ff0d1',
+    glyph: '档',
+    agent_description: {
+      one_liner: '办公室主题的 Hexa Sort 二创：先腾空归档栏，再把同部门工牌叠满一柱整批收走。',
+      core_loop: '玩家面对七根蜂巢式归档栏，只能搬运每栏最上方连续相同部门的一段工牌；把它们倒进空栏，或倒到同部门顶牌上继续叠高；任意一栏叠满四张同部门工牌就会整栏直接归档消失，直到五个部门都被清空。',
+      controls: '单指先点源栏锁定，再点空栏或同部门顶牌栏执行搬运；再次点同一栏取消选择；点击“重开这一栏”恢复固定盘面。',
+      mechanics: [
+        '顶层连续搬运：不是一张一张挪，而是顶层连着的同部门整段一起滑走，复刻 Hexa Sort 最关键的爽点',
+        '空栏缓冲：两根空栏负责中转，玩家先腾位再归并，形成连续短线决策',
+        '满柱即清：四张同部门叠满整栏会直接整批归档，给出很强的节奏反馈',
+        '蜂巢布局：七栏按六角蜂窝排开，不再是试管或直排瓶子，视觉和操作都更贴近这个玩法族',
+        '固定短局：五种部门牌、两根缓冲栏，几十秒到一两分钟就能完整复盘一轮'
+      ],
+      visual_language: '冷绿办公夜班配色，六角工牌取代普通色块，归档栏像玻璃文件槽，仍保持单文件竖屏与纯画布渲染。',
+      state_model: 'state.columns 记录七个归档栏自底向上的部门牌序列；state.selected 记录当前源栏；state.cleared 保存已整批归档的部门；state.moves 统计搬运步数；state.mode 在 playing/won 间切换。',
+      share_hook: '“我把五个部门的工牌一把归完了”很像办公室梗图，也方便继续往归档、排班、审批主题扩。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更多蜂巢盘面 seed', '加入一步撤回', '加入限步三星文案']
+    },
+  },
+  {
+    game: tapAwayWarehouseRemixGame,
+    id: 'remix-night-shift-crate-out',
+    slug: 'night-shift-crate-out',
+    title: '夜班货架出箱',
+    source_file: 'tap-away-fake.html',
+    parent_slug: 'tap-away-fake',
+    lineage: ['tap-away-fake', 'night-shift-crate-out'],
+    prompt: { text: '把 Tap Away 式 3D 箭头出块改成夜班仓储主题，彩块换成不同标签货箱，保留旋转货架和顺着箭头推出外层箱子的节奏。', voice_transcript: '' },
+    summary: '夜班仓储主题的 3D 出块二创：先推出外层货箱，再靠旋转货架把整架清空。',
+    accent: '#8ef6d8',
+    glyph: '箱',
+    agent_description: {
+      one_liner: '夜班仓储主题的 3D 出块二创：先推出外层货箱，再靠旋转货架把整架清空。',
+      core_loop: '玩家面对一团堆在夜班货架上的立体货箱，只要某个箱子的贴纸箭头方向没有别箱阻挡，点它就会顺着货道直接推出货架；中层和内层暂时被外壳包住时，需要先左右旋转货架，换一个角度继续拆露在外面的箱子，直到 15 个货箱全部出完。',
+      controls: '单指点货箱尝试推出；左右滑动或点“左转 / 右转”旋转货架；点击“重开这架”恢复固定堆叠。',
+      mechanics: [
+        '箭头即出路：每个货箱都绑定一个固定推出方向，只要那条线上没有别箱就会立刻出架',
+        '外层先拆：内层货箱天然被外层包住，必须先清掉包壳，保留 Tap Away 最核心的剥层爽点',
+        '旋转找角度：不能平移整团，只能旋转视角重新判断哪些货箱已经露在边缘',
+        '无时间压力：没有计时和道具，只靠顺序与空间判断制造短线策略',
+        '固定短局：单团 15 箱，十几秒到几十秒就能完整复盘一轮'
+      ],
+      visual_language: '把高饱和彩色方块换成冷色夜班货箱、仓储标签和低照度货架，继续保持离线单文件、手机竖屏和纯画布渲染。',
+      state_model: 'state.blocks 保存每个货箱的 3D 坐标、箭头方向、颜色标签和是否仍在架上；state.yaw 记录当前货架旋转角度；state.cleared 记录已推出数量；state.mode 在 playing/won 间切换。',
+      share_hook: '“这一架终于拆空了”比普通方块更像打工人夜班梗图，也方便继续往仓储题材扩。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入第二套更厚的 3x3x3 牌面', '加入上下倾斜视角切换', '加入最少步数或最快清架文案']
+    },
+  },
+  {
+    game: colorBlockJamOfficeRemixGame,
+    id: 'remix-office-folder-jam',
+    slug: 'office-folder-jam',
+    title: '工位文件归槽',
+    source_file: 'color-block-jam-fake.html',
+    parent_slug: 'color-block-jam-fake',
+    lineage: ['color-block-jam-fake', 'office-folder-jam'],
+    prompt: { text: '把 Color Block Jam 式彩块滑门谜题改成办公室文件归档主题，彩块换成不同部门文件夹，出口换成收纳槽。', voice_transcript: '' },
+    summary: '办公室主题的彩块滑门二创：先给大文件夹让路，再把所有部门件滑进对应收纳槽。',
+    accent: '#8ae8ff',
+    glyph: '档',
+    agent_description: {
+      one_liner: '办公室主题的彩块滑门二创：先给大文件夹让路，再把所有部门件滑进对应收纳槽。',
+      core_loop: '玩家面对一块被柜体挡住的 6x6 工位归档板，先选中文件夹，再朝四个方向一划；文件夹会沿空路一直滑到停点，若正好贴到同部门收纳槽边缘就会直接归档离场；把大文件夹先挪走、为后排小件腾出通道，直到整盘文件都滑进各自槽位。',
+      controls: '单指点中文件夹后朝四个方向滑动，或使用下方方向按钮微调；点击“重开这一层”恢复固定牌面。',
+      mechanics: [
+        '任意方向滑动：不同于固定箭头位移，这类彩块可以朝四个方向尝试，直到撞到柜体或别的文件夹才停下',
+        '同色门口离场：只有对应部门文件夹贴到自己的收纳槽边缘时才会立刻消失，保留 Color Block Jam 的核心目标',
+        '尺寸差异：盘里同时有长条夹和小件夹，必须先处理占位最大的长条件',
+        '固定障碍：柜体不会移动，只负责制造窄通道和卡位，强化短线空间规划',
+        '短局复玩：单盘几步到十几步即可解完，天然适合快速连刷和再二创'
+      ],
+      visual_language: '把亮色彩块换成冷色办公室文件夹与收纳槽，深蓝背景配玻璃感面板，仍保持离线单文件和手机竖屏的轻量节奏。',
+      state_model: 'state.blocks 保存每个文件夹的行列位置、尺寸、颜色和是否已归档；state.selectedId 记录当前被选中的文件夹；state.moves 统计推档次数；state.mode 在 playing/won 间切换。',
+      share_hook: '“把一层文件一次性归槽完了”很像办公室段子截图，也适合作为同一玩法线的轻主题二创。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更多固定盘面 seed', '加入一步撤回', '加入更长的双格和三格文件夹组合']
+    },
+  },
+  {
+    game: subwaySnakeRemixGame,
+    id: 'remix-subway-snake-shift',
+    slug: 'subway-snake-shift',
+    title: '地铁刷卡蛇',
+    source_file: 'snake-battle-fake.html',
+    parent_slug: 'snake-battle-fake',
+    lineage: ['snake-battle-fake', 'subway-snake-shift'],
+    prompt: { text: '把贪吃蛇大作战式冲榜局改成地铁通勤主题，光豆换成刷卡点，冲刺掉出票根，整体更像晚高峰换乘。', voice_transcript: '' },
+    summary: '通勤主题的蛇局二创：单指变道、长按冲刺、吃刷卡点把列车长龙冲进榜单。',
+    accent: '#5dc2ff',
+    glyph: '蛇',
+    agent_description: {
+      one_liner: '通勤主题的蛇局二创：单指变道、长按冲刺、吃刷卡点把列车长龙冲进榜单。',
+      core_loop: '玩家操控一列蛇形通勤列车在竖屏大厅内单指变道，持续吃掉散落的刷卡点来增长车厢长度；长按冲刺可以快速抢点，但尾部会不断掉出票根，既可能被自己回收，也会给对手留下可抢资源；只要把列车长度冲到 40 就算通勤通关。',
+      controls: '手指在画布上拖动决定车头朝向；长按“长按冲刺”按钮或空格键进入加速；点击“重开”立即重置一局。',
+      mechanics: [
+        '单指转向：车头始终朝最近指针方向平滑扭动，保留热门蛇局最核心的低门槛手感',
+        '冲刺掉尾：长按冲刺显著提速，但会把尾部长度逐段抖成票根豆点，形成经典风险换速度',
+        '撞身判负：只要蛇头蹭到任意蛇身就会立刻出局，逼玩家在换乘口做极短决策',
+        'Bot 冲榜：四条 AI 列车也会抢点、撞线、爆豆，场面始终维持轻度 io 压迫',
+        '短局目标：长度冲到 40 即胜，适合十几秒到几十秒的碎片复玩'
+      ],
+      visual_language: '深蓝换乘大厅、荧蓝轨道网格、暖黄刷卡点与橙色票根，蛇身更像一串发光车厢，整体比原型更偏通勤夜色。',
+      state_model: 'state.player 保存玩家列车的头部坐标、角度、长度与轨迹；state.bots 是四条 AI 列车；state.pellets 是大厅内散落的刷卡点与票根；state.mode 在 playing/won/lost 之间切换。',
+      share_hook: '“晚高峰我把地铁蛇冲到榜一了”这类结果文案天然适合截图传播。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入换乘高峰时段速度波动', '加入站台广播倒计时', '加入双蛇交错的更密车流 seed']
+    },
+  },
+  {
+    game: screwRemixGame,
+    id: 'remix-night-shift-screws',
+    slug: 'night-shift-screws',
+    title: '夜班拆钉台',
+    source_file: 'screw-sorter.html',
+    parent_slug: 'screw-sorter',
+    lineage: ['screw-sorter', 'night-shift-screws'],
+    prompt: { text: '改成夜班工位主题，板材换成工牌和键帽，反馈更冷更硬。', voice_transcript: '' },
+    summary: '夜班工位主题的拧钉排序局：拆挡板、收同色、避免夜班盒爆仓。',
+    accent: '#22f4ee',
+    glyph: '改',
+    agent_description: {
+      one_liner: '夜班工位主题的拧钉排序局：拆挡板、收同色、避免夜班盒爆仓。',
+      core_loop: '玩家先拆最上层可点击的彩钉，让被工牌和键帽压住的下层螺丝逐步露出；每拆下一枚都会进入下方六格夜班盒，凑满三枚同类自动归档清除；如果盒子被不同颜色塞满则失败，拆空全部层板即通关。',
+      controls: '触摸点击高亮可拆的螺丝；不可点击被上层挡住的螺丝；点击“重开这一板”重置关卡。',
+      mechanics: [
+        '层叠遮挡：只有不被更高层板件覆盖的螺丝可以拆除',
+        '三枚归档：同类螺丝进入六格盒后，累计三枚自动清空',
+        '有限槽位：不同类颜色混装会快速占满盒子，迫使玩家规划顺序',
+        '板件剥离：拆空某层板件上的螺丝后，该板件视觉上退出场景，露出更深层',
+        '短局复玩：单局目标明确，适合十几秒到几十秒反复尝试'
+      ],
+      visual_language: '冷色夜班工位风，深蓝背景加霓虹冷光，板件替换成工牌压板、键帽挡片与主控底板，收纳盒字符也改成工位符号。',
+      state_model: 'state.screws 记录每枚螺丝的层级、颜色、位置与激活状态；state.tray 为六格夜班盒；state.mode 为 playing/won/lost；state.removed 记录已归档数量。',
+      share_hook: '结果文案天然适合截图分享，比如“我把夜班拆钉台一板清空了”或“夜班盒又爆仓了”。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保留 printer artifact 元数据与页面契约'],
+      next_evolution_hooks: ['加入限时夜班倒计时', '加入特殊锁钉与万能空槽', '加入每日板面 seed 与排行榜文案']
+    },
+  },
+  {
+    game: screwBoxRemixGame,
+    id: 'remix-parcel-screw-boxes',
+    slug: 'parcel-screw-boxes',
+    title: '分拨拆钉台',
+    source_file: 'screw-box-blitz.html',
+    parent_slug: 'screw-box-blitz',
+    lineage: ['screw-box-blitz', 'parcel-screw-boxes'],
+    prompt: { text: '把同色彩盒拆钉局改成快递分拨台主题，盒子换成包裹框，保留三枚同色立即出库的节奏。', voice_transcript: '' },
+    summary: '快递分拨主题的彩盒拆钉二创：先拆挡板，再把同色封签塞进对应包裹框。',
+    accent: '#ffb347',
+    glyph: '箱',
+    agent_description: {
+      one_liner: '快递分拨主题的彩盒拆钉二创：先拆挡板，再把同色封签塞进对应包裹框。',
+      core_loop: '玩家先从上层可点击位置拆出封签钉，露出被包材压住的下层钉件；每枚钉件会进入对应颜色的包裹框，同色累计到三枚就会立刻整框出库清空；如果四个包裹框总待处理量堆到六枚，分拨台就会堵塞失败。',
+      controls: '触摸点击发亮的可拆封签钉；被高层包材遮挡的钉件不能点；点击“重开这一局”恢复固定板面。',
+      mechanics: [
+        '层叠遮挡：只有最上层不被遮住的钉件才能被拆出',
+        '同色入框：拆下来的钉件直接进入对应颜色的包裹框，不再进入混合暂存栏',
+        '三枚即出库：任意颜色累计到三枚会立刻清空该框，形成明确节奏点',
+        '六格堵塞失败：所有包裹框的待处理量合计到六枚时失败，逼玩家按颜色规划顺序',
+        '短局强复盘：板面固定、反馈清晰，适合反复优化拆钉路径'
+      ],
+      visual_language: '把工业拆板主题换成快递分拨台：暖橙背景、纸箱色挡板、四色包裹框，钉件标签则改成急件与色签的分拨符号。',
+      state_model: 'state.screws 记录每枚钉件的层级、颜色、位置与激活状态；state.bins 记录四个包裹框当前各自待处理数量；state.mode 为 playing/won/lost；state.removed 记录已出库数量。',
+      share_hook: '“这车封签又把分拨台堵死了”这类失败文案很适合做梗图，成功清空时也有明确的收尾截图点。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保留 printer artifact 元数据与页面契约'],
+      next_evolution_hooks: ['加入万能快递框', '加入限时快件倒计时', '加入第二块更密的分拨板面']
+    },
+  },
+  {
+    game: screwdomOfficeRemixGame,
+    id: 'remix-office-pin-pile',
+    slug: 'office-pin-pile',
+    title: '工位夹签归档',
+    source_file: 'screwdom-fake.html',
+    parent_slug: 'screwdom-fake',
+    lineage: ['screwdom-fake', 'office-pin-pile'],
+    prompt: { text: '把 Screwdom 式针位堆叠拆钉改成办公室归档主题，钉帽换成部门夹签，底部箱位换成归档框。', voice_transcript: '' },
+    summary: '办公室主题的针位拆钉二创：只处理每根柱子的顶层夹签，三张同部门立刻整框归档。',
+    accent: '#97f0ff',
+    glyph: '签',
+    agent_description: {
+      one_liner: '办公室主题的针位拆钉二创：只处理每根柱子的顶层夹签，三张同部门立刻整框归档。',
+      core_loop: '玩家面对五根竖向夹签柱，只能处理每根柱子最上层那张部门夹签；第一次点击用于锁定当前顶层颜色，第二次点击同一根柱子就把它送进底部对应部门归档框；只要某个部门累计到三张就会立刻整框归档清空，而如果四个框位累计待处理量涨到六张则失败。',
+      controls: '单指点击任意夹签柱最上层标签进行“选中 -> 拆下”两段操作；点到空白区域会取消选中；点击“重开这一盘”恢复固定牌面。',
+      mechanics: [
+        '只拆顶层：任何时候都只能操作每根柱子最上面露出的那张夹签，保留 Screwdom 最核心的顺序压力',
+        '同色整框：底部每个部门框最多先暂存两张，第三张入框时立即整框清空，形成明确节奏点',
+        '有限待处理：四个部门框的待清总量达到六张就失败，迫使玩家提前规划颜色顺序',
+        '纯针位堆叠：没有额外道具、移动或 meta，只靠竖向堆叠和底部箱位制造短线策略',
+        '固定短局：五根柱、十七张夹签的固定牌面几十秒内即可复盘一轮'
+      ],
+      visual_language: '深蓝办公室夜班底色，竖向针柱和部门夹签取代工业螺丝模型，底部四个归档框保持纯色和大字标签，继续遵守单文件竖屏契约。',
+      state_model: 'state.pins 保存五根夹签柱当前的颜色栈；state.selected 记录是否已锁定某根柱子的顶层；state.bins 保存四个部门框当前待清数量；state.removed 记录已归档总数；state.mode 为 playing/won/lost。',
+      share_hook: '“这盘归档又被客服签卡死了”这种结果文案很像办公室段子，适合继续往工位主题扩。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入第二块更深的夹签柱牌面', '加入一步撤销', '加入每日固定 seed 与最优步数文案']
+    },
+  },
+  {
+    game: officePixelRemixGame,
+    id: 'remix-overtime-pixel-loop',
+    slug: 'overtime-pixel-loop',
+    title: '加班像素回路',
+    source_file: 'pixel-loop-fake.html',
+    parent_slug: 'pixel-loop-fake',
+    lineage: ['pixel-loop-fake', 'overtime-pixel-loop'],
+    prompt: { text: '把 Pixel Flow 式像素环流局改成夜班工位主题，彩块换成邮件、表格、会议和报销，保留实时堵槽压力。', voice_transcript: '' },
+    summary: '夜班工位主题的像素环流二创：处理头同色消件，五个夜班槽一旦报废就会堵死全局。',
+    accent: '#6ee7ff',
+    glyph: '班',
+    agent_description: {
+      one_liner: '夜班工位主题的像素环流二创：处理头同色消件，五个夜班槽一旦报废就会堵死全局。',
+      core_loop: '玩家面对一条绕着像素任务板循环移动的杂务环带，持续把当前处理头部署到下方空槽；已部署处理头会自动拦截同色工单并点亮中间像素板，电量耗尽后会变成废槽，需要玩家手动清走；在堆单上限与五格废槽之间维持平衡，直到整块像素板被点亮。',
+      controls: '点击下方空槽部署当前处理头；点击已报废槽位可立刻清槽；点击“重开这一环”恢复固定循环序列。',
+      mechanics: [
+        '实时环带：工单沿固定路径持续绕圈，拖久就会形成稳定压迫',
+        '同色自动拦截：处理头只会清掉自己颜色的工单，玩家要先分配有限槽位',
+        '五格堵槽：每个处理头只有固定电量，用尽会占住槽位，全部报废会直接失败',
+        '像素点亮：每次正确拦截都会把中间任务板点亮一格，形成清晰的进度反馈',
+        '固定序列短局：颜色与来件顺序是确定的，天然适合反复复盘最优部署节奏'
+      ],
+      visual_language: '夜班工位主题，深蓝黑底、冷青发光环带，中间像素板像发亮任务屏，颜色字块全部原创且无外部素材。',
+      state_model: 'state.carriers 保存环带工单的颜色与位置；state.slots 记录五个处理槽的颜色、电量与报废状态；state.nextColor 为待部署处理头；state.overflow 是漏件计数；state.painted 记录已点亮像素格。',
+      share_hook: '“我把整块加班像素屏一把点亮了”这种结果很适合做短视频封面或截图。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更长的环带与多层像素图', '加入一次性清槽道具', '加入每日工单 seed 与极限分数']
+    },
+  },
+  {
+    game: lunchMergeRemixGame,
+    id: 'remix-lunchbox-merge-pot',
+    slug: 'lunchbox-merge-pot',
+    title: '午饭合成锅',
+    source_file: 'brainrot-merge-pot.html',
+    parent_slug: 'brainrot-merge-pot',
+    lineage: ['brainrot-merge-pot', 'lunchbox-merge-pot'],
+    prompt: { text: '把脑腐梗怪改成午饭配菜版，保留合成大西瓜式掉落手感和翻锅警戒线。', voice_transcript: '' },
+    summary: '午饭配菜主题的掉落合成锅：同类碰撞升级，越堆越大，别越过打包线。',
+    accent: '#5eead4',
+    glyph: '饭',
+    agent_description: {
+      one_liner: '午饭配菜主题的掉落合成锅：同类碰撞升级，越堆越大，别越过打包线。',
+      core_loop: '玩家在锅口上方左右瞄准，把当前配菜球投进容器；球体会在重力与碰撞下滚动堆叠，两颗同级食材接触后合成为更大一级；持续叠高直到触碰上方打包线即失败，分数来自每次升级合成。',
+      controls: '手指在锅口上方移动改变预览落点；点击屏幕把当前食材投下；点“重开这一锅”重置局面。',
+      mechanics: [
+        '顶部投放：始终只有一个当前球与一个下一球提示，决策节奏非常快',
+        '刚体堆叠：球体受重力、边界与相互挤压影响，会自然滚动寻找缝隙',
+        '同级升级：只有相同等级球体能合成为更大一档，形成连锁空间管理',
+        '翻锅失败：稳定堆叠高度越过警戒线并维持一段时间即结束',
+        '短回合复玩：单局几十秒即可结束，天然适合反复开新局冲更高合成链'
+      ],
+      visual_language: '便当午饭主题，冷青锅体配暖色食材，顶部虚线改成打包线，所有球面只用单字标签和纯色圆形表达，保持离线单文件的轻量感。',
+      state_model: 'state.pieces 保存所有活跃球体的 tier、位置、速度与合成冷却；state.next 是下一个食材等级；state.hold 记录危险线停留时长；state.mode 为 aiming/falling/lost。',
+      share_hook: '“今天午饭合成到盒饭王了吗”这种结果文案天然能截图传播。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入连续合成 bonus', '加入每日固定投放序列', '加入锅体皮肤与结果卡']
+    },
+  },
+  {
+    game: officeRaiderRemixGame,
+    id: 'remix-office-raider-yard',
+    slug: 'office-raider-yard',
+    title: '工位摸鱼盘',
+    source_file: 'brainrot-raider-yard.html',
+    parent_slug: 'brainrot-raider-yard',
+    lineage: ['brainrot-raider-yard', 'office-raider-yard'],
+    prompt: { text: '把偷家脑腐怪改成工位杂物主题，保留生单位、拖拽合成、产币和定时防偷。', voice_transcript: '' },
+    summary: '工位杂物主题的偷家合成盘：摆物件、拖同类升级、挂机摸鱼，还得拦住巡查经理。',
+    accent: '#22f4ee',
+    glyph: '盘',
+    agent_description: {
+      one_liner: '工位杂物主题的偷家合成盘：摆物件、拖同类升级、挂机摸鱼，还得拦住巡查经理。',
+      core_loop: '玩家用摸鱼币不断往工位盘里摆进便签、咖啡杯和表格等低阶杂物，再把两个同类拖到一起升级成更值钱的大件；工位会持续自动产出摸鱼币，但每隔一段时间巡查经理都会来收走最低阶物件，玩家必须在倒计时结束前按下拦截按钮，否则节奏会被打断。',
+      controls: '点击“摆一件”消耗货币生成新物件；按住并拖动物件，把同级物件拖到一起完成合成；巡查经理弹窗出现时点“拦截小偷”；点击“重开这块场”重置局面。',
+      mechanics: [
+        '生成单位：花费随场上单位数上涨，逼玩家平衡扩张速度',
+        '拖拽合成：只有同级物件可以合成，合成后会直接抬高秒产',
+        '挂机产币：每个物件每秒稳定产出，形成明确的养成坡度',
+        '定时防偷：巡查经理总是盯最低阶物件，形成轻度实时打断',
+        '格子解锁：随着合成次数增长，工位盘会逐步开放更多位置'
+      ],
+      visual_language: '夜班工位主题，深青背景加冷色霓虹，圆形单位改成工位杂物徽章，保持离线单文件和手机竖屏的轻量手感。',
+      state_model: 'state.units 保存每个单位的 tier 与 slot；state.coins 与 totalIncome 组成养成经济；state.raid 记录当前巡查事件；state.slotCount 控制已解锁工位数。',
+      share_hook: '“经理一来我就被偷走三杯咖啡”这种结果文案很适合做轻吐槽截图。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更强偷家事件', '加入随机 buff 物件', '加入结果卡和最高摸鱼币排行']
+    },
+  },
+  {
+    game: officeEggRemixGame,
+    id: 'remix-office-egg-run',
+    slug: 'office-egg-run',
+    title: '快递柜摸鱼蛋',
+    source_file: 'brainrot-egg-run.html',
+    parent_slug: 'brainrot-egg-run',
+    lineage: ['brainrot-egg-run', 'office-egg-run'],
+    prompt: { text: '把 Collect Brainrot Egg 的买蛋-拖回基地-孵化产币-偷蛋窗口改成办公室快递盲盒题材，保持单屏小循环。', voice_transcript: '' },
+    summary: '办公室快递盲盒二创：拿盒、拖回工位拆、持续产币，再截胡隔壁加急件。',
+    accent: '#34d399',
+    glyph: '件',
+    agent_description: {
+      one_liner: '办公室快递盲盒二创：拿盒、拖回工位拆、持续产币，再截胡隔壁加急件。',
+      core_loop: '玩家先花摸鱼币从快递柜传送带拿盲盒，把盒子直接拖回下方空工位开始拆；拆开的办公室摆件会持续产出摸鱼币，用于购买更高一级的盒子；与此同时，隔壁工区会周期性刷新一颗可截胡的加急件，玩家需要在窗口打开时点按钮把它拖走，补足高阶收益。',
+      controls: '点击“拿一盒”购买当前盒子；按住传送带或截胡区里的盒子并拖到下方空工位；窗口亮起时点击“截胡隔壁件”抢下高阶包裹；点击“重开这条线”恢复开局。',
+      mechanics: [
+        '双传送带来源：上方固定是自购快递柜，另一条则是周期性出现的截胡窗口',
+        '拖回工位：盒子必须放进空工位里才会开始拆，保留原作“买回来还得带回家”的手感',
+        '定时孵化产币：每个工位都有独立拆盒进度，完成后转成稳定秒产摆件',
+        '高阶解锁：随着场上摆件增加，自购盒子和截胡件会逐步升阶，复刻增长斜坡',
+        '满位取舍：三格工位很快会塞满，错过腾位时截胡件会直接折现，形成短期策略点'
+      ],
+      visual_language: '办公室快递柜主题，深青背景配薄荷绿高光，蛋和怪物都改成快递盒与工位摆件，用纯色图形和单字符号保持离线单文件轻量感。',
+      state_model: 'state.eggs 保存传送带或工位中的盲盒、来源与拆盒进度；state.units 记录已拆出的摆件 tier 与工位位置；state.coins 和 incomeTotal 构成养成经济；state.raidTimer 驱动隔壁加急件窗口。',
+      share_hook: '“工位满了只能眼看加急件折现”这种办公室失败瞬间很适合截图传播。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入工位扩容槽位', '加入随机主管巡楼打断', '加入盲盒图鉴和最高摸鱼币成绩']
+    },
+  },
+  {
+    game: courierArrowRemixGame,
+    id: 'remix-courier-arrow-rush',
+    slug: 'courier-arrow-rush',
+    title: '快递箭阵',
+    source_file: 'arrow-escape-fake.html',
+    parent_slug: 'arrow-escape-fake',
+    lineage: ['arrow-escape-fake', 'courier-arrow-rush'],
+    prompt: { text: '把拔箭逃生改成快递分拣主题，保留从外层剥到内层的单指解谜节奏。', voice_transcript: '' },
+    summary: '快递分拣主题的箭块解谜：外层先出站，给中间箭道腾路线。',
+    accent: '#fbbf24',
+    glyph: '站',
+    agent_description: {
+      one_liner: '快递分拣主题的箭块解谜：外层先出站，给中间箭道腾路线。',
+      core_loop: '玩家点击一枚朝出口方向没有阻挡的箭块，它会立刻从站台飞出；外层箭先清走后，中层与内层才会逐步露出通路；误点被挡住的箭会消耗一次容错，三次用完即失败。',
+      controls: '单指点击箭块尝试出站；按钮“重开这一局”重置固定棋盘。',
+      mechanics: [
+        '单向出站：箭块只能沿自己的朝向笔直离场，不允许转弯',
+        '外层剥离：外缘可行动作会逐步打开内层路径，形成连续爽点',
+        '有限容错：错误点击会立刻消耗机会，逼玩家先看后点',
+        '固定短局：同一面板十几秒到几十秒就能跑完一局，很适合连刷'
+      ],
+      visual_language: '分拣站台主题，蜂蜜黄与深棕色面板，箭块像站内分流牌，整体保留单屏轻量气质。',
+      state_model: 'state.tiles 保存每枚箭块的网格坐标、朝向与激活状态；state.hearts 记录剩余容错；state.cleared 记录已出站数量；state.mode 为 playing/won/lost。',
+      share_hook: '“我一把没压单清完快递箭阵”这种结果很适合截图。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入每日面板 seed', '加入传送带障碍', '加入连清评级文案']
+    },
+  },
+  {
+    game: officeHopRemixGame,
+    id: 'remix-office-hop-stack',
+    slug: 'office-hop-stack',
+    title: '工牌踩箱梯',
+    source_file: 'emoji-gator-hop.html',
+    parent_slug: 'emoji-gator-hop',
+    lineage: ['emoji-gator-hop', 'office-hop-stack'],
+    prompt: { text: '把 TikTok 隐藏表情跳跃游戏改成夜班工位主题，保留自动弹跳、易碎台、危险台和表情/道具冲刺。', voice_transcript: '' },
+    summary: '夜班工位主题的纵向跳跃二创：托盘接跳、破箱会塌、咖啡徽章给一次猛冲。',
+    accent: '#7dd3fc',
+    glyph: '梯',
+    agent_description: {
+      one_liner: '夜班工位主题的纵向跳跃二创：托盘接跳、破箱会塌、咖啡徽章给一次猛冲。',
+      core_loop: '玩家控制一个工牌徽章在一串向上排列的文件托盘和纸箱间自动回弹，只需要左右接下一个落点；普通托盘稳定回弹，破箱只会承重一次，灰色危险托盘会直接让本局结束，而漂浮的咖啡徽章会把角色猛冲到更高的楼层。',
+      controls: '单指左右拖动控制落点，角色落到平台就会自动弹起；点击“重开这一跳”回到固定开局节奏。',
+      mechanics: [
+        '自动弹跳：保留社交 App 彩蛋小游戏那种零学习成本，上手即玩',
+        '纵向追镜头：镜头始终追着最高点走，失误掉屏就结束，短局复玩很强',
+        '一次性破箱：黄箱踩过就塌，逼玩家及时横移换线',
+        '危险托盘：灰色骷髅托盘碰到即死，保留原始玩法的明确惩罚点',
+        '加速徽章：漂浮咖啡徽章提供强上冲，复刻原作里表情/道具触发的爽点'
+      ],
+      visual_language: '把绿色鳄梯换成冷色工位托盘和纸箱，角色改成工牌徽章，保持单屏纵向跳跃和社交彩蛋游戏的轻量感。',
+      state_model: 'state.player 保存横向位置、纵向速度和当前冲刺尾迹；state.platforms 记录不同平台类型与是否已损坏；state.pickups 记录漂浮咖啡徽章；state.cameraY 决定纵向追踪镜头；state.score 与 combo 管理当前高度与连踩表现。',
+      share_hook: '“夜班工牌连踩 80 层才掉下去”这种成绩天然适合截图分享。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入每日固定平台 seed', '加入好友最高层文案', '加入冲刺后短暂无敌特效']
+    },
+  },
+  {
+    game: milkTeaSortRemixGame,
+    id: 'remix-milk-tea-sorter',
+    slug: 'milk-tea-sorter',
+    title: '奶茶封杯局',
+    source_file: 'marble-sort-fake.html',
+    parent_slug: 'marble-sort-fake',
+    lineage: ['marble-sort-fake', 'milk-tea-sorter'],
+    prompt: { text: '把 Marble Sort 式分色瓶改成奶茶备料台，保留选杯换杯的单指 sorting 节奏。', voice_transcript: '' },
+    summary: '奶茶备料主题的换杯分拣局：把同料倒进空杯或同料顶层，直到每杯单色。',
+    accent: '#f59e0b',
+    glyph: '茶',
+    agent_description: {
+      one_liner: '奶茶备料主题的换杯分拣局：把同料倒进空杯或同料顶层，直到每杯单色。',
+      core_loop: '玩家先点选一个顶部有配料的杯子，再点目标空杯或同色顶层杯，把顶部连续同类一次性倒过去；随着杯中层次逐步变纯，每个杯子最终只保留一种配料并装满四层即可过关。',
+      controls: '单指点击杯子进行“选源杯 -> 选目标杯”；再次点击源杯可取消；点击“重开这一局”恢复固定牌面。',
+      mechanics: [
+        '单指换杯：一来一回只有两次点击，门槛极低',
+        '连续倒料：源杯顶部连续同色会被成组移动，保留 Marble Sort 的真实手感',
+        '目标约束：只能倒进空杯，或倒到同色顶层且有剩余容量的杯子',
+        '固定短局：一面固定牌几十步内即可解完，天然适合碎片时间反复开局',
+        '完成判定：所有非空杯都变成满四层单色后立刻通关'
+      ],
+      visual_language: '暖色奶茶门店备料台，玻璃试管替成封杯杯体，配料只用单字与纯色圆点表示，不使用任何外部素材。',
+      state_model: 'state.tubes 是每个杯子的颜色栈；state.selected 记录当前源杯；state.moves 记录完成的倒料手数；state.mode 为 playing/won。',
+      share_hook: '“今天把奶茶备料一把理顺了”这种结果很适合做短视频封面或截图。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更多关卡 seed', '加入撤回一步', '加入封杯连击评级']
+    },
+  },
+  {
+    game: officeWoolRemixGame,
+    id: 'remix-office-loom-sort',
+    slug: 'office-loom-sort',
+    title: '工位理线板',
+    source_file: 'wool-sort-fake.html',
+    parent_slug: 'wool-sort-fake',
+    lineage: ['wool-sort-fake', 'office-loom-sort'],
+    prompt: { text: '把 Wool Sort 式绕线分拣改成夜班工位理线主题，保留同色绕线和逐步显图，但把绣片换成工牌面板。', voice_transcript: '' },
+    summary: '夜班工位主题的绕线分拣二创：先把四路线束理顺，再让工牌像素图完整亮出来。',
+    accent: '#60a5fa',
+    glyph: '线',
+    agent_description: {
+      one_liner: '夜班工位主题的绕线分拣二创：先把四路线束理顺，再让工牌像素图完整亮出来。',
+      core_loop: '玩家先点选一卷顶部可见的线束，再把顶部连续同色的一组绕进空卷轴或同色顶层卷轴；只要某个卷轴被整理成满四层单色，这一路就会被视为归束完成，同时点亮上方工牌面板里对应颜色的像素绣块；当所有非空卷轴都变成单色满卷，整块图案也随之亮满，当前短局结束。',
+      controls: '单指点击执行“选源卷轴 -> 选目标卷轴”；再次点击同一卷轴可取消；点击“重开这一绷”恢复固定牌面。',
+      mechanics: [
+        '单指绕线：操作门槛与热门 sort puzzle 一样低，保持两次点击完成一次转移',
+        '连续同色搬运：源卷顶部连续同色会被整段搬走，完整保留原玩法最关键的读顶层手感',
+        '目标约束：只能绕进空卷轴，或绕到同色顶层且仍有剩余容量的卷轴',
+        '显图反馈：每理顺一路颜色，就会同步亮起一部分工牌像素图，强化“排序不只是清关而是在补图”的爽点',
+        '固定短局：固定六卷牌面几十步内可解完，天然适合反复优化路径'
+      ],
+      visual_language: '深蓝夜班工位色板，卷轴像收线盘，预览区不再是手工绣片而是发光工牌像素面板，整体更像办公桌面的冷色收线工具。',
+      state_model: 'state.spools 记录六个卷轴当前的颜色栈；state.selected 记录当前源卷轴；state.moves 记录排线手数；state.stitched 保存已经因归束而点亮的像素格；state.mode 在 playing/won 间切换。',
+      share_hook: '“终于把工位理线板一次收干净了”这种结果文案很像打工人梗图，适合继续往办公室题材扩。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更多像素图 seed', '加入撤回一步', '加入更长的五色线束局']
+    },
+  },
+  {
+    game: meetingGridlockGame,
+    id: 'remix-meeting-gridlock',
+    slug: 'meeting-gridlock',
+    title: '会议室别挨着',
+    source_file: 'zen-logic-fake.html',
+    parent_slug: 'zen-logic-fake',
+    lineage: ['zen-logic-fake', 'meeting-gridlock'],
+    prompt: { text: '把佛系逻辑羊盘改成会议室座位安排：保留每行每列每色块唯一、且不能相邻的硬约束。', voice_transcript: '' },
+    summary: '会议室座位版逻辑盘：按行列和分区排人，每块区域只能坐一位，还不能挨着。',
+    accent: '#7cc8ff',
+    glyph: '座',
+    agent_description: {
+      one_liner: '会议室座位版逻辑盘：按行列和分区排人，每块区域只能坐一位，还不能挨着。',
+      core_loop: '玩家面对一个被划成六块区域的 6x6 座位盘，需要把六位参会人安排进不同格子里；每一行、每一列、每个色块区域都只能出现一位，而且任何两位都不能横竖或斜角相邻，直到整盘约束同时成立。',
+      controls: '点击空格放下一位参会人；再点已放的人即可撤回；点到冲突格只会给出冲突原因，不会落子；点击“重开这盘”恢复空盘。',
+      mechanics: [
+        '行列唯一：每一行、每一列最终都只能保留一位参会人',
+        '色块唯一：每个彩色分区也只能放一位，直接复刻热门逻辑盘的区域约束',
+        '斜角禁贴：八方向相邻都算冲突，保留原作最关键的高压限制',
+        '自动排除：已放角色会自动让同行、同列、同区和相邻格变灰，形成扫雷式排除反馈',
+        '唯一候选提示：当某行、某列或某分区只剩一个可放点时，会被高亮提示，复刻“只剩一格就该落子”的爽点'
+      ],
+      visual_language: '把柔和小羊盘换成会议室座位图：冷色背景、彩色会议分区、圆点头像符号，仍旧保持单屏竖版和极简离线风格。',
+      state_model: 'state.queens 保存当前已放角色的行列位置；forced 记录由行列分区推导出的唯一候选格；state.note 记录最近一次冲突或撤回提示；state.mode 在 playing/won 间切换。',
+      share_hook: '“终于把这 6 个人排开了”天然像办公室梗图，适合做轻度传播和再二创。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入每日盘面 seed', '加入手动叉号笔记层', '加入完成步数或误触统计']
+    },
+  },
+  {
+    game: busJamNightRemixGame,
+    id: 'remix-night-shift-shuttle',
+    slug: 'night-shift-shuttle',
+    title: '夜班摆渡车',
+    source_file: 'bus-jam-fake.html',
+    parent_slug: 'bus-jam-fake',
+    lineage: ['bus-jam-fake', 'night-shift-shuttle'],
+    prompt: { text: '把 Bus Jam 式乘客分流改成夜班园区摆渡车，乘客换成工牌队列，整体更冷更硬。', voice_transcript: '' },
+    summary: '夜班园区主题的 Bus Jam 二创：点发对应班车，把门口这排工牌快速分流送走。',
+    accent: '#8be9ff',
+    glyph: '班',
+    agent_description: {
+      one_liner: '夜班园区主题的 Bus Jam 二创：点发对应班车，把门口这排工牌快速分流送走。',
+      core_loop: '玩家面对四列堵在夜班园区门口的工牌队列，只能处理每列最靠门的那张；下方三辆不同组别的摆渡车持续轮换，点中某辆车后，它会立刻带走当前所有能直接上车的同组工牌，前排一空，后排人才会继续露头。',
+      controls: '单指点击底部摆渡车发车；如果当前门口没有对应颜色的工牌，这辆车不会动；点击“重开这一班”恢复固定牌面。',
+      mechanics: [
+        '前排可见约束：只有每列最靠门的那张工牌是可操作对象，完整保留 Bus Jam 的“先清前排再露后排”压力',
+        '同色批量上车：一辆摆渡车发出后，会把当前所有能直接登车的同组工牌连续带走，形成爽快的链式揭露',
+        '三车轮换：底部始终只给三辆当前车，旧车发走后新车顶上，保留对颜色次序的短线决策',
+        '堵死判负：如果露出来的工牌颜色和眼前三辆车全部不匹配，整站会直接卡死失败',
+        '固定短局：单局十几秒到几十秒，天然适合碎片时间复玩和截图传播'
+      ],
+      visual_language: '把明亮通勤站换成冷色夜班园区：深蓝门岗、低饱和车灯、工牌标签替代普通乘客，整体更像凌晨换班的摆渡口。',
+      state_model: 'state.lanes 保存四列门口队伍；state.buses 保存当前三个车位里的班车颜色、已载人数与发车动画；state.queueIndex 指向后续进站车辆；state.mode 在 playing/won/lost 间切换。',
+      share_hook: '“夜班门口又堵住了”或者“这班摆渡我一把清完”都很像办公室段子，适合拿来做封面和二创。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更长的发车队列', '加入每日门口 seed', '加入一键提示下一辆该先发哪台']
+    },
+  },
+  {
+    game: seatAwayOfficeRemixGame,
+    id: 'remix-office-seat-scramble',
+    slug: 'office-seat-scramble',
+    title: '工位让一让',
+    source_file: 'seat-away-fake.html',
+    parent_slug: 'seat-away-fake',
+    lineage: ['seat-away-fake', 'office-seat-scramble'],
+    prompt: { text: '把 Seat Away 式挪座局改成办公室散场主题，乘客换成工牌，座椅换成工位椅，保留只沿箭头滑出通道的短线决策。', voice_transcript: '' },
+    summary: '办公室主题的挪座二创：顺着箭头推开工椅，让整片工位区快速散场。',
+    accent: '#8ae8ff',
+    glyph: '座',
+    agent_description: {
+      one_liner: '办公室主题的挪座二创：顺着箭头推开工椅，让整片工位区快速散场。',
+      core_loop: '玩家面对一块 5x5 的拥挤工位盘，每张工牌工椅都只允许沿箭头方向直线滑动；如果前方一路通到边缘，工位就会直接撤出场外，否则只能先滑到最近空位，为别的工位腾出通道；把整盘工位全部送出走道就算过关。',
+      controls: '单指点击任意工位椅触发滑动；能直通边缘的会直接离场，被堵住但前方有空位的会先滑到空位；点击“重开这一层”恢复固定牌面。',
+      mechanics: [
+        '单向滑动：每张工椅都绑定一个固定箭头，只能沿这一方向直线移动',
+        '直通即离场：如果从当前位置到边缘没有阻挡，这张椅子会直接滑出工位区',
+        '先挪后通：被其他椅子挡住时，只能先滑到最近空位，慢慢给后排让道',
+        '固定短局：固定八张椅子的牌面几十秒内就能反复尝试，天然适合碎片复玩',
+        '清盘收尾：全部工椅离场后立刻出现散场提示，形成明确截图点'
+      ],
+      visual_language: '把原型里的乘客座位换成冷色办公室工位：深蓝地板、发光走道、彩色工牌椅背与极简箭头，整体更像夜班散场前的办公层。',
+      state_model: 'state.seats 记录每张工椅的行列位置、箭头方向、标签与是否仍在场内；state.moves 统计推椅次数；state.mode 在 playing/won 间切换；render_game_to_text 会同时给出每张椅子下一步是 blocked/slide/exit。',
+      share_hook: '“终于把这一层工位全清空了”天然是打工人梗图文案，也方便继续往更多办公室谜题扩。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更多固定工位 seed', '加入一步撤回', '加入连续离场的散场连击文案']
+    },
+  },
+  {
+    game: parkingJamOfficeRemixGame,
+    id: 'remix-overtime-carpool-jam',
+    slug: 'overtime-carpool-jam',
+    title: '下班拼车出库',
+    source_file: 'parking-jam-fake.html',
+    parent_slug: 'parking-jam-fake',
+    lineage: ['parking-jam-fake', 'overtime-carpool-jam'],
+    prompt: { text: '把 Parking Jam 式停车解堵改成办公室下班拼车主题，保留点车顺着车头滑出、先清门口短车再放后排长车的节奏。', voice_transcript: '' },
+    summary: '办公室主题的 Parking Jam 二创：先疏通门口短车，再把下班拼车一台台放出园区。',
+    accent: '#9be9d4',
+    glyph: '车',
+    agent_description: {
+      one_liner: '办公室主题的 Parking Jam 二创：先疏通门口短车，再把下班拼车一台台放出园区。',
+      core_loop: '玩家面对一层被晚班拼车塞满的园区车位，每台车都只会顺着自己的车头方向往前开；如果前方车道完全打通，它就会直接出库，否则会先往前蹭到最近空位，继续给后排班车让路；只有先放掉出口边的小车，后排长车和竖停班车才会逐步得到通道，直到整层全部清空。',
+      controls: '单指点击任意拼车，车辆会立刻沿车头方向滑到尽头或直接出库；点击“重开这一层”恢复固定盘面。',
+      mechanics: [
+        '车头朝向约束：每台车只能顺着自己的朝向前进，保留 Parking Jam 最核心的堵点判断',
+        '先滑再出：前方没完全打通时，车辆会先占住最近空位，为下一辆腾出链式通道',
+        '长短车混排：两格与三格车辆同时出现，必须先处理占位最恶心的长车或门口短车',
+        '多出口压力：盘边不只一个闸口，需要读懂每辆车更接近哪一侧才能快速放行',
+        '固定短局：单盘十辆车、几十秒到一两分钟即可通掉，天然适合碎片时间反复试顺序'
+      ],
+      visual_language: '冷色夜班园区配色，普通车辆换成不同部门的拼车标签，出口做成发光闸口，保持单文件竖屏和纯画布停车场表现。',
+      state_model: 'state.cars 记录每台车的行列、长度、朝向、颜色和是否仍在场内；state.selectedId 记录最近一次点中的车辆；state.moves 统计放车次数；state.escaped 统计已出库车辆；state.mode 在 playing/won 间切换。',
+      share_hook: '“终于把这层下班拼车都放出去了”很像打工人段子，也方便继续往园区、仓储、校车等题材扩。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入更多固定停车盘面', '加入按出口分类的放行统计', '加入更长的三格班车组合']
+    },
+  },
+  {
+    game: factoryBoltJamRemixGame,
+    id: 'remix-factory-bolt-jam',
+    slug: 'factory-bolt-jam',
+    title: '夜班进厂通车',
+    source_file: 'traffic-bolt-jam.html',
+    parent_slug: 'traffic-bolt-jam',
+    lineage: ['traffic-bolt-jam', 'factory-bolt-jam'],
+    prompt: { text: '把今天热门“挪车打螺丝”盘改成夜班进厂通车主题，保留点车顺车头挪位、先清门口短车再放后排长车。', voice_transcript: '' },
+    summary: '进厂主题的挪车二创：先疏通闸口，再把班车一台台送进厂门。',
+    accent: '#9ce8c4',
+    glyph: '厂',
+    agent_description: {
+      one_liner: '进厂主题的挪车二创：先疏通闸口，再把班车一台台送进厂门。',
+      core_loop: '玩家面对一层堵在厂门前的夜班班车，每台车都只会沿着自己的车头方向往前开；如果前方一路通到闸口，它就会直接滑进去，否则只能先蹭到最近空位，继续给别的班车腾路；只有先处理门口那几台短车和竖停小车，后排长车才会逐步打开通道，直到整层车都顺利进厂。',
+      controls: '单指点击任意班车触发滑动；能直通闸口的会直接进厂，否则先滑到最近空位；点击“重开这一班”恢复固定盘面。',
+      mechanics: [
+        '车头朝向约束：每台车只能沿着自己的车头方向前进，保留热点挪车盘最关键的堵点判断',
+        '先滑后通：当前路没完全打通时，车辆会先占住最近空位，制造连续腾位链条',
+        '长短车混排：两格与三格班车并存，必须先动门口小车，后排长车才会真正松动',
+        '多闸口读盘：三个不同边缘闸口同时存在，要读懂哪台车离哪个出口最近',
+        '短局高复玩：固定十车盘面，几十秒到一两分钟就能完整试一轮，很适合碎片时间反复找顺序'
+      ],
+      visual_language: '把泛用停车场换成低照度夜班厂门，普通车辆换成班组标签和冷绿闸口灯，保留单文件竖屏与纯画布堵车解盘手感。',
+      state_model: 'state.cars 记录每台车的行列、长度、朝向、标签和是否仍在场内；state.moves 统计进车次数；state.escaped 统计已进厂车辆；state.mode 在 playing/won 间切换；render_game_to_text 给出每台车当前下一步是 blocked/slide/exit。',
+      share_hook: '“终于把这一班车全送进厂门了”天然带打工人梗感，也方便继续往园区、仓储、校门口等题材扩。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入第二套厂门盘面 seed', '加入按闸口分类的放行统计', '加入一步撤回或提示']
+    },
+  },
+  {
+    game: gooseRushRemixGame,
+    id: 'remix-midnight-goose-rush',
+    slug: 'midnight-goose-rush',
+    title: '夜宵颠锅抓鸽王',
+    source_file: 'goose-ladle.html',
+    parent_slug: 'goose-ladle',
+    lineage: ['goose-ladle', 'midnight-goose-rush'],
+    prompt: { text: '把锅底三消做得更贴近抓大鹅的节奏：第一锅热身，第二锅立刻上强度，再把颠锅和露鹅做得更显眼。', voice_transcript: '' },
+    summary: '夜宵锅主题的抓鹅二创版：先过热身锅，再进高压第二锅把鸽王抓出来。',
+    accent: '#f97316',
+    glyph: '锅',
+    agent_description: {
+      one_liner: '夜宵锅主题的抓鹅二创版：先过热身锅，再进高压第二锅把鸽王抓出来。',
+      core_loop: '玩家先在第一锅里快速理解“三个相同即消除”的规则，捞出第一只鸽子后立刻进入第二锅，物件数量和遮挡层级同步上升，必须靠更谨慎的点选和有限次数的颠锅把锅底鸽王翻出来。',
+      controls: '触摸点击最上层食材；当锅底露出鸽子时直接点它过关；点击“颠锅”打乱食材并压低部分遮挡层；第一锅结束后继续点同一按钮进入第二锅。',
+      mechanics: [
+        '两段式难度：第一锅是十几件食材的热身局，第二锅直接切到满盘高遮挡局',
+        '七格暂存栏：点到的食材先进入下方格子，凑满三个同类立刻消除',
+        '锅底目标：并非必须清空所有物件，只要让底部鸽子暴露并被点击就算过锅',
+        '有限颠锅：每锅可用次数固定，颠锅会重排可见物并下压几件上层食材',
+        '倒计时压迫：热身锅和第二锅各自独立计时，第二锅在更短容错里放大失误感'
+      ],
+      visual_language: '夜宵摊锅底气质，暖橙锅面配深棕背景，食材图标都压成简化单色图形，保持离线单文件的轻量感，同时把露鹅提示做成更醒目的锅底字幕。',
+      state_model: 'state.levelIndex 标记当前是第几锅；state.tiles 记录现存食材的图标、坐标、层级和激活状态；state.tray 为七格暂存栏；state.timeLeft 与 state.shakes 管理每锅的高压资源；state.mode 在 playing/between/won/lost 间切换。',
+      share_hook: '“第一锅随便过，第二锅卡成狗”是这个类型天然的传播点，这版结果文案就围绕两锅反差来写。',
+      known_constraints: ['离线单文件', '移动竖屏优先', '无外链素材', '保持 printer artifact 契约'],
+      next_evolution_hooks: ['加入每日锅面 seed', '加入省份/好友对战文案', '加入锅内食材轻微物理滚动以更贴近原作颠锅感']
+    },
+  },
+];
+
 const games = [
+  screwBaseGame,
+  screwBoxBaseGame,
+  screwdomBaseGame,
+  brainrotMergeGame,
+  brainrotRaiderGame,
+  brainrotEggGame,
+  arrowEscapeGame,
+  emojiHopperGame,
+  zenLogicBaseGame,
+  marbleSortGame,
+  woolSortBaseGame,
+  pixelFlowGame,
+  busJamBaseGame,
+  seatAwayBaseGame,
+  parkingJamBaseGame,
+  trafficBoltJamBaseGame,
+  colorBlockJamBaseGame,
+  tapAwayBaseGame,
+  loopSortBaseGame,
+  hexaAwayBaseGame,
+  hexaSortBaseGame,
+  tripleMatchBaseGame,
   {
     id: 'sbti-fake',
     file: 'sbti-fake.html',
@@ -275,6 +9573,1268 @@ const games = [
       reset();
       window.advanceTime = () => {};
       window.render_game_to_text = () => JSON.stringify({ coordinate_system: 'canvas 390x560 origin top-left', mode: state.mode, tray: state.tray, remaining: state.tiles.filter((tile) => tile.active).length, free: state.tiles.filter(free).length, removed: state.removed });
+    `,
+  },
+  {
+    id: 'goose-ladle',
+    file: 'goose-ladle.html',
+    title: '摸鱼捞大鸽',
+    kind: '堆叠',
+    sourceGame: '抓大鹅式锅底寻物三消',
+    accent: '#ff8a3d',
+    summary: '先三消清锅面，再把藏在工位火锅底的鸽子捞出来。',
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="tray" id="tray"></div>
+        <p id="statusText"></p>
+        <div class="stack">
+          <button class="primary" id="shakeBtn">颠锅 x2</button>
+          <button class="choice" id="resetBtn">重开这锅</button>
+        </div>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      window.__GOOSE_DEBUG_LEVEL__ = ${JSON.stringify(gooseLevel)};
+      const GOOSE_LEVEL = window.__GOOSE_DEBUG_LEVEL__;
+      const TILE_W = GOOSE_LEVEL.tileWidth;
+      const TILE_H = GOOSE_LEVEL.tileHeight;
+      const iconSet = {
+        keyboard: { label: '键', color: '#6690ff' },
+        coffee: { label: '啡', color: '#b06a39' },
+        badge: { label: '卡', color: '#ff5c88' },
+        mail: { label: '邮', color: '#35b0c9' },
+        mouse: { label: '鼠', color: '#8b75ff' },
+        battery: { label: '电', color: '#52b96f' }
+      };
+      const state = { tiles: [], tray: [], mode: 'playing', removed: 0, timeLeft: 52, shakes: 2, rescued: false, pulse: 0 };
+      function rect(tile) {
+        return { left: tile.x, top: tile.y, right: tile.x + TILE_W, bottom: tile.y + TILE_H };
+      }
+      function overlapsRect(a, b) {
+        const ra = rect(a);
+        const rb = rect(b);
+        const w = Math.min(ra.right, rb.right) - Math.max(ra.left, rb.left);
+        const h = Math.min(ra.bottom, rb.bottom) - Math.max(ra.top, rb.top);
+        return w > 0 && h > 0;
+      }
+      function overlapsGoose(tile) {
+        const goose = GOOSE_LEVEL.goose;
+        const tileCx = tile.x + TILE_W / 2;
+        const tileCy = tile.y + TILE_H / 2;
+        return Math.abs(tileCx - goose.x) < goose.radius + TILE_W * 0.38 && Math.abs(tileCy - goose.y) < goose.radius + TILE_H * 0.42;
+      }
+      function gooseFree() {
+        return !state.tiles.some((tile) => tile.active && overlapsGoose(tile));
+      }
+      function free(tile) {
+        return tile.active && !state.tiles.some((other) => other.active && other.z > tile.z && overlapsRect(tile, other));
+      }
+      function reset() {
+        state.tiles = GOOSE_LEVEL.tiles.map((tile) => ({ ...tile, active: true }));
+        state.tray = [];
+        state.mode = 'playing';
+        state.removed = 0;
+        state.timeLeft = 52;
+        state.shakes = 2;
+        state.rescued = false;
+        state.pulse = 0;
+        render();
+      }
+      function resolveTriples(icon) {
+        const count = state.tray.filter((item) => item === icon).length;
+        if (count < 3) return;
+        let removed = 0;
+        state.tray = state.tray.filter((item) => {
+          if (item === icon && removed < 3) {
+            removed += 1;
+            return false;
+          }
+          return true;
+        });
+        state.removed += 3;
+        state.pulse = 1;
+      }
+      function pickTile(tile) {
+        if (!tile || state.mode !== 'playing' || !free(tile)) return;
+        tile.active = false;
+        state.tray.push(tile.icon);
+        resolveTriples(tile.icon);
+        if (state.tray.length >= 7) state.mode = 'lost';
+        render();
+      }
+      function rescueGoose() {
+        if (state.mode !== 'playing' || !gooseFree()) return;
+        state.rescued = true;
+        state.mode = 'won';
+        state.pulse = 1;
+        render();
+      }
+      function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const tmp = arr[i];
+          arr[i] = arr[j];
+          arr[j] = tmp;
+        }
+      }
+      function shakePan() {
+        if (state.mode !== 'playing' || state.shakes <= 0) return;
+        state.shakes -= 1;
+        state.timeLeft = Math.max(6, state.timeLeft - 5);
+        const layers = [0, 1, 2];
+        layers.forEach((z) => {
+          const active = state.tiles.filter((tile) => tile.active && tile.z === z);
+          const slots = GOOSE_LEVEL.slots.filter((slot) => slot.z === z).map((slot) => ({ x: slot.x, y: slot.y }));
+          shuffle(slots);
+          active.forEach((tile, index) => {
+            tile.x = slots[index].x;
+            tile.y = slots[index].y;
+          });
+        });
+        state.tiles
+          .filter((tile) => tile.active && tile.z > 0)
+          .sort((a, b) => b.z - a.z)
+          .slice(0, 3)
+          .forEach((tile) => { tile.z -= 1; });
+        state.pulse = 1;
+        render();
+      }
+      function pointer(ev) {
+        const box = canvas.getBoundingClientRect();
+        const x = (ev.clientX - box.left) * canvas.width / box.width;
+        const y = (ev.clientY - box.top) * canvas.height / box.height;
+        const goose = GOOSE_LEVEL.goose;
+        if (gooseFree() && Math.hypot(x - goose.x, y - goose.y) <= goose.radius + 10) {
+          rescueGoose();
+          return;
+        }
+        const top = state.tiles
+          .filter((tile) => tile.active && x >= tile.x && x <= tile.x + TILE_W && y >= tile.y && y <= tile.y + TILE_H)
+          .sort((a, b) => b.z - a.z)[0];
+        pickTile(top);
+      }
+      function step(ms) {
+        if (state.mode !== 'playing') {
+          render();
+          return;
+        }
+        state.timeLeft = Math.max(0, state.timeLeft - ms / 1000);
+        state.pulse = Math.max(0, state.pulse - ms / 900);
+        if (state.timeLeft <= 0) state.mode = 'lost';
+        render();
+      }
+      function drawIcon(icon, cx, cy) {
+        const meta = iconSet[icon];
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.lineWidth = 2.2;
+        ctx.strokeStyle = '#17121d';
+        if (icon === 'keyboard') {
+          ctx.fillStyle = meta.color;
+          ctx.beginPath(); ctx.roundRect(-18, -12, 36, 24, 6); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#edf3ff';
+          for (let row = 0; row < 2; row++) {
+            for (let col = 0; col < 4; col++) {
+              ctx.fillRect(-12 + col * 7, -7 + row * 8, 4, 4);
+            }
+          }
+        } else if (icon === 'coffee') {
+          ctx.fillStyle = '#fff7ea';
+          ctx.beginPath(); ctx.roundRect(-14, -10, 24, 22, 5); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = meta.color;
+          ctx.beginPath(); ctx.arc(12, -1, 6, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+          ctx.fillStyle = meta.color; ctx.fillRect(-12, 2, 20, 8);
+        } else if (icon === 'badge') {
+          ctx.fillStyle = meta.color;
+          ctx.beginPath(); ctx.roundRect(-13, -15, 26, 24, 6); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(-7, -8, 14, 5);
+          ctx.fillStyle = '#ffdfe8';
+          ctx.fillRect(-4, 0, 8, 14);
+        } else if (icon === 'mail') {
+          ctx.fillStyle = meta.color;
+          ctx.beginPath(); ctx.roundRect(-17, -12, 34, 24, 5); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = '#fff';
+          ctx.beginPath(); ctx.moveTo(-16, -10); ctx.lineTo(0, 2); ctx.lineTo(16, -10); ctx.stroke();
+        } else if (icon === 'mouse') {
+          ctx.fillStyle = meta.color;
+          ctx.beginPath(); ctx.roundRect(-11, -16, 22, 32, 11); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = '#fff';
+          ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(0, 1); ctx.stroke();
+        } else if (icon === 'battery') {
+          ctx.fillStyle = meta.color;
+          ctx.beginPath(); ctx.roundRect(-17, -10, 30, 20, 4); ctx.fill(); ctx.stroke();
+          ctx.fillRect(14, -5, 4, 10);
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.moveTo(-2, -7); ctx.lineTo(5, -7); ctx.lineTo(0, 1); ctx.lineTo(7, 1); ctx.lineTo(-2, 12); ctx.lineTo(1, 4); ctx.lineTo(-6, 4);
+          ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+      }
+      function drawGoose() {
+        const goose = GOOSE_LEVEL.goose;
+        ctx.save();
+        ctx.translate(goose.x, goose.y + Math.sin((52 - state.timeLeft) * 3) * 2);
+        ctx.globalAlpha = gooseFree() ? 1 : 0.3;
+        ctx.fillStyle = gooseFree() ? '#fff3c4' : '#51453e';
+        ctx.strokeStyle = '#211410';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, 10, 28 + state.pulse * 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(15, -18, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ff8a3d';
+        ctx.beginPath(); ctx.moveTo(27, -18); ctx.lineTo(40, -13); ctx.lineTo(27, -7); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#17121d';
+        ctx.beginPath(); ctx.arc(18, -20, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+      function render() {
+        ctx.fillStyle = '#140d0a';
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#2a140d';
+        ctx.beginPath(); ctx.roundRect(20, 18, 350, 64, 22); ctx.fill();
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = '900 28px sans-serif';
+        ctx.fillText(state.mode === 'won' ? '鸽到了' : '摸鱼捞大鸽', 32, 56);
+        ctx.fillStyle = '#ffc69f';
+        ctx.font = '700 13px sans-serif';
+        ctx.fillText('热门锅底三消 · 剩 ' + state.tiles.filter((tile) => tile.active).length + ' 件 · ' + Math.ceil(state.timeLeft) + ' 秒', 32, 77);
+        ctx.fillStyle = '#5a2612';
+        ctx.beginPath(); ctx.arc(195, 298, 150, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#7f3518';
+        ctx.beginPath(); ctx.arc(195, 298, 126, 0, Math.PI * 2); ctx.fill();
+        drawGoose();
+        state.tiles.filter((tile) => tile.active).sort((a, b) => a.z - b.z).forEach((tile) => {
+          const enabled = free(tile);
+          const depthOffset = tile.z * 5;
+          ctx.fillStyle = enabled ? '#ffe9d3' : '#695246';
+          ctx.strokeStyle = enabled ? '#ffffff' : '#3d302a';
+          ctx.lineWidth = enabled ? 2.2 : 1.2;
+          ctx.beginPath(); ctx.roundRect(tile.x, tile.y - depthOffset, TILE_W, TILE_H, 10); ctx.fill(); ctx.stroke();
+          drawIcon(tile.icon, tile.x + TILE_W / 2, tile.y + TILE_H / 2 - depthOffset, enabled);
+          if (!enabled) {
+            ctx.fillStyle = 'rgba(20,13,10,0.18)';
+            ctx.fillRect(tile.x + 4, tile.y + 3 - depthOffset, TILE_W - 8, TILE_H - 8);
+          }
+        });
+        if (gooseFree() && !state.rescued && state.mode === 'playing') {
+          ctx.fillStyle = '#fff0cc';
+          ctx.font = '900 14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('锅底露出一只鸽子，点它带走', 195, 470);
+          ctx.textAlign = 'left';
+        }
+        document.getElementById('tray').innerHTML = Array.from({ length: 7 }, (_, i) => '<span>' + (state.tray[i] ? iconSet[state.tray[i]].label : '') + '</span>').join('');
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? '你把锅面清空，还顺手捞走了摸鱼大鸽。'
+          : state.mode === 'lost'
+            ? (state.timeLeft <= 0 ? '超时翻车 · 鸽子已经飞了。' : '槽位爆了 · 工位杂物塞满了。')
+            : '可点 ' + state.tiles.filter(free).length + ' · 已消 ' + state.removed + ' · 颠锅剩 ' + state.shakes;
+        document.getElementById('shakeBtn').textContent = '颠锅 x' + state.shakes;
+      }
+      canvas.addEventListener('pointerdown', pointer);
+      document.getElementById('shakeBtn').addEventListener('click', shakePan);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(200), 200);
+      window.advanceTime = (ms) => step(ms);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 origin top-left',
+        mode: state.mode,
+        tray: state.tray,
+        remaining: state.tiles.filter((tile) => tile.active).length,
+        free: state.tiles.filter(free).length,
+        removed: state.removed,
+        timeLeft: Number(state.timeLeft.toFixed(1)),
+        shakes: state.shakes,
+        gooseFree: gooseFree(),
+        rescued: state.rescued
+      });
+    `,
+  },
+  {
+    id: 'nostalgia-spotter',
+    file: 'nostalgia-spotter.html',
+    title: '怀旧穿帮找茬',
+    kind: '找茬',
+    sourceGame: '找茬大湿怀旧版式年代场景找不合理',
+    accent: '#86f77b',
+    summary: '在老教室里点出 7 个现代穿帮物件，点错会扣时间。',
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="countText">已找 0 / 7</b><span id="timerText">90 秒</span></div>
+        <div class="chips" id="targetChips"></div>
+        <p id="statusText">找出教室里所有不属于那个年代的东西。</p>
+        <button class="primary" id="resetBtn">重开这张图</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const SPOTS = [
+        { id: 'ring-light', label: '补光灯', x: 304, y: 154, r: 24, draw(cx, cy) {
+          ctx.strokeStyle = '#f8fbff'; ctx.lineWidth = 5;
+          ctx.beginPath(); ctx.arc(cx, cy, 13, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = '#445'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(cx, cy + 14); ctx.lineTo(cx - 7, cy + 27); ctx.moveTo(cx, cy + 14); ctx.lineTo(cx + 7, cy + 27); ctx.stroke();
+        } },
+        { id: 'qr-code', label: '二维码', x: 63, y: 168, r: 19, draw(cx, cy) {
+          ctx.fillStyle = '#fff'; ctx.fillRect(cx - 12, cy - 12, 24, 24);
+          ctx.fillStyle = '#111';
+          [[-8,-8],[2,-8],[-8,2],[5,5],[-1,5],[5,-1],[-4,-1],[2,2]].forEach(([dx, dy]) => ctx.fillRect(cx + dx, cy + dy, 5, 5));
+        } },
+        { id: 'earbud', label: '耳机', x: 124, y: 362, r: 18, draw(cx, cy) {
+          ctx.fillStyle = '#fafafa';
+          ctx.beginPath(); ctx.arc(cx, cy - 4, 7, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.roundRect(cx - 3, cy + 2, 6, 12, 4); ctx.fill();
+        } },
+        { id: 'robot-vacuum', label: '扫地机', x: 322, y: 492, r: 25, draw(cx, cy) {
+          ctx.fillStyle = '#20242c'; ctx.beginPath(); ctx.arc(cx, cy, 16, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#96ffe7'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = '#8cf0d5'; ctx.beginPath(); ctx.arc(cx + 5, cy - 5, 2, 0, Math.PI * 2); ctx.fill();
+        } },
+        { id: 'energy-drink', label: '能量饮料', x: 219, y: 392, r: 18, draw(cx, cy) {
+          ctx.fillStyle = '#2db6ff'; ctx.beginPath(); ctx.roundRect(cx - 8, cy - 15, 16, 30, 6); ctx.fill();
+          ctx.fillStyle = '#c7f0ff'; ctx.fillRect(cx - 3, cy - 11, 6, 3);
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - 4, cy + 4); ctx.lineTo(cx + 4, cy - 6); ctx.lineTo(cx + 1, cy + 9); ctx.stroke();
+        } },
+        { id: 'selfie-stick', label: '自拍杆', x: 79, y: 438, r: 22, draw(cx, cy) {
+          ctx.strokeStyle = '#2d3038'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(cx - 12, cy + 12); ctx.lineTo(cx + 8, cy - 10); ctx.stroke();
+          ctx.fillStyle = '#8ec7ff'; ctx.beginPath(); ctx.roundRect(cx + 2, cy - 18, 14, 11, 3); ctx.fill();
+        } },
+        { id: 'phone', label: '手机', x: 278, y: 332, r: 20, draw(cx, cy) {
+          ctx.fillStyle = '#1f2630'; ctx.beginPath(); ctx.roundRect(cx - 10, cy - 16, 20, 32, 5); ctx.fill();
+          ctx.fillStyle = '#8be4ff'; ctx.fillRect(cx - 7, cy - 11, 14, 20);
+          ctx.fillStyle = '#dae2eb'; ctx.beginPath(); ctx.arc(cx, cy + 12, 2, 0, Math.PI * 2); ctx.fill();
+        } },
+      ];
+      window.__NOSTALGIA_SPOTTER__ = {
+        scene: 'late-90s classroom',
+        differenceCount: SPOTS.length,
+        spots: SPOTS.map(({ id, label, x, y, r }) => ({ id, label, x, y, r })),
+      };
+      const state = { found: [], foundOrder: [], mistakes: 0, timeLeft: 90, mode: 'playing', pulse: 0, scanlinePhase: 0, flash: 0 };
+      function foundSet() {
+        return new Set(state.found);
+      }
+      function reset() {
+        state.found = [];
+        state.foundOrder = [];
+        state.mistakes = 0;
+        state.timeLeft = 90;
+        state.mode = 'playing';
+        state.pulse = 0;
+        state.scanlinePhase = 0;
+        state.flash = 0;
+        render();
+      }
+      function markFound(spot) {
+        if (state.mode !== 'playing' || state.found.includes(spot.id)) return;
+        state.found.push(spot.id);
+        state.foundOrder.push(spot.id);
+        state.pulse = 1;
+        if (state.found.length >= SPOTS.length) state.mode = 'won';
+        render();
+      }
+      function miss() {
+        if (state.mode !== 'playing') return;
+        state.mistakes += 1;
+        state.timeLeft = Math.max(0, state.timeLeft - 6);
+        state.flash = 1;
+        if (state.timeLeft <= 0) state.mode = 'lost';
+        render();
+      }
+      function pointer(ev) {
+        const box = canvas.getBoundingClientRect();
+        const x = (ev.clientX - box.left) * canvas.width / box.width;
+        const y = (ev.clientY - box.top) * canvas.height / box.height;
+        const target = SPOTS.find((spot) => !state.found.includes(spot.id) && Math.hypot(x - spot.x, y - spot.y) <= spot.r);
+        if (target) markFound(target);
+        else miss();
+      }
+      function step(ms) {
+        state.scanlinePhase = (state.scanlinePhase + ms * 0.045) % 560;
+        state.pulse = Math.max(0, state.pulse - ms / 700);
+        state.flash = Math.max(0, state.flash - ms / 220);
+        if (state.mode === 'playing') {
+          state.timeLeft = Math.max(0, state.timeLeft - ms / 1000);
+          if (state.timeLeft <= 0) state.mode = 'lost';
+        }
+        render();
+      }
+      function drawBackground() {
+        const wall = ctx.createLinearGradient(0, 0, 0, 560);
+        wall.addColorStop(0, '#d8b27d');
+        wall.addColorStop(0.56, '#c28c4d');
+        wall.addColorStop(1, '#83552a');
+        ctx.fillStyle = wall;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#5a3d1e';
+        ctx.fillRect(0, 398, 390, 162);
+        ctx.fillStyle = '#325a3d';
+        ctx.fillRect(34, 72, 212, 110);
+        ctx.strokeStyle = '#d8d4b6'; ctx.lineWidth = 5;
+        ctx.strokeRect(34, 72, 212, 110);
+        ctx.fillStyle = '#fff6cf'; ctx.font = '900 18px sans-serif';
+        ctx.fillText('好好学习  天天向上', 58, 112);
+        ctx.font = '700 13px sans-serif';
+        ctx.fillText('值日生：小王 / 小李 / 小周', 56, 144);
+        ctx.fillStyle = '#bcdcff';
+        ctx.fillRect(270, 56, 84, 128);
+        ctx.fillStyle = '#f5f1d8';
+        ctx.fillRect(276, 62, 72, 116);
+        ctx.fillStyle = '#8ec6ff';
+        ctx.fillRect(281, 66, 28, 50);
+        ctx.fillRect(315, 66, 28, 50);
+        ctx.fillRect(281, 122, 28, 50);
+        ctx.fillRect(315, 122, 28, 50);
+        ctx.fillStyle = '#eef7ff';
+        ctx.beginPath(); ctx.arc(324, 42, 18, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#6b4a22'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(324, 42); ctx.lineTo(324, 31); ctx.moveTo(324, 42); ctx.lineTo(334, 48); ctx.stroke();
+        ctx.fillStyle = '#e6d2a1';
+        ctx.fillRect(46, 210, 124, 54);
+        ctx.fillRect(218, 224, 124, 54);
+        ctx.fillRect(82, 310, 124, 54);
+        ctx.fillRect(204, 290, 124, 54);
+        ctx.fillRect(46, 414, 136, 60);
+        ctx.fillRect(226, 414, 120, 60);
+        ctx.fillStyle = '#8e6031';
+        [[46,210,124,54],[218,224,124,54],[82,310,124,54],[204,290,124,54],[46,414,136,60],[226,414,120,60]].forEach(([x, y, w, h]) => {
+          ctx.fillRect(x + 8, y + h, 10, 34);
+          ctx.fillRect(x + w - 18, y + h, 10, 34);
+        });
+        ctx.fillStyle = '#c23f34';
+        ctx.beginPath(); ctx.moveTo(22, 18); ctx.lineTo(110, 18); ctx.lineTo(98, 42); ctx.lineTo(22, 42); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#f6ebcc'; ctx.font = '900 13px sans-serif'; ctx.fillText('怀旧找茬专场', 32, 34);
+      }
+      function drawStudents() {
+        const heads = [[118, 281], [266, 296], [156, 381], [278, 362]];
+        heads.forEach(([x, y], index) => {
+          ctx.fillStyle = '#f1c287';
+          ctx.beginPath(); ctx.arc(x, y, 17, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = ['#26314a','#4a2e22','#303030','#5a3a2d'][index];
+          ctx.beginPath(); ctx.arc(x, y - 4, 18, Math.PI, 0); ctx.fill();
+          ctx.fillStyle = ['#5fa3ff','#ff8e7d','#7fd17d','#e8c25f'][index];
+          ctx.beginPath(); ctx.roundRect(x - 20, y + 14, 40, 30, 10); ctx.fill();
+        });
+      }
+      function drawSpotMarkers() {
+        const found = foundSet();
+        SPOTS.forEach((spot) => {
+          spot.draw(spot.x, spot.y);
+          if (found.has(spot.id)) {
+            ctx.strokeStyle = '#ff4f87';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(spot.x, spot.y, spot.r + 4 + state.pulse * 3, 0, Math.PI * 2); ctx.stroke();
+          }
+        });
+      }
+      function drawHud() {
+        ctx.fillStyle = 'rgba(16,8,4,.56)';
+        ctx.beginPath(); ctx.roundRect(20, 18, 350, 42, 18); ctx.fill();
+        ctx.fillStyle = '#fff8de'; ctx.font = '900 16px sans-serif';
+        ctx.fillText('90 年代教室 · 找出现代穿帮', 34, 45);
+        if (state.flash > 0) {
+          ctx.fillStyle = 'rgba(255,79,135,' + (state.flash * 0.24).toFixed(3) + ')';
+          ctx.fillRect(0, 0, 390, 560);
+        }
+        ctx.fillStyle = 'rgba(255,255,255,.07)';
+        for (let i = 0; i < 30; i++) {
+          const y = (i * 20 + state.scanlinePhase) % 560;
+          ctx.fillRect(0, y, 390, 1);
+        }
+      }
+      function render() {
+        drawBackground();
+        drawStudents();
+        drawSpotMarkers();
+        drawHud();
+        document.getElementById('countText').textContent = '已找 ' + state.found.length + ' / ' + SPOTS.length;
+        document.getElementById('timerText').textContent = Math.ceil(state.timeLeft) + ' 秒';
+        document.getElementById('targetChips').innerHTML = SPOTS.map((spot) => {
+          const found = state.found.includes(spot.id);
+          return '<span class="' + (found ? 'chip active' : 'chip') + '">' + (found ? '已抓' : '待找') + ' ' + spot.label + '</span>';
+        }).join('');
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? '你把整张怀旧图的 7 处穿帮都抓出来了。'
+          : state.mode === 'lost'
+            ? '时间耗尽，现代物件继续混进老照片。'
+            : '点错扣 6 秒 · 已点错 ' + state.mistakes + ' 次';
+      }
+      canvas.addEventListener('pointerdown', pointer);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(200), 200);
+      window.advanceTime = (ms) => step(ms);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 origin top-left scene hunt',
+        mode: state.mode,
+        timeLeft: Number(state.timeLeft.toFixed(1)),
+        found: state.found,
+        foundOrder: state.foundOrder,
+        remaining: SPOTS.filter((spot) => !state.found.includes(spot.id)).map((spot) => spot.label),
+        mistakes: state.mistakes,
+        differenceCount: SPOTS.length,
+        scanlinePhase: Number(state.scanlinePhase.toFixed(1))
+      });
+    `,
+  },
+  {
+    id: 'overtime-blocks',
+    file: 'overtime-blocks.html',
+    title: '加班方块清仓',
+    kind: '拼盘',
+    sourceGame: 'Block Blast 式 8x8 方块拼盘',
+    accent: '#ff9a3d',
+    summary: '三选一摆入 8x8 工位，清行清列打连击，放不下就下班。',
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="scoreText">得分 0</b><span id="comboText">连击 0</span></div>
+        <p id="statusText">选底部方块，再点棋盘空位落下。</p>
+        <button class="primary" id="resetBtn">重开这一轮</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const BOARD = 8;
+      const CELL = 40;
+      const BOARD_X = 35;
+      const BOARD_Y = 76;
+      const RACK_Y = 430;
+      const seedBase = ${Number(generatedAt.slice(0, 10).replace(/-/g, ''))};
+      const pieceDefs = [
+        { id: 'dot', color: '#ffd166', cells: [[0,0]] },
+        { id: 'line2', color: '#9bff7a', cells: [[0,0],[1,0]] },
+        { id: 'line3', color: '#67e8f9', cells: [[0,0],[1,0],[2,0]] },
+        { id: 'line4', color: '#5ea1ff', cells: [[0,0],[1,0],[2,0],[3,0]] },
+        { id: 'square', color: '#ff7aa2', cells: [[0,0],[1,0],[0,1],[1,1]] },
+        { id: 'L3', color: '#c084fc', cells: [[0,0],[0,1],[1,1]] },
+        { id: 'L4', color: '#ff9f43', cells: [[0,0],[0,1],[0,2],[1,2]] },
+        { id: 'zig', color: '#2dd4bf', cells: [[0,0],[1,0],[1,1],[2,1]] },
+        { id: 'tee', color: '#f472b6', cells: [[0,0],[1,0],[2,0],[1,1]] },
+        { id: 'plus', color: '#facc15', cells: [[1,0],[0,1],[1,1],[2,1],[1,2]] }
+      ];
+      const state = { board: [], rack: [], selected: -1, hover: null, score: 0, combo: 0, clears: 0, mode: 'playing', rng: seedBase };
+      function rand() {
+        state.rng = (state.rng * 1664525 + 1013904223) >>> 0;
+        return state.rng / 4294967296;
+      }
+      function clonePiece(def) {
+        return { id: def.id, color: def.color, cells: def.cells.map((cell) => cell.slice()) };
+      }
+      function nextPiece() {
+        const bias = state.score > 900 ? 0.2 : 0;
+        const pool = pieceDefs.filter((piece) => bias < 0.15 || piece.cells.length <= 4 || rand() > bias);
+        return clonePiece(pool[Math.floor(rand() * pool.length)]);
+      }
+      function refillRack() {
+        state.rack = [nextPiece(), nextPiece(), nextPiece()];
+        state.selected = state.rack.findIndex(Boolean);
+        if (state.selected < 0) state.selected = 0;
+      }
+      function reset() {
+        state.board = Array.from({ length: BOARD }, () => Array(BOARD).fill(null));
+        state.score = 0;
+        state.combo = 0;
+        state.clears = 0;
+        state.mode = 'playing';
+        state.hover = null;
+        state.rng = seedBase;
+        refillRack();
+        if (!hasAnyMove()) state.mode = 'lost';
+        render();
+      }
+      function rackRects() {
+        return Array.from({ length: 3 }, (_, i) => ({ x: 24 + i * 120, y: RACK_Y, w: 102, h: 92 }));
+      }
+      function boardPoint(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (clientX - rect.left) * canvas.width / rect.width;
+        const y = (clientY - rect.top) * canvas.height / rect.height;
+        return { x, y };
+      }
+      function hoverFromPoint(point, piece) {
+        if (!piece) return null;
+        const col = Math.floor((point.x - BOARD_X) / CELL);
+        const row = Math.floor((point.y - BOARD_Y) / CELL);
+        if (row < 0 || col < 0 || row >= BOARD || col >= BOARD) return null;
+        return { row, col };
+      }
+      function fits(piece, row, col) {
+        return piece.cells.every(([dx, dy]) => {
+          const x = col + dx;
+          const y = row + dy;
+          return x >= 0 && y >= 0 && x < BOARD && y < BOARD && !state.board[y][x];
+        });
+      }
+      function lineClears() {
+        const rows = [];
+        const cols = [];
+        for (let row = 0; row < BOARD; row++) if (state.board[row].every(Boolean)) rows.push(row);
+        for (let col = 0; col < BOARD; col++) {
+          let full = true;
+          for (let row = 0; row < BOARD; row++) if (!state.board[row][col]) full = false;
+          if (full) cols.push(col);
+        }
+        return { rows, cols };
+      }
+      function clearLines(rows, cols) {
+        rows.forEach((row) => {
+          for (let col = 0; col < BOARD; col++) state.board[row][col] = null;
+        });
+        cols.forEach((col) => {
+          for (let row = 0; row < BOARD; row++) state.board[row][col] = null;
+        });
+      }
+      function hasAnyMove() {
+        return state.rack.some((piece) => piece && canPlaceAnywhere(piece));
+      }
+      function canPlaceAnywhere(piece) {
+        for (let row = 0; row < BOARD; row++) {
+          for (let col = 0; col < BOARD; col++) {
+            if (fits(piece, row, col)) return true;
+          }
+        }
+        return false;
+      }
+      function afterMove() {
+        if (state.rack.every((piece) => !piece)) refillRack();
+        if (!hasAnyMove()) state.mode = 'lost';
+      }
+      function placeSelected(row, col) {
+        const piece = state.rack[state.selected];
+        if (!piece || state.mode !== 'playing' || !fits(piece, row, col)) return false;
+        piece.cells.forEach(([dx, dy]) => {
+          state.board[row + dy][col + dx] = { color: piece.color, id: piece.id };
+        });
+        const placedCells = piece.cells.length;
+        const { rows, cols } = lineClears();
+        const cleared = rows.length + cols.length;
+        if (cleared) {
+          clearLines(rows, cols);
+          state.combo += 1;
+          state.clears += cleared;
+          state.score += placedCells * 5 + cleared * 80 + state.combo * 25;
+        } else {
+          state.combo = 0;
+          state.score += placedCells * 5;
+        }
+        state.rack[state.selected] = null;
+        const nextIndex = state.rack.findIndex(Boolean);
+        state.selected = nextIndex >= 0 ? nextIndex : 0;
+        state.hover = null;
+        afterMove();
+        render();
+        return true;
+      }
+      function pickRack(point) {
+        const rects = rackRects();
+        const index = rects.findIndex((rect) => point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h);
+        if (index >= 0 && state.rack[index]) {
+          state.selected = index;
+          state.hover = null;
+          render();
+          return true;
+        }
+        return false;
+      }
+      function onPointerMove(event) {
+        if (state.mode !== 'playing') return;
+        const point = boardPoint(event.clientX, event.clientY);
+        const piece = state.rack[state.selected];
+        state.hover = hoverFromPoint(point, piece);
+        render();
+      }
+      function onPointerDown(event) {
+        const point = boardPoint(event.clientX, event.clientY);
+        if (pickRack(point)) return;
+        const piece = state.rack[state.selected];
+        const hover = hoverFromPoint(point, piece);
+        if (hover && piece) {
+          placeSelected(hover.row, hover.col);
+          return;
+        }
+        state.hover = null;
+        render();
+      }
+      function drawPiece(piece, ox, oy, scale, alpha, ghost) {
+        if (!piece) return;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        piece.cells.forEach(([dx, dy]) => {
+          const x = ox + dx * scale;
+          const y = oy + dy * scale;
+          ctx.fillStyle = ghost ? 'rgba(255,255,255,.18)' : piece.color;
+          ctx.strokeStyle = ghost ? 'rgba(255,255,255,.4)' : 'rgba(255,255,255,.18)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(x, y, scale - 4, scale - 4, 9);
+          ctx.fill();
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+      function drawBoard() {
+        ctx.fillStyle = '#17111d';
+        ctx.beginPath();
+        ctx.roundRect(20, 60, 350, 350, 28);
+        ctx.fill();
+        for (let row = 0; row < BOARD; row++) {
+          for (let col = 0; col < BOARD; col++) {
+            const x = BOARD_X + col * CELL;
+            const y = BOARD_Y + row * CELL;
+            ctx.fillStyle = 'rgba(255,255,255,.06)';
+            ctx.beginPath();
+            ctx.roundRect(x, y, CELL - 3, CELL - 3, 10);
+            ctx.fill();
+            const block = state.board[row][col];
+            if (block) drawPiece({ cells: [[0,0]], color: block.color }, x + 2, y + 2, CELL - 1, 1, false);
+          }
+        }
+        const piece = state.rack[state.selected];
+        if (piece && state.hover && fits(piece, state.hover.row, state.hover.col)) {
+          drawPiece(piece, BOARD_X + state.hover.col * CELL + 2, BOARD_Y + state.hover.row * CELL + 2, CELL, 0.72, true);
+        }
+      }
+      function drawRack() {
+        rackRects().forEach((rect, index) => {
+          const active = index === state.selected && state.rack[index];
+          ctx.fillStyle = active ? 'rgba(255,154,61,.2)' : 'rgba(255,255,255,.06)';
+          ctx.strokeStyle = active ? '#ffb36b' : 'rgba(255,255,255,.14)';
+          ctx.lineWidth = active ? 2.5 : 1.5;
+          ctx.beginPath();
+          ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 22);
+          ctx.fill();
+          ctx.stroke();
+          const piece = state.rack[index];
+          if (piece) {
+            const width = Math.max(...piece.cells.map(([dx]) => dx)) + 1;
+            const height = Math.max(...piece.cells.map(([, dy]) => dy)) + 1;
+            const scale = Math.min(22, Math.floor(58 / Math.max(width, height)));
+            const ox = rect.x + (rect.w - width * scale) / 2 + 2;
+            const oy = rect.y + (rect.h - height * scale) / 2 + 2;
+            drawPiece(piece, ox, oy, scale, 1, false);
+          } else {
+            ctx.fillStyle = 'rgba(255,255,255,.18)';
+            ctx.font = '900 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('已用', rect.x + rect.w / 2, rect.y + rect.h / 2 + 4);
+            ctx.textAlign = 'left';
+          }
+        });
+      }
+      function render() {
+        ctx.fillStyle = '#09070d';
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#2a1730';
+        ctx.beginPath();
+        ctx.roundRect(20, 16, 350, 34, 17);
+        ctx.fill();
+        ctx.fillStyle = '#fff8ef';
+        ctx.font = '900 18px sans-serif';
+        ctx.fillText('加班方块清仓', 32, 38);
+        ctx.fillStyle = '#ffc78f';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText('热门拼盘复刻 · 8x8 工位 · 清行清列', 192, 38);
+        drawBoard();
+        drawRack();
+        ctx.fillStyle = 'rgba(255,255,255,.62)';
+        ctx.font = '800 12px sans-serif';
+        ctx.fillText('候选方块', 24, 420);
+        document.getElementById('scoreText').textContent = '得分 ' + state.score;
+        document.getElementById('comboText').textContent = '连击 ' + state.combo;
+        document.getElementById('statusText').textContent = state.mode === 'lost'
+          ? '三个候选都放不下了，这轮工位已经塞满。'
+          : (state.hover && state.rack[state.selected] && fits(state.rack[state.selected], state.hover.row, state.hover.col))
+            ? '可落点：第 ' + (state.hover.row + 1) + ' 行，第 ' + (state.hover.col + 1) + ' 列。'
+            : '选底部方块，再点棋盘空位落下。已清 ' + state.clears + ' 条线。';
+      }
+      canvas.addEventListener('pointermove', onPointerMove);
+      canvas.addEventListener('pointerdown', onPointerDown);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with 8x8 board and bottom rack',
+        mode: state.mode,
+        score: state.score,
+        combo: state.combo,
+        clears: state.clears,
+        selected: state.selected,
+        rack: state.rack.map((piece) => piece ? piece.id : null),
+        occupied: state.board.flat().filter(Boolean).length
+      });
+    `,
+  },
+  {
+    id: 'clock-out-jam',
+    file: 'clock-out-jam.html',
+    title: '下班工牌突围',
+    kind: '挪块',
+    sourceGame: 'Color Block Jam / Block Jam 式单屏堵塞解谜',
+    accent: '#55d6ff',
+    summary: '拖开会议和审批，把主工牌一路挪到出口，步数越少越像真会下班。',
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="moveText">步数 0</b><span id="bestText">目标 9 步内</span></div>
+        <p id="statusText">拖动色块，让“下班工牌”从右侧出口溜出去。</p>
+        <button class="primary" id="resetBtn">重开这一局</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const BOARD = 6;
+      const CELL = 48;
+      const BOARD_X = 51;
+      const BOARD_Y = 120;
+      const EXIT_ROW = 2;
+      const palette = {
+        badge: { fill: '#61dafb', edge: '#dbf6ff', label: '下班工牌' },
+        meet: { fill: '#ff8e72', edge: '#ffd6ca', label: '会议' },
+        deck: { fill: '#ffd166', edge: '#fff0bc', label: '汇报' },
+        flow: { fill: '#a78bfa', edge: '#ece3ff', label: '审批' },
+        sheet: { fill: '#44d39d', edge: '#cbffe8', label: '表格' },
+        chat: { fill: '#ff6fae', edge: '#ffd8e8', label: '群聊' },
+        bug: { fill: '#7ee081', edge: '#dafcdd', label: '线上 bug' },
+      };
+      const level = [
+        { id: 'badge', type: 'badge', axis: 'h', len: 2, row: 2, col: 1 },
+        { id: 'meet', type: 'meet', axis: 'v', len: 3, row: 0, col: 3 },
+        { id: 'deck', type: 'deck', axis: 'v', len: 2, row: 0, col: 4 },
+        { id: 'flow', type: 'flow', axis: 'h', len: 2, row: 1, col: 1 },
+        { id: 'sheet', type: 'sheet', axis: 'v', len: 2, row: 3, col: 2 },
+        { id: 'chat', type: 'chat', axis: 'h', len: 2, row: 4, col: 3 },
+        { id: 'bug', type: 'bug', axis: 'v', len: 2, row: 3, col: 5 }
+      ];
+      const state = {
+        blocks: [],
+        moves: 0,
+        mode: 'playing',
+        selected: null,
+        drag: null
+      };
+      function cloneBlocks() {
+        return level.map((block) => ({ ...block }));
+      }
+      function reset() {
+        state.blocks = cloneBlocks();
+        state.moves = 0;
+        state.mode = 'playing';
+        state.selected = null;
+        state.drag = null;
+        render();
+      }
+      function occupancy(ignoreId) {
+        const map = Array.from({ length: BOARD }, () => Array(BOARD).fill(null));
+        state.blocks.forEach((block) => {
+          if (block.id === ignoreId) return;
+          for (let i = 0; i < block.len; i++) {
+            const row = block.row + (block.axis === 'v' ? i : 0);
+            const col = block.col + (block.axis === 'h' ? i : 0);
+            map[row][col] = block.id;
+          }
+        });
+        return map;
+      }
+      function blockRect(block) {
+        return {
+          x: BOARD_X + block.col * CELL,
+          y: BOARD_Y + block.row * CELL,
+          w: (block.axis === 'h' ? block.len : 1) * CELL - 6,
+          h: (block.axis === 'v' ? block.len : 1) * CELL - 6
+        };
+      }
+      function pointFromEvent(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * canvas.width / rect.width,
+          y: (event.clientY - rect.top) * canvas.height / rect.height
+        };
+      }
+      function findBlock(point) {
+        return state.blocks.findLast((block) => {
+          const rect = blockRect(block);
+          return point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h;
+        }) || null;
+      }
+      function travelBounds(block) {
+        const map = occupancy(block.id);
+        let min = 0;
+        let max = 0;
+        if (block.axis === 'h') {
+          let left = block.col - 1;
+          while (left >= 0 && !map[block.row][left]) {
+            min -= 1;
+            left -= 1;
+          }
+          let right = block.col + block.len;
+          while (right < BOARD && !map[block.row][right]) {
+            max += 1;
+            right += 1;
+          }
+          if (block.id === 'badge') {
+            while (right <= BOARD) {
+              if (right === BOARD) {
+                max += 1;
+                break;
+              }
+              if (map[block.row][right]) break;
+              max += 1;
+              right += 1;
+            }
+          }
+        } else {
+          let up = block.row - 1;
+          while (up >= 0 && !map[up][block.col]) {
+            min -= 1;
+            up -= 1;
+          }
+          let down = block.row + block.len;
+          while (down < BOARD && !map[down][block.col]) {
+            max += 1;
+            down += 1;
+          }
+        }
+        return { min, max };
+      }
+      function applyMove(block, delta) {
+        if (!block || !delta || state.mode !== 'playing') return false;
+        const bounds = travelBounds(block);
+        const step = Math.max(bounds.min, Math.min(bounds.max, delta));
+        if (!step) return false;
+        if (block.axis === 'h') block.col += step;
+        else block.row += step;
+        state.moves += Math.abs(step);
+        if (block.id === 'badge' && block.col + block.len > BOARD - 1) state.mode = 'won';
+        render();
+        return true;
+      }
+      function drawBoard() {
+        ctx.fillStyle = '#0e1015';
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#111722';
+        ctx.beginPath();
+        ctx.roundRect(34, 96, 322, 322, 28);
+        ctx.fill();
+        ctx.fillStyle = '#17344a';
+        ctx.beginPath();
+        ctx.roundRect(356, BOARD_Y + EXIT_ROW * CELL + 10, 16, CELL - 20, 8);
+        ctx.fill();
+        for (let row = 0; row < BOARD; row++) {
+          for (let col = 0; col < BOARD; col++) {
+            const x = BOARD_X + col * CELL;
+            const y = BOARD_Y + row * CELL;
+            ctx.fillStyle = row === EXIT_ROW ? 'rgba(97,218,251,.08)' : 'rgba(255,255,255,.05)';
+            ctx.beginPath();
+            ctx.roundRect(x, y, CELL - 6, CELL - 6, 12);
+            ctx.fill();
+          }
+        }
+      }
+      function drawHud() {
+        ctx.fillStyle = '#1b2434';
+        ctx.beginPath();
+        ctx.roundRect(24, 20, 342, 52, 22);
+        ctx.fill();
+        ctx.fillStyle = '#f2f7ff';
+        ctx.font = '900 20px sans-serif';
+        ctx.fillText('下班工牌突围', 38, 44);
+        ctx.fillStyle = '#89dfff';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText('热门挪块复刻 · 先把会挪开，再谈下班', 38, 62);
+      }
+      function drawBlocks() {
+        state.blocks.forEach((block) => {
+          const meta = palette[block.type];
+          const rect = blockRect(block);
+          const active = state.selected === block.id;
+          ctx.fillStyle = meta.fill;
+          ctx.strokeStyle = active ? '#ffffff' : meta.edge;
+          ctx.lineWidth = active ? 3 : 2;
+          ctx.beginPath();
+          ctx.roundRect(rect.x, rect.y, rect.w, rect.h, 14);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,.16)';
+          ctx.fillRect(rect.x + 8, rect.y + 8, rect.w - 16, 8);
+          ctx.fillStyle = '#071018';
+          ctx.font = block.id === 'badge' ? '900 14px sans-serif' : '800 12px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(meta.label, rect.x + rect.w / 2, rect.y + rect.h / 2 + 4);
+          ctx.textAlign = 'left';
+        });
+      }
+      function render() {
+        drawBoard();
+        drawHud();
+        drawBlocks();
+        document.getElementById('moveText').textContent = '步数 ' + state.moves;
+        document.getElementById('bestText').textContent = state.mode === 'won'
+          ? (state.moves <= 9 ? '9 步内逃离' : '已逃离，继续卷步数')
+          : '目标 9 步内';
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? '你终于把工牌从会议缝里挤出去了。'
+          : state.selected
+            ? '沿着亮块方向拖动，别让审批再挡道。'
+            : '拖动任意色块，给“下班工牌”让出右侧出口。';
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        const point = pointFromEvent(event);
+        const block = findBlock(point);
+        state.selected = block ? block.id : null;
+        if (!block || state.mode !== 'playing') {
+          render();
+          return;
+        }
+        state.drag = {
+          id: block.id,
+          axis: block.axis,
+          startX: point.x,
+          startY: point.y
+        };
+        canvas.setPointerCapture(event.pointerId);
+        render();
+      });
+      canvas.addEventListener('pointerup', (event) => {
+        if (!state.drag) return;
+        const block = state.blocks.find((item) => item.id === state.drag.id);
+        const point = pointFromEvent(event);
+        const deltaPx = state.drag.axis === 'h' ? point.x - state.drag.startX : point.y - state.drag.startY;
+        const delta = deltaPx > 0 ? Math.floor((deltaPx + CELL * 0.4) / CELL) : Math.ceil((deltaPx - CELL * 0.4) / CELL);
+        applyMove(block, delta);
+        state.drag = null;
+      });
+      canvas.addEventListener('pointercancel', () => { state.drag = null; });
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      window.advanceTime = () => {};
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 6x6 sliding block board',
+        mode: state.mode,
+        moves: state.moves,
+        selected: state.selected,
+        exit_row: EXIT_ROW,
+        badge_col: state.blocks.find((block) => block.id === 'badge')?.col ?? null,
+        blocks: state.blocks.map((block) => ({ id: block.id, row: block.row, col: block.col, axis: block.axis, len: block.len }))
+      });
+    `,
+  },
+  {
+    id: 'meeting-pinball',
+    file: 'meeting-pinball.html',
+    title: '开会见缝插话',
+    kind: '反应',
+    sourceGame: '见缝插针 / aa 式旋转插针',
+    accent: '#6f55ff',
+    summary: '把发言条插进旋转会议盘，不撞车，打完一轮直接升压。',
+    canvas: true,
+    markup: `
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="tray" id="queueBar"></div>
+        <p id="statusText"></p>
+        <button class="primary" id="resetBtn">重开今日会</button>
+      </section>
+    `,
+    script: `
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const levels = [
+        { shots: 8, speed: 1.4, reverseEvery: 0, starterAngles: [-0.8, 1.3, 2.8] },
+        { shots: 10, speed: -1.7, reverseEvery: 0, starterAngles: [-1.1, 0.1, 1.5, 2.8] },
+        { shots: 11, speed: 1.9, reverseEvery: 4, starterAngles: [-1.4, -0.1, 1.2, 2.2, 3.2] },
+        { shots: 12, speed: -2.2, reverseEvery: 3, starterAngles: [-1.2, -0.4, 0.8, 1.7, 2.5, 3.4] }
+      ];
+      const state = { mode: 'ready', levelIndex: 0, wheelAngle: 0, rotationSpeed: 0, pins: [], queue: [], activeShot: null, pulse: 0, tick: 0, lastFlipShot: -1 };
+      function pinText(id) {
+        return ['预算','进度','风险','复盘','排期','同步','对齐','跟进','结论','抄送','审批','补充'][id % 12];
+      }
+      function buildLevel(index) {
+        const level = levels[index];
+        state.mode = 'playing';
+        state.levelIndex = index;
+        state.wheelAngle = -Math.PI / 2;
+        state.rotationSpeed = level.speed;
+        state.tick = 0;
+        state.pulse = 0;
+        state.lastFlipShot = -1;
+        state.activeShot = null;
+        state.pins = level.starterAngles.map((angle, idx) => ({ id: idx, angle, text: pinText(idx) }));
+        state.queue = Array.from({ length: level.shots }, (_, i) => ({ id: i + state.pins.length, text: pinText(i + state.pins.length) }));
+      }
+      function reset() {
+        buildLevel(0);
+        render();
+      }
+      function scheduleNextLevel() {
+        if (state.levelIndex >= levels.length - 1) {
+          state.mode = 'won';
+          return;
+        }
+        buildLevel(state.levelIndex + 1);
+      }
+      function fire() {
+        if (state.mode !== 'playing' || state.activeShot || !state.queue.length) return;
+        const next = state.queue.shift();
+        state.activeShot = { id: next.id, text: next.text, y: 476, vy: -580 };
+      }
+      function fail() {
+        state.mode = 'lost';
+        state.activeShot = null;
+        state.pulse = 1;
+      }
+      function success(angle, shot) {
+        state.pins.push({ id: shot.id, angle, text: shot.text });
+        state.activeShot = null;
+        state.pulse = 1;
+        if (!state.queue.length) {
+          state.mode = 'transition';
+          window.setTimeout(scheduleNextLevel, 520);
+        }
+      }
+      function update(ms) {
+        const dt = Math.min(0.032, ms / 1000);
+        state.tick += dt;
+        state.pulse = Math.max(0, state.pulse - dt * 2.6);
+        if (state.mode !== 'playing') {
+          render();
+          return;
+        }
+        const level = levels[state.levelIndex];
+        if (level.reverseEvery > 0) {
+          const inserted = state.pins.length - level.starterAngles.length;
+          if (inserted > 0 && inserted % level.reverseEvery === 0 && state.lastFlipShot !== inserted) {
+            state.rotationSpeed *= -1;
+            state.lastFlipShot = inserted;
+          }
+        }
+        state.wheelAngle += state.rotationSpeed * dt;
+        if (state.activeShot) {
+          state.activeShot.y += state.activeShot.vy * dt;
+          if (state.activeShot.y <= 364) {
+            const insertAngle = -Math.PI / 2 - state.wheelAngle;
+            const gap = 0.34;
+            const collided = state.pins.some((pin) => {
+              let diff = Math.atan2(Math.sin(pin.angle - insertAngle), Math.cos(pin.angle - insertAngle));
+              diff = Math.abs(diff);
+              return diff < gap;
+            });
+            collided ? fail() : success(insertAngle, state.activeShot);
+          }
+        }
+        render();
+      }
+      function drawNeedle(x, y, angle, label, active) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.strokeStyle = active ? '#fff7d6' : '#f7f3ff';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -92);
+        ctx.stroke();
+        ctx.fillStyle = active ? '#ffcf43' : '#b9a7ff';
+        ctx.beginPath();
+        ctx.arc(0, 8, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#140f22';
+        ctx.font = '900 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(label.slice(0, 2), 0, 12);
+        ctx.restore();
+      }
+      function drawWheel() {
+        const cx = 195;
+        const cy = 214;
+        const r = 72 + state.pulse * 6;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(state.wheelAngle);
+        ctx.fillStyle = '#1d1533';
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 8;
+        ctx.strokeStyle = '#6f55ff';
+        ctx.stroke();
+        ctx.fillStyle = '#f2efff';
+        ctx.font = '900 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('会议', 0, -4);
+        ctx.fillStyle = '#a89ade';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText('ROUND ' + (state.levelIndex + 1), 0, 16);
+        state.pins.forEach((pin) => drawNeedle(0, 0, pin.angle, pin.text, false));
+        ctx.restore();
+      }
+      function drawLauncher() {
+        const baseY = state.activeShot ? state.activeShot.y : 476;
+        const shot = state.activeShot || state.queue[0];
+        if (!shot) return;
+        drawNeedle(195, baseY, 0, shot.text, true);
+      }
+      function render() {
+        ctx.fillStyle = '#0b0814';
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#22163e';
+        ctx.beginPath();
+        ctx.roundRect(20, 20, 350, 80, 22);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 30px sans-serif';
+        ctx.fillText(state.mode === 'won' ? '会议结束' : '见缝插话', 28, 55);
+        ctx.fillStyle = '#c6bbff';
+        ctx.font = '700 14px sans-serif';
+        const speedText = Math.abs(state.rotationSpeed).toFixed(1);
+        ctx.fillText('ROUND ' + (state.levelIndex + 1) + ' · 转速 ' + speedText, 28, 82);
+        drawWheel();
+        drawLauncher();
+        ctx.fillStyle = '#38275e';
+        ctx.beginPath();
+        ctx.roundRect(101, 500, 188, 26, 13);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = '800 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(state.mode === 'lost' ? '话撞上了，重开' : state.mode === 'transition' ? '本轮通过，准备下一会' : state.mode === 'won' ? '全部发完，今日存活' : '点击屏幕发言', 195, 518);
+        ctx.textAlign = 'left';
+        document.getElementById('queueBar').innerHTML = Array.from({ length: Math.max(8, state.queue.length) }, (_, i) => '<span>' + (state.queue[i] ? '•' : '') + '</span>').join('');
+        document.getElementById('statusText').textContent = state.mode === 'won'
+          ? '四轮结束 · 你成功把所有废话插进了议程。'
+          : state.mode === 'lost'
+            ? '碰撞失败 · 同题重复发言会炸。'
+            : '待发 ' + state.queue.length + ' · 已插 ' + state.pins.length + ' · 当前轮 ' + (state.levelIndex + 1);
+      }
+      canvas.addEventListener('pointerdown', fire);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => update(16), 16);
+      window.advanceTime = (ms) => {
+        const steps = Math.max(1, Math.round(ms / 16));
+        for (let i = 0; i < steps; i++) update(16);
+      };
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 origin top-left',
+        mode: state.mode,
+        level: state.levelIndex + 1,
+        queue: state.queue.length,
+        pins: state.pins.length,
+        activeShot: state.activeShot ? { y: Math.round(state.activeShot.y), text: state.activeShot.text } : null,
+        speed: Number(state.rotationSpeed.toFixed(2))
+      });
     `,
   },
   {
@@ -813,6 +11373,7 @@ const games = [
       document.getElementById('splitBtn').addEventListener('click',splitCells);document.getElementById('ejectBtn').addEventListener('click',ejectMass);document.getElementById('resetBtn').addEventListener('click',reset);reset();setInterval(()=>step(16),16);window.advanceTime=(ms)=>{for(let i=0;i<Math.max(1,Math.round(ms/16));i++)step(16);};window.render_game_to_text=()=>JSON.stringify({coordinate_system:'world '+worldWidth+'x'+worldHeight+' with camera projected to canvas 390x560',mode:state.mode,score:state.score,worldWidth,camera,cells:state.cells.map(c=>({x:Math.round(c.x),y:Math.round(c.y),r:Math.round(c.r)})),pellets:state.pellets.length,splitCells:state.cells.length,ejectMass:state.ejected.length,leaderboard:state.leaderboard});
     `,
   },
+  snakeBattleBaseGame,
   {
     id: 'qingjiao-sim',
     file: 'qingjiao-sim.html',
@@ -1699,6 +12260,7 @@ const games = [
       window.render_game_to_text=()=>JSON.stringify({coordinate_system:'DOM six-line hexagram',mode:state.mode,wish:state.wish,lines:state.lines,result:state.result});
     `,
   },
+  goodsSortBaseGame,
 ];
 
 function artifactFor(game) {
@@ -1771,6 +12333,8 @@ function commonCss(accent) {
     html.embed-mode .play-canvas { max-height: calc(100svh - 116px); object-fit: contain; }
     html.embed-mode .panel { box-shadow: none; }
     .stack { display: grid; gap: 10px; }
+    .stat-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: rgba(255,255,255,.84); font-size: 13px; font-weight: 900; }
+    .button-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-bottom: 10px; }
     .choice, .shop-row, .chip, .plot { border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; min-height: 58px; padding: 12px 14px; text-align: left; font-weight: 850; cursor: pointer; }
     .choice:active, .chip:active, .plot:active, .big-tap:active { transform: scale(.98); }
     .meter { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
@@ -1781,6 +12345,44 @@ function commonCss(accent) {
     .bars i { display: block; height: 9px; border-radius: 999px; background: var(--accent); }
     .tray { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
     .tray span { aspect-ratio: 1; border: 1px dashed rgba(255,255,255,.24); border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.09); font-weight: 900; }
+    .triple-playfield { gap: 10px; }
+    .triple-targets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .triple-chip { min-height: 56px; border: 1px solid var(--chip-edge, rgba(255,255,255,.14)); border-radius: 14px; padding: 8px 9px; background: color-mix(in srgb, var(--chip-fill, rgba(255,255,255,.14)), rgba(255,255,255,.08) 76%); color: var(--chip-ink, #fff); display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 6px; }
+    .triple-chip b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 9px; background: rgba(255,255,255,.3); font-size: 13px; }
+    .triple-chip i, .triple-chip u { font-style: normal; text-decoration: none; font-weight: 900; }
+    .triple-chip i { font-size: 11px; }
+    .triple-chip u { font-size: 15px; }
+    .triple-board { position: relative; min-height: 346px; border: 1px solid rgba(255,255,255,.16); border-radius: 20px; background: radial-gradient(circle at 50% 16%, var(--pile-glow, rgba(125,214,255,.18)), transparent 34%), linear-gradient(180deg, var(--board-top, #08131f), var(--board-bottom, #050a12)); overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 20px 50px rgba(0,0,0,.28); }
+    .triple-board::after { content: ""; position: absolute; left: 18px; right: 18px; bottom: 18px; height: 46px; border-radius: 50%; background: rgba(0,0,0,.22); filter: blur(12px); pointer-events: none; }
+    .triple-item { position: absolute; width: 68px; height: 76px; margin-left: -34px; margin-top: -38px; border: 0; background: transparent; padding: 0; display: grid; place-items: center; cursor: pointer; }
+    .triple-item-glyph { width: 64px; height: 64px; border: 2px solid rgba(255,255,255,.22); border-radius: 18px; display: grid; place-items: center; font-size: 27px; font-weight: 1000; box-shadow: 0 14px 24px rgba(0,0,0,.22); }
+    .triple-item-tag { margin-top: -10px; min-width: 42px; border-radius: 999px; padding: 3px 8px; background: rgba(0,0,0,.48); color: rgba(255,255,255,.88); font-size: 10px; font-weight: 900; }
+    .triple-item.top .triple-item-glyph { transform: translateY(-4px); box-shadow: 0 18px 28px rgba(0,0,0,.32); }
+    .triple-item.locked { cursor: not-allowed; }
+    .triple-item.locked .triple-item-glyph { filter: saturate(.55) brightness(.82); opacity: .72; }
+    .triple-tray-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin: 10px 0 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .triple-tray { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; background: color-mix(in srgb, var(--tray-glow, rgba(255,255,255,.08)), rgba(255,255,255,.05) 62%); }
+    .triple-slot { min-height: 38px; border-radius: 12px; border: 1px dashed rgba(255,255,255,.2); display: grid; place-items: center; font-size: 18px; font-weight: 1000; }
+    .triple-slot.empty { background: rgba(255,255,255,.04); }
+    .triple-slot.filled { border-style: solid; box-shadow: inset 0 -6px 10px rgba(0,0,0,.12); }
+    .goods-targets { margin-bottom: 10px; }
+    .goods-shelves { display: grid; gap: 10px; }
+    .goods-shelf { border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 10px; background: rgba(255,255,255,.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .goods-shelf-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .goods-lane-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .goods-lane { position: relative; min-height: 108px; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 10px 8px 8px; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); color: #fff; display: grid; align-content: space-between; justify-items: center; gap: 8px; overflow: hidden; cursor: pointer; }
+    .goods-lane::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 10px; height: 9px; border-radius: 999px; background: rgba(0,0,0,.22); filter: blur(7px); }
+    .goods-lane.empty { opacity: .56; cursor: default; }
+    .goods-backdrop { position: absolute; inset: 0; background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--lane-glow), white 18%), transparent 34%); opacity: .8; pointer-events: none; }
+    .goods-item { position: relative; z-index: 1; width: 70px; min-height: 72px; border: 2px solid rgba(255,255,255,.18); border-radius: 18px; display: grid; place-items: center; gap: 3px; padding: 8px 6px; box-shadow: 0 16px 24px rgba(0,0,0,.22); }
+    .goods-item b { font-size: 26px; line-height: 1; }
+    .goods-item i { font-style: normal; font-size: 11px; font-weight: 900; }
+    .goods-lane u, .goods-empty-copy { position: relative; z-index: 1; text-decoration: none; font-size: 11px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .box-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .color-box { min-height: 78px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 10px; background: color-mix(in srgb, var(--box-fill), rgba(255,255,255,.08) 76%); display: grid; gap: 8px; }
+    .color-box b { font-size: 13px; }
+    .color-box span { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .color-box i { min-height: 28px; border-radius: 10px; display: grid; place-items: center; font-style: normal; font-weight: 1000; background: rgba(0,0,0,.22); color: #fff; }
     .big-tap { min-height: 118px; border: 0; border-radius: 28px; background: linear-gradient(145deg, var(--accent), #ff8ab9); color: #fff; display: grid; place-items: center; gap: 4px; font-weight: 1000; box-shadow: inset 0 -16px 30px rgba(0,0,0,.18), 0 20px 60px rgba(255,59,134,.32); }
     .big-tap.dark { background: linear-gradient(145deg, #151018, #31112a 54%, var(--accent)); color: #fff; }
     .big-tap b { font-size: 32px; }
@@ -1926,13 +12528,13 @@ function gamePage(game) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
   <link rel="icon" href="data:,">
-  <title>${game.title} - 赝品库</title>
+  <title>${game.title} - Arcade Atelier</title>
   <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
   <style>${commonCss(game.accent)}</style>
 </head>
 <body data-printer-artifact="fake-game-library" data-game-page="${game.id}" data-output-format="multi_html">
   <div class="phone-shell">
-    <header class="app-top"><a class="brand" href="index.html">赝品库</a><a href="${game.file}">重载</a></header>
+    <header class="app-top"><a class="brand" href="index.html">Arcade Atelier</a><a href="${game.file}">重载</a></header>
     <main class="screen play-screen">
       <section class="hero play-hero">
         <p class="kicker">${game.kind}</p>
@@ -1954,6 +12556,98 @@ function gamePage(game) {
 `;
 }
 
+function remixPage(remix) {
+  const artifact = {
+    ...artifactFor(remix.game),
+    parent_file: remix.source_file,
+    remix_prompt: remix.prompt.text,
+    agent_description_file: remix.slug + '.remix.json',
+  };
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="icon" href="data:,">
+  <title>${remix.title} - Arcade Atelier Remix</title>
+  <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
+  <style>${commonCss(remix.game.accent)}</style>
+</head>
+<body data-printer-artifact="fake-game-library" data-game-page="${remix.game.id}" data-output-format="multi_html">
+  <div class="phone-shell">
+    <header class="app-top"><a class="brand" href="index.html">Arcade Atelier</a><a href="${remix.game.file}">重载</a></header>
+    <main class="screen play-screen">
+      <section class="hero play-hero">
+        <p class="kicker">REMIX · ${remix.game.kind}</p>
+        <h1>${remix.title}</h1>
+      </section>
+      <section class="game-stage">
+        ${remix.game.markup}
+      </section>
+    </main>
+  </div>
+  <script>
+    window.__PRINTER_ARTIFACT__ = ${JSON.stringify(artifact)};
+    (() => {
+      ${remix.game.script}
+    })();
+  </script>
+</body>
+</html>
+`;
+}
+
+function remixDescription(remix) {
+  return {
+    schema_version: 1,
+    id: remix.id,
+    slug: remix.slug,
+    title: remix.title,
+    source_file: remix.source_file,
+    parent_slug: remix.parent_slug,
+    lineage: remix.lineage,
+    created_at: generatedAt,
+    prompt: remix.prompt,
+    agent_description: remix.agent_description,
+    files: {
+      html: remix.game.file,
+    },
+    validation: {
+      static_checked: true,
+      browser_checked: false,
+      notes: [],
+    },
+  };
+}
+
+function syncDeterministicRemixes(manifest) {
+  const lockedSlugs = new Set(deterministicRemixes.map((remix) => remix.slug));
+  const preserved = (manifest.remixes || []).filter((entry) => !lockedSlugs.has(entry.slug));
+  const generated = deterministicRemixes.map((remix) => ({
+    id: remix.id,
+    slug: remix.slug,
+    file: remix.game.file,
+    description_file: remix.slug + '.remix.json',
+    title: remix.title,
+    kind: 'Remix',
+    source_file: remix.source_file,
+    parent_slug: remix.parent_slug,
+    lineage: remix.lineage,
+    summary: remix.summary,
+    accent: remix.accent,
+    glyph: remix.glyph,
+    created_at: generatedAt,
+    agent_description: remix.agent_description,
+    prompt: remix.prompt,
+  }));
+  manifest.remixes = [...preserved, ...generated];
+  for (const remix of deterministicRemixes) {
+    fs.writeFileSync(path.join(outputDir, remix.game.file), remixPage(remix), 'utf8');
+    writeJson(remix.slug + '.remix.json', remixDescription(remix));
+  }
+  return manifest;
+}
+
 function indexPage() {
   const artifact = {
     generator: 'printer/tools/generate_fake_library.mjs',
@@ -1964,7 +12658,7 @@ function indexPage() {
     intent_plan: pipelinePlan,
     complexity: { total: 78, components: 24, interactions: 26, pages: games.length, data_flow: 20 },
   };
-  const coverGlyphs = ['SBTI','羊','脑','刺','撞','密','合','☑','跑','种','io','青','重','推','战','玄','塔','命','星','卦'];
+  const coverGlyphs = ['钉','箱','柱','锅','夺','箭','鳄','珠','逻','SBTI','羊','鸽','茬','块','堵','针','脑','刺','撞','密','合','☑','跑','种','io','蛇','青','重','推','战','玄','塔','命','星','卦','柜'];
   const homeItems = games.map((game, i) => ({
     id: game.id,
     instanceId: `${game.id}-0`,
@@ -1975,9 +12669,9 @@ function indexPage() {
     sourceGame: game.sourceGame,
     summary: game.summary,
     accent: game.accent,
-    glyph: coverGlyphs[i],
+    glyph: coverGlyphs[i] || '游',
     cover: coverForFile(game.file),
-    author: '@赝品库',
+    author: '@Atelier',
     likes: 1200 + i * 137,
     saves: 240 + i * 31,
     baseIndex: i,
@@ -2040,7 +12734,7 @@ function indexPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <link rel="icon" href="data:,">
-  <title>HTML 刷刷 - 赝品库 Remix Feed</title>
+  <title>Arcade Atelier - Playable Remix Catalog</title>
   <style>
     ${commonCss('#111')}
     html, body { background: #040404; }
@@ -2052,7 +12746,7 @@ function indexPage() {
     .home-screen::-webkit-scrollbar { display: none; }
     .home-head { position: sticky; top: calc(-12px - env(safe-area-inset-top)); z-index: 10; display: grid; gap: 10px; padding: 12px 0 10px; background: linear-gradient(#050505 72%, rgba(5,5,5,0)); }
     .home-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .home-brand { margin: 0; font-size: 22px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
+    .home-brand { margin: 0; font-size: 20px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
     .home-brand span { color: #ff375f; }
     .start-feed { min-height: 36px; border: 0; border-radius: 999px; padding: 0 14px; background: #fff; color: #050505; font-weight: 1000; }
     .home-search { display: flex; align-items: center; gap: 8px; min-height: 38px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 0 13px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.72); font-size: 13px; font-weight: 750; }
@@ -2124,8 +12818,8 @@ function indexPage() {
     <main class="screen home-screen" id="homeScreen">
       <header class="home-head">
         <div class="home-bar">
-          <h1 class="home-brand">HTML<span>刷刷</span></h1>
-          <button class="start-feed" type="button" data-start-feed>开始刷刷</button>
+          <h1 class="home-brand">Arcade<span> Atelier</span></h1>
+          <button class="start-feed" type="button" data-start-feed>开始浏览</button>
         </div>
         <div class="home-search"><span>⌕</span><span>搜索游戏、玩法、Remix</span></div>
         <nav class="home-tags" aria-label="分类">
@@ -2779,9 +13473,9 @@ function ensureRemixManifest() {
         };
       }
     } catch {}
-  } else {
-    writeJson('remix_manifest.json', manifest);
   }
+  manifest = syncDeterministicRemixes(manifest);
+  writeJson('remix_manifest.json', manifest);
   fs.writeFileSync(
     path.join(outputDir, 'remix_manifest.js'),
     'window.__PRINTER_REMIX_MANIFEST__ = ' + JSON.stringify(manifest, null, 2) + ';\n',
@@ -2793,7 +13487,13 @@ fs.writeFileSync(path.join(outputDir, 'index.html'), indexPage(), 'utf8');
 for (const game of games) fs.writeFileSync(path.join(outputDir, game.file), gamePage(game), 'utf8');
 ensureRemixManifest();
 
-const files = ['index.html', ...games.map((game) => game.file), 'remix_manifest.json', 'remix_manifest.js'];
+const files = [
+  'index.html',
+  ...games.map((game) => game.file),
+  ...deterministicRemixes.map((remix) => remix.game.file),
+  'remix_manifest.json',
+  'remix_manifest.js',
+];
 writeJson('run_report.json', {
   output_format: 'multi_html',
   complexity: { total: 84, components: 26, interactions: 28, pages: games.length, data_flow: 18 },
