@@ -12658,7 +12658,8 @@ function indexPage() {
     intent_plan: pipelinePlan,
     complexity: { total: 78, components: 24, interactions: 26, pages: games.length, data_flow: 20 },
   };
-  const coverGlyphs = ['钉','箱','柱','锅','夺','箭','鳄','珠','逻','SBTI','羊','鸽','茬','块','堵','针','脑','刺','撞','密','合','☑','跑','种','io','蛇','青','重','推','战','玄','塔','命','星','卦','柜'];
+  const coverGlyphs = ['钉','箱','柱','锅','夺','箭','鳄','珠','逻','SBTI','羊','鸽','茬','块','堵','针','脑','刺','撞','密','合','☑','跑','种','io','蛇','青','重','推','战','玄','塔','命','星','卦','柜','环','停','货','蜂','三','六','走','锁','车','牌','格','币','轨','链','换','叠','仓','桌','夜','拆','收','压','转','桥','灯','闪','算','逃','钩','镜','钥','塔','线','拼','码','牌','球','厨','站','店','棋'];
+  const glyphForGame = (game, i) => coverGlyphs[i] || (game.kind ? game.kind.slice(0, 2) : '') || (game.title ? game.title.slice(0, 1) : '') || '玩';
   const homeItems = games.map((game, i) => ({
     id: game.id,
     instanceId: `${game.id}-0`,
@@ -12669,7 +12670,7 @@ function indexPage() {
     sourceGame: game.sourceGame,
     summary: game.summary,
     accent: game.accent,
-    glyph: coverGlyphs[i] || '游',
+    glyph: glyphForGame(game, i),
     cover: coverForFile(game.file),
     author: '@Atelier',
     likes: 1200 + i * 137,
@@ -12713,7 +12714,7 @@ function indexPage() {
     const coverHeight = 132 + (i % 5) * 18 + (i % 2) * 12;
     const coverImage = item.cover ? `<img class="water-cover-image" src="${escapeHtml(item.cover)}" alt="" loading="lazy" onload="this.closest('.water-cover').classList.add('has-render')" onerror="this.remove()">` : '';
     return `
-      <button class="water-card" type="button" data-open-feed="${i}" data-instance-id="${escapeHtml(item.instanceId)}" style="--game-accent:${escapeHtml(item.accent)}; --cover-h:${coverHeight}px;">
+      <button class="water-card" type="button" data-open-feed="${i}" data-instance-id="${escapeHtml(item.instanceId)}" style="--game-accent:${escapeHtml(item.accent)}; --cover-h:${coverHeight}px; --i:${i % 16};">
         <span class="water-cover">${coverImage}<b>${escapeHtml(item.glyph)}</b><i>${escapeHtml(item.kind)}</i></span>
         <span class="water-title">${escapeHtml(item.title)}</span>
         <span class="water-summary">${escapeHtml(item.summary)}</span>
@@ -12721,6 +12722,13 @@ function indexPage() {
       </button>`;
   };
   const waterfall = homeItems.map(waterCardMarkup).join('');
+  const featuredRail = homeItems.slice(0, 7).map((item, i) => {
+    const coverImage = item.cover ? `<img src="${escapeHtml(item.cover)}" alt="" loading="${i === 0 ? 'eager' : 'lazy'}">` : '';
+    return `
+        <button class="rail-cover" type="button" data-feature-open="${item.baseIndex}" aria-label="打开 ${escapeHtml(item.title)}" style="--game-accent:${escapeHtml(item.accent)}; --tilt:${(i % 2 ? 1 : -1) * (2 + i % 3)}deg; --i:${i};">
+          ${coverImage}<b>${escapeHtml(item.glyph)}</b><span>${escapeHtml(item.kind)}</span>
+        </button>`;
+  }).join('');
   const remixTwists = [
     { label: '夜市版', glyph: '夜', accent: '#00c2ff', summary: '把节奏压进霓虹夜场，反馈更密、奖励更亮。', prompt: '霓虹夜市、快反馈、强分享截图' },
     { label: '地铁版', glyph: '站', accent: '#ffcf33', summary: '改成单手通勤节奏，十秒内给出一次明确变化。', prompt: '地铁通勤、单手操作、十秒循环' },
@@ -12744,28 +12752,56 @@ function indexPage() {
     [hidden] { display: none !important; }
     .home-screen { min-height: 100svh; max-height: 100svh; overflow-y: auto; padding: calc(12px + env(safe-area-inset-top)) 12px calc(22px + env(safe-area-inset-bottom)); background: #050505; scrollbar-width: none; }
     .home-screen::-webkit-scrollbar { display: none; }
-    .home-head { position: sticky; top: calc(-12px - env(safe-area-inset-top)); z-index: 10; display: grid; gap: 10px; padding: 12px 0 10px; background: linear-gradient(#050505 72%, rgba(5,5,5,0)); }
+    .home-head { position: sticky; top: calc(-12px - env(safe-area-inset-top)); z-index: 10; display: grid; gap: 11px; padding: 12px 0 12px; background: linear-gradient(#050505 72%, rgba(5,5,5,.78) 86%, rgba(5,5,5,0)); backdrop-filter: blur(18px); }
     .home-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .home-brand { margin: 0; font-size: 20px; line-height: 1; font-weight: 1000; letter-spacing: 0; }
-    .home-brand span { color: #ff375f; }
-    .start-feed { min-height: 36px; border: 0; border-radius: 999px; padding: 0 14px; background: #fff; color: #050505; font-weight: 1000; }
-    .home-search { display: flex; align-items: center; gap: 8px; min-height: 38px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 0 13px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.72); font-size: 13px; font-weight: 750; }
-    .home-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 1px; scrollbar-width: none; }
+    .home-brand { margin: 0; font-size: 22px; line-height: .92; font-weight: 1000; letter-spacing: -.04em; text-transform: uppercase; }
+    .home-brand span { color: #ff375f; text-shadow: 0 0 22px rgba(255,55,95,.42); }
+    .home-actions { display: flex; align-items: center; gap: 8px; }
+    .start-feed { min-height: 38px; border: 0; border-radius: 999px; padding: 0 15px; background: #fff8e8; color: #050505; font-weight: 1000; box-shadow: 0 10px 28px rgba(255,248,232,.16); }
+    .fake-feed { min-height: 38px; border: 1px solid rgba(255,207,51,.38); border-radius: 999px; padding: 0 13px; background: linear-gradient(135deg, #ffcf33, #ff375f); color: #080808; font-weight: 1000; box-shadow: 0 12px 32px rgba(255,55,95,.22); }
+    .start-feed:focus-visible, .fake-feed:focus-visible, .ghost-feed:focus-visible, .home-tag:focus-visible, .water-card:focus-visible, .rail-cover:focus-visible { outline: 2px solid #fff8e8; outline-offset: 3px; }
+    .home-search { display: flex; align-items: center; gap: 8px; min-height: 40px; border: 1px solid rgba(255,255,255,.12); border-radius: 999px; padding: 0 13px; background: rgba(255,255,255,.075); color: rgba(255,255,255,.72); font-size: 13px; font-weight: 750; box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+    .home-search input { width: 100%; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; min-width: 0; }
+    .home-search input::placeholder { color: rgba(255,255,255,.48); }
+    .home-tags { display: flex; gap: 8px; overflow-x: auto; padding: 1px 0 2px; scrollbar-width: none; }
     .home-tags::-webkit-scrollbar { display: none; }
-    .home-tags span { flex: 0 0 auto; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 7px 11px; background: rgba(255,255,255,.06); color: rgba(255,255,255,.76); font-size: 12px; font-weight: 850; }
-    .home-tags .active { background: rgba(255,55,95,.18); border-color: rgba(255,55,95,.36); color: #fff; }
-    .waterfall { column-count: 2; column-gap: 10px; padding: 2px 0 12px; }
-    .water-card { width: 100%; margin: 0 0 10px; break-inside: avoid; display: grid; gap: 7px; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 0 0 10px; overflow: hidden; background: #111; color: #fff; text-align: left; cursor: pointer; box-shadow: 0 14px 42px rgba(0,0,0,.24); }
+    .home-tag { flex: 0 0 auto; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 7px 11px; background: rgba(255,255,255,.055); color: rgba(255,255,255,.78); font-size: 12px; font-weight: 900; }
+    .home-tags .active { background: rgba(255,55,95,.2); border-color: rgba(255,55,95,.48); color: #fff; box-shadow: 0 0 0 1px rgba(255,55,95,.1), 0 10px 28px rgba(255,55,95,.14); }
+    .showcase { position: relative; margin: 0 0 14px; min-height: 238px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); border-radius: 26px; padding: 18px; background: radial-gradient(circle at 70% 18%, rgba(255,55,95,.36), transparent 34%), radial-gradient(circle at 12% 86%, rgba(34,244,238,.28), transparent 28%), linear-gradient(145deg, #16100b, #050505 62%); box-shadow: 0 28px 80px rgba(0,0,0,.44); isolation: isolate; animation: homeReveal .42s ease both; }
+    .showcase::before { content: ""; position: absolute; inset: -30% -12%; z-index: -1; background: repeating-linear-gradient(105deg, rgba(255,255,255,.08) 0 1px, transparent 1px 18px); opacity: .18; transform: rotate(-4deg); }
+    .showcase-copy { position: relative; z-index: 2; width: 58%; min-height: 202px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
+    .showcase-kicker { margin: 0; color: #ffcf33; font-size: 10px; line-height: 1; font-weight: 1000; letter-spacing: .18em; text-transform: uppercase; }
+    .showcase-title { margin: 0; color: #fff; font-size: clamp(30px, 12vw, 50px); line-height: .86; font-weight: 1000; letter-spacing: -.08em; text-wrap: balance; }
+    .showcase-text { margin: 0; color: rgba(255,255,255,.68); font-size: 12px; line-height: 1.35; font-weight: 780; }
+    .showcase-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .ghost-feed { min-height: 38px; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 0 13px; background: rgba(255,255,255,.08); color: #fff; font-weight: 1000; backdrop-filter: blur(12px); }
+    .showcase-rail { position: absolute; inset: 20px 10px 18px 47%; display: grid; grid-template-columns: repeat(4, minmax(54px, 1fr)); grid-auto-rows: 72px; gap: 8px; transform: rotate(-4deg); }
+    .rail-cover { position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,.14); border-radius: 18px; background: color-mix(in srgb, var(--game-accent), #050505 44%); color: #fff; box-shadow: 0 18px 38px rgba(0,0,0,.34); transform: rotate(var(--tilt)); cursor: pointer; animation: coverRise .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 52ms); }
+    .rail-cover:nth-child(1), .rail-cover:nth-child(4) { grid-row: span 2; }
+    .rail-cover:nth-child(6) { grid-column: span 2; }
+    .rail-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; opacity: .9; }
+    .rail-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,.05), rgba(0,0,0,.48)); }
+    .rail-cover b { position: absolute; z-index: 1; left: 9px; bottom: 8px; font-size: 22px; line-height: 1; font-weight: 1000; text-shadow: 0 8px 18px rgba(0,0,0,.5); }
+    .rail-cover span { position: absolute; z-index: 1; left: 8px; top: 8px; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; padding: 4px 7px; background: rgba(0,0,0,.38); color: rgba(255,255,255,.9); font-size: 9px; line-height: 1; font-weight: 1000; }
+    .home-count { margin-left: auto; align-self: center; color: rgba(255,255,255,.52); font-size: 11px; line-height: 1; font-weight: 900; white-space: nowrap; }
+    .waterfall { column-count: 2; column-gap: 10px; padding: 2px 0 14px; }
+    .water-card { width: 100%; margin: 0 0 10px; break-inside: avoid; display: grid; gap: 7px; border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 0 0 10px; overflow: hidden; background: linear-gradient(180deg, #141414, #0b0b0b); color: #fff; text-align: left; cursor: pointer; box-shadow: 0 14px 42px rgba(0,0,0,.24); animation: homeReveal .42s ease both; animation-delay: calc(var(--i, 0) * 28ms); }
+    .water-card[hidden] { display: none; }
+    .water-card:hover { border-color: color-mix(in srgb, var(--game-accent), white 24%); transform: translateY(-1px); }
     .water-card:active { transform: scale(.985); }
     .water-cover { position: relative; height: var(--cover-h); display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--game-accent), white 12%), transparent 38%), linear-gradient(155deg, color-mix(in srgb, var(--game-accent), #050505 46%), #080808 70%); }
-    .water-cover-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; transform: scale(1.01); }
-    .water-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,.06), transparent 42%, rgba(0,0,0,.38)); }
+    .water-cover-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; transform: scale(1.012); transition: transform .36s ease; }
+    .water-card:hover .water-cover-image { transform: scale(1.045); }
+    .water-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,.06), transparent 42%, rgba(0,0,0,.46)); }
     .water-cover b { position: relative; z-index: 1; font-size: clamp(24px, 10vw, 44px); line-height: 1; font-weight: 1000; letter-spacing: 0; text-shadow: 0 10px 28px rgba(0,0,0,.34); }
     .water-cover.has-render b { display: none; }
-    .water-cover i { position: absolute; z-index: 1; left: 9px; top: 9px; border-radius: 999px; padding: 4px 7px; background: rgba(0,0,0,.34); color: rgba(255,255,255,.9); font-style: normal; font-size: 10px; font-weight: 900; }
+    .water-cover i { position: absolute; z-index: 1; left: 9px; top: 9px; max-width: calc(100% - 18px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; padding: 4px 7px; background: rgba(0,0,0,.36); color: rgba(255,255,255,.9); font-style: normal; font-size: 10px; font-weight: 900; backdrop-filter: blur(10px); }
     .water-title { padding: 0 10px; font-size: 13px; line-height: 1.24; font-weight: 950; color: rgba(255,255,255,.94); }
     .water-summary { padding: 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: rgba(255,255,255,.58); font-size: 11px; line-height: 1.35; font-weight: 700; }
     .water-meta { padding: 0 10px; display: flex; justify-content: space-between; gap: 8px; color: rgba(255,255,255,.5); font-size: 10px; line-height: 1; font-weight: 850; }
+    .home-empty { margin: 18px 0 26px; border: 1px dashed rgba(255,255,255,.18); border-radius: 18px; padding: 22px 14px; color: rgba(255,255,255,.62); text-align: center; font-size: 13px; font-weight: 850; background: rgba(255,255,255,.045); }
+    @keyframes homeReveal { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes coverRise { from { opacity: 0; transform: translateY(22px) rotate(var(--tilt)) scale(.92); } to { opacity: 1; transform: translateY(0) rotate(var(--tilt)) scale(1); } }
     .feed-screen { padding: 0; height: 100svh; overflow: hidden; }
     .feed-back { position: fixed; z-index: 12; left: max(12px, calc((100vw - 430px) / 2 + 12px)); top: calc(12px + env(safe-area-inset-top)); width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.14); border-radius: 50%; background: rgba(0,0,0,.28); color: #fff; font-size: 26px; line-height: 1; backdrop-filter: blur(12px); }
     .feed { height: 100svh; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; background: #000; }
@@ -12809,8 +12845,9 @@ function indexPage() {
     .remix-preview { width: 100%; height: 380px; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: #050505; display: none; }
     .remix-preview.is-visible { display: block; }
     .remix-status { min-height: 18px; margin: 0; color: rgba(255,255,255,.68); font-size: 12px; line-height: 1.35; }
-    @media (max-width: 360px) { .feed-actions { right: 8px; } .feed-caption { right: 76px; } .action-button { width: 48px; } .action-button b { width: 42px; height: 42px; } }
+    @media (max-width: 360px) { .showcase { min-height: 252px; padding: 16px; } .showcase-copy { width: 64%; } .showcase-rail { left: 53%; grid-template-columns: repeat(3, minmax(48px, 1fr)); grid-auto-rows: 66px; } .feed-actions { right: 8px; } .feed-caption { right: 76px; } .action-button { width: 48px; } .action-button b { width: 42px; height: 42px; } }
     @media (min-width: 700px) { body { padding: 18px 0; } #homeShell { min-height: calc(100svh - 36px); height: calc(100svh - 36px); overflow: hidden; } .feed-screen, .feed, .feed-item { height: calc(100svh - 36px); } .feed-item { min-height: 640px; } }
+    @media (prefers-reduced-motion: reduce) { .showcase, .rail-cover, .water-card { animation: none; } .water-cover-image { transition: none; } }
   </style>
 </head>
 <body data-printer-artifact="fake-game-library" data-output-format="multi_html">
@@ -12819,13 +12856,38 @@ function indexPage() {
       <header class="home-head">
         <div class="home-bar">
           <h1 class="home-brand">Arcade<span> Atelier</span></h1>
-          <button class="start-feed" type="button" data-start-feed>开始浏览</button>
+          <div class="home-actions">
+            <button class="fake-feed" type="button" data-fake-create>Fake 一款</button>
+            <button class="start-feed" type="button" data-start-feed>开始浏览</button>
+          </div>
         </div>
-        <div class="home-search"><span>⌕</span><span>搜索游戏、玩法、Remix</span></div>
-        <nav class="home-tags" aria-label="分类">
-          <span class="active">推荐</span><span>小游戏</span><span>玄学</span><span>.io</span><span>解谜</span><span>新 Remix</span>
+        <label class="home-search" for="homeSearch"><span aria-hidden="true">⌕</span><input id="homeSearch" type="search" autocomplete="off" placeholder="搜索游戏、玩法、Remix"></label>
+        <nav class="home-tags" id="homeTags" aria-label="分类">
+          <button class="home-tag active" type="button" data-filter="all">精选</button>
+          <button class="home-tag" type="button" data-filter="puzzle">解谜/排序</button>
+          <button class="home-tag" type="button" data-filter="sim">模拟/经营</button>
+          <button class="home-tag" type="button" data-filter="io">.io</button>
+          <button class="home-tag" type="button" data-filter="remix">Remix</button>
+          <span class="home-count" id="homeCount">${homeItems.length} 款</span>
         </nav>
       </header>
+      <section class="showcase" aria-label="最终版展示">
+        <div class="showcase-copy">
+          <div>
+            <p class="showcase-kicker">Playable Fake Library</p>
+            <h2 class="showcase-title">Final Show Build</h2>
+            <p class="showcase-text">离线小游戏赝品库，保留短局、滑动浏览和本地二创。</p>
+          </div>
+          <div class="showcase-actions">
+            <button class="fake-feed" type="button" data-fake-create>从零 Fake</button>
+            <button class="start-feed" type="button" data-start-feed>进入最终版</button>
+            <button class="ghost-feed" type="button" data-feature-open="0">看第一款</button>
+          </div>
+        </div>
+        <div class="showcase-rail">${featuredRail}
+        </div>
+      </section>
+      <p class="home-empty" id="homeEmpty" hidden>没有匹配的游戏，换个关键词或分类。</p>
       <section class="waterfall" id="waterfall" aria-label="游戏瀑布流">${waterfall}
       </section>
     </main>
@@ -12839,12 +12901,12 @@ function indexPage() {
     <div class="remix-panel" role="dialog" aria-modal="true" aria-labelledby="remixTitle">
       <header class="remix-head">
         <div>
-          <p class="kicker">REMIX HARNESS</p>
+          <p class="kicker" id="remixKicker">REMIX HARNESS</p>
           <h2 id="remixTitle">Remix</h2>
         </div>
         <button class="remix-close" type="button" id="remixClose" aria-label="关闭">×</button>
       </header>
-      <label class="remix-field">想怎么调整<textarea class="remix-textarea" id="remixPrompt" placeholder="比如：改成霓虹夜市版，加入连击、倒计时和截图结果卡。"></textarea></label>
+      <label class="remix-field"><span id="remixPromptLabel">想怎么调整</span><textarea class="remix-textarea" id="remixPrompt" placeholder="比如：改成霓虹夜市版，加入连击、倒计时和截图结果卡。"></textarea></label>
       <button class="primary" type="button" id="draftBtn">生成调整</button>
       <div class="remix-progress" id="remixProgress" hidden><i id="remixProgressBar"></i></div>
       <iframe class="remix-preview" id="draftPreview" title="Remix 草稿预览"></iframe>
@@ -12867,28 +12929,33 @@ function indexPage() {
       const waterfall = document.getElementById('waterfall');
       const feedScreen = document.getElementById('feedScreen');
       const feedBack = document.getElementById('feedBack');
+      const homeSearch = document.getElementById('homeSearch');
+      const homeTags = document.getElementById('homeTags');
+      const homeEmpty = document.getElementById('homeEmpty');
+      const homeCount = document.getElementById('homeCount');
       const baseItems = ${JSON.stringify(homeItems)};
       const remixTwists = ${JSON.stringify(remixTwists)};
       const publishedRemixes = (window.__PRINTER_REMIX_MANIFEST__ && Array.isArray(window.__PRINTER_REMIX_MANIFEST__.remixes)) ? window.__PRINTER_REMIX_MANIFEST__.remixes : [];
       function itemFromManifest(entry, offset = 0) {
+        const isFake = entry.origin === 'scratch' || entry.kind === 'Fake';
         return {
           id: entry.slug || entry.id || ('remix-' + offset),
           instanceId: (entry.slug || entry.id || ('remix-' + offset)) + '-published-0',
           file: entry.file,
-          title: entry.title || entry.slug || 'Remix',
-          sourceTitle: entry.title || entry.slug || 'Remix',
-          kind: entry.kind || 'Remix',
-          sourceGame: entry.source_file || entry.parent_slug || 'Remix Harness',
-          summary: entry.summary || (entry.agent_description && entry.agent_description.one_liner) || '本地发布的 Remix。',
-          accent: entry.accent || '#22f4ee',
-          glyph: entry.glyph || '改',
+          title: entry.title || entry.slug || (isFake ? 'Fake Game' : 'Remix'),
+          sourceTitle: entry.title || entry.slug || (isFake ? 'Fake Game' : 'Remix'),
+          kind: entry.kind || (isFake ? 'Fake' : 'Remix'),
+          sourceGame: isFake ? 'Fake From Scratch' : (entry.source_file || entry.parent_slug || 'Remix Harness'),
+          summary: entry.summary || (entry.agent_description && entry.agent_description.one_liner) || (isFake ? '本地从零 fake 的新游戏。' : '本地发布的 Remix。'),
+          accent: entry.accent || (isFake ? '#ffcf33' : '#22f4ee'),
+          glyph: entry.glyph || (isFake ? '造' : '改'),
           cover: entry.cover || ('covers/' + String(entry.file || entry.slug || 'remix').replace(/\.html$/, '') + '.png'),
-          author: '@Remix',
+          author: isFake ? '@Fake' : '@Remix',
           likes: 400 + offset * 37,
           saves: 120 + offset * 17,
           baseIndex: baseItems.length + offset,
           loop: 0,
-          remixed: true,
+          remixed: !isFake,
           remixPrompt: entry.prompt && entry.prompt.text ? entry.prompt.text : '',
         };
       }
@@ -12914,12 +12981,44 @@ function indexPage() {
       function waterCardMarkup(item, index) {
         const coverHeight = 132 + (index % 5) * 18 + (index % 2) * 12;
         const coverImage = item.cover ? '<img class="water-cover-image" src="' + escapeHtml(item.cover) + '" alt="" loading="lazy" onload="this.closest(\\'.water-cover\\').classList.add(\\'has-render\\')" onerror="this.remove()">' : '';
-        return '<button class="water-card" type="button" data-open-feed="' + index + '" data-instance-id="' + escapeHtml(item.instanceId) + '" style="--game-accent:' + escapeHtml(item.accent) + '; --cover-h:' + coverHeight + 'px;">' +
+        return '<button class="water-card" type="button" data-open-feed="' + index + '" data-instance-id="' + escapeHtml(item.instanceId) + '" style="--game-accent:' + escapeHtml(item.accent) + '; --cover-h:' + coverHeight + 'px; --i:' + (index % 16) + ';">' +
           '<span class="water-cover">' + coverImage + '<b>' + escapeHtml(item.glyph) + '</b><i>' + escapeHtml(item.kind) + '</i></span>' +
           '<span class="water-title">' + escapeHtml(item.title) + '</span>' +
           '<span class="water-summary">' + escapeHtml(item.summary) + '</span>' +
           '<span class="water-meta"><span>' + escapeHtml(item.author) + '</span><span>♡ ' + formatCount(item.likes) + '</span></span>' +
         '</button>';
+      }
+      let homeQuery = '';
+      let homeFilter = 'all';
+      const normalizeText = (value) => String(value || '').toLowerCase();
+      function textForHomeItem(item) {
+        return normalizeText([item.title, item.kind, item.summary, item.sourceGame, item.sourceTitle, item.author].join(' '));
+      }
+      function itemMatchesHome(item) {
+        if (!item) return false;
+        const text = textForHomeItem(item);
+        const queryOk = !homeQuery || text.includes(homeQuery);
+        let filterOk = true;
+        if (homeFilter === 'puzzle') filterOk = /sort|match|puzzle|logic|word|pin|block|sort|解谜|排序|消除|找茬|拼|针|块|锁|逃/i.test(text);
+        if (homeFilter === 'sim') filterOk = /sim|idle|office|parking|store|factory|模拟|经营|停车|仓|店|柜|厨房|农场/i.test(text);
+        if (homeFilter === 'io') filterOk = /(^|\\s|\\.)io(\\s|$)|\\.io|snake|arena|survival/i.test(text);
+        if (homeFilter === 'remix') filterOk = Boolean(item.remixed) || /remix|二创|改版/i.test(text);
+        return queryOk && filterOk;
+      }
+      function filterWaterfall() {
+        if (!waterfall) return;
+        let visibleCount = 0;
+        waterfall.querySelectorAll('.water-card[data-instance-id]').forEach((card) => {
+          const item = feedItems.find((candidate) => candidate.instanceId === card.dataset.instanceId);
+          const visible = itemMatchesHome(item);
+          card.hidden = !visible;
+          if (visible) {
+            card.style.setProperty('--i', String(visibleCount % 16));
+            visibleCount += 1;
+          }
+        });
+        if (homeEmpty) homeEmpty.hidden = visibleCount !== 0;
+        if (homeCount) homeCount.textContent = visibleCount + ' 款';
       }
       function syncWaterfallIndices() {
         if (!waterfall) return;
@@ -12931,6 +13030,7 @@ function indexPage() {
       function appendWaterfallCard(item, index) {
         if (!waterfall || !item || !item.file) return;
         waterfall.insertAdjacentHTML('beforeend', waterCardMarkup(item, index));
+        filterWaterfall();
       }
       function markupFor(item, index) {
         const eager = index < 2 || item.remixed;
@@ -12955,6 +13055,7 @@ function indexPage() {
         feed.insertAdjacentHTML('beforeend', manifestItems.map((item, index) => markupFor(item, baseItems.length + index)).join(''));
       }
       manifestItems.forEach((item, index) => appendWaterfallCard(item, baseItems.length + index));
+      filterWaterfall();
       function articleList() {
         return Array.from(feed.querySelectorAll('.feed-item'));
       }
@@ -13109,8 +13210,11 @@ function indexPage() {
       const draftBtn = document.getElementById('draftBtn');
       const deleteDraftBtn = document.getElementById('deleteDraftBtn');
       const remixClose = document.getElementById('remixClose');
+      const remixKicker = document.getElementById('remixKicker');
+      const remixPromptLabel = document.getElementById('remixPromptLabel');
       let progressTimer = 0;
       let progressStartedAt = 0;
+      let currentDraftMode = 'remix';
       function localSlug(value) {
         return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'remix';
       }
@@ -13170,7 +13274,7 @@ function indexPage() {
         if (!response.ok) throw new Error(text);
         return text ? JSON.parse(text) : {};
       }
-      async function pollDraftJob(jobId, initialJob) {
+      async function pollDraftJob(jobId, initialJob, statusBase) {
         let job = initialJob;
         while (true) {
           if (job) {
@@ -13179,7 +13283,7 @@ function indexPage() {
             if (job.status === 'error') throw new Error(job.error || job.message || '生成失败');
           }
           await sleep(850);
-          const response = await fetch('/api/remix/draft-jobs/' + encodeURIComponent(jobId), { cache: 'no-store' });
+          const response = await fetch(statusBase + encodeURIComponent(jobId), { cache: 'no-store' });
           job = await parseJsonResponse(response);
         }
       }
@@ -13200,14 +13304,38 @@ function indexPage() {
           return parseJsonResponse(fallback);
         }
         const job = await parseJsonResponse(response);
-        return pollDraftJob(job.job_id, job);
+        return pollDraftJob(job.job_id, job, '/api/remix/draft-jobs/');
+      }
+      async function createFakeDraftWithProgress(payload) {
+        setRemixProgress(5, '提交新游戏任务...');
+        const response = await fetch('/api/fake/draft-jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (response.status === 404) {
+          setRemixProgress(36, '旧版 Harness 生成中...');
+          const fallback = await fetch('/api/fake/draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return parseJsonResponse(fallback);
+        }
+        const job = await parseJsonResponse(response);
+        return pollDraftJob(job.job_id, job, '/api/fake/draft-jobs/');
       }
       function openRemixPanel(article) {
         const item = feedItems[articleList().indexOf(article)] || { file: article.dataset.src, title: article.querySelector('h2')?.textContent || 'Remix' };
+        currentDraftMode = 'remix';
         currentRemixArticle = article;
         currentRemixPromptKey = remixPromptKeyFor(item, article);
         currentDraft = null;
+        if (remixKicker) remixKicker.textContent = 'REMIX HARNESS';
         remixTitle.textContent = 'Remix ' + item.title;
+        if (remixPromptLabel) remixPromptLabel.textContent = '想怎么调整';
+        draftBtn.textContent = '生成调整';
+        remixPrompt.placeholder = '比如：改成霓虹夜市版，加入连击、倒计时和截图结果卡。';
         remixPrompt.value = remixPromptByFile.get(currentRemixPromptKey) || '';
         remixName.value = '';
         draftPreview.removeAttribute('src');
@@ -13219,17 +13347,38 @@ function indexPage() {
         remixModal.setAttribute('aria-hidden', 'false');
         setRemixStatus(harnessAvailable ? '输入一句调整，然后生成。' : 'Harness 服务未连接，当前会回退成本地假 Remix。');
       }
+      function openFakePanel() {
+        currentDraftMode = 'fake';
+        currentRemixArticle = null;
+        currentRemixPromptKey = '__fake_game__';
+        currentDraft = null;
+        if (remixKicker) remixKicker.textContent = 'FAKE GAME AGENT';
+        remixTitle.textContent = 'Fake 一款游戏';
+        if (remixPromptLabel) remixPromptLabel.textContent = '想 Fake 什么';
+        draftBtn.textContent = '生成新游戏';
+        remixPrompt.placeholder = '比如：做一个夜班仓库接单游戏，单手拖拽物品，30 秒结算，有截图结果卡。';
+        remixPrompt.value = remixPromptByFile.get(currentRemixPromptKey) || '';
+        remixName.value = '';
+        draftPreview.removeAttribute('src');
+        draftPreview.classList.remove('is-visible');
+        setRemixProgress(0, '');
+        publishStep.hidden = true;
+        publishBtn.disabled = true;
+        remixModal.classList.add('is-visible');
+        remixModal.setAttribute('aria-hidden', 'false');
+        setRemixStatus(harnessAvailable ? '输入玩法、题材和短局目标，然后从零 fake 一款。' : 'Harness 服务未连接。请先启动本地服务。');
+      }
       function closeRemixPanel() {
         remixModal.classList.remove('is-visible');
         remixModal.setAttribute('aria-hidden', 'true');
       }
       async function createHarnessDraft() {
-        if (!currentRemixArticle) return;
-        const item = feedItems[articleList().indexOf(currentRemixArticle)] || { file: currentRemixArticle.dataset.src };
+        if (currentDraftMode === 'remix' && !currentRemixArticle) return;
+        const item = currentDraftMode === 'remix' ? (feedItems[articleList().indexOf(currentRemixArticle)] || { file: currentRemixArticle.dataset.src }) : null;
         const promptText = remixPrompt.value.trim();
         if (currentRemixPromptKey) remixPromptByFile.set(currentRemixPromptKey, remixPrompt.value);
         if (!promptText) {
-          setRemixStatus('先写一句想怎么调整。');
+          setRemixStatus(currentDraftMode === 'fake' ? '先写一句想 fake 的玩法。' : '先写一句想怎么调整。');
           remixPrompt.focus();
           return;
         }
@@ -13239,17 +13388,19 @@ function indexPage() {
         setRemixProgress(12, '准备生成调整...');
         startProgressTicker();
         try {
-          currentDraft = await createDraftWithProgress({
-            source_file: item.file,
-            prompt_text: promptText,
-            voice_transcript: ''
-          });
+          currentDraft = currentDraftMode === 'fake'
+            ? await createFakeDraftWithProgress({ prompt_text: promptText, voice_transcript: '' })
+            : await createDraftWithProgress({
+                source_file: item.file,
+                prompt_text: promptText,
+                voice_transcript: ''
+              });
           draftPreview.src = currentDraft.preview_url;
           draftPreview.classList.add('is-visible');
-          remixName.value = currentDraft.title || item.title + ' Remix';
+          remixName.value = currentDraft.title || (item ? item.title + ' Remix' : 'New Fake Game');
           publishStep.hidden = false;
           publishBtn.disabled = false;
-          setRemixProgress(100, '调整完成，取个名字后发布。');
+          setRemixProgress(100, currentDraftMode === 'fake' ? '新游戏完成，取个名字后发布。' : '调整完成，取个名字后发布。');
         } catch (error) {
           setRemixStatus('生成失败：' + formatRemixError(error));
         } finally {
@@ -13258,7 +13409,7 @@ function indexPage() {
         }
       }
       async function publishHarnessDraft() {
-        if (!currentDraft || !currentRemixArticle) return;
+        if (!currentDraft) return;
         publishBtn.disabled = true;
         setRemixStatus('正在发布到 output...');
         try {
@@ -13276,13 +13427,23 @@ function indexPage() {
           if (!response.ok) throw new Error(await response.text());
           const result = await response.json();
           const newItem = itemFromManifest(result.manifest_entry || {}, feedItems.length);
-          const index = articleList().indexOf(currentRemixArticle);
-          feedItems.splice(index + 1, 0, newItem);
-          currentRemixArticle.insertAdjacentHTML('afterend', markupFor(newItem, index + 1));
-          appendWaterfallCard(newItem, index + 1);
+          let inserted = null;
+          let nextIndex = feedItems.length;
+          if (currentDraftMode === 'remix' && currentRemixArticle) {
+            const index = articleList().indexOf(currentRemixArticle);
+            nextIndex = index + 1;
+            feedItems.splice(nextIndex, 0, newItem);
+            currentRemixArticle.insertAdjacentHTML('afterend', markupFor(newItem, nextIndex));
+            inserted = currentRemixArticle.nextElementSibling;
+          } else {
+            feedItems.push(newItem);
+            feed.insertAdjacentHTML('beforeend', markupFor(newItem, nextIndex));
+            inserted = articleList()[nextIndex];
+          }
+          appendWaterfallCard(newItem, nextIndex);
           syncWaterfallIndices();
-          const inserted = currentRemixArticle.nextElementSibling;
           window.requestAnimationFrame(() => {
+            if (feedScreen.hidden) openFeedAt(nextIndex);
             inserted.scrollIntoView({ behavior: 'smooth', block: 'start' });
             loadFrame(inserted);
             updateActive();
@@ -13326,11 +13487,32 @@ function indexPage() {
       draftBtn.addEventListener('click', createHarnessDraft);
       publishBtn.addEventListener('click', publishHarnessDraft);
       deleteDraftBtn.addEventListener('click', deleteHarnessDraft);
+      if (homeSearch) {
+        homeSearch.addEventListener('input', () => {
+          homeQuery = normalizeText(homeSearch.value.trim());
+          filterWaterfall();
+        });
+      }
+      if (homeTags) {
+        homeTags.addEventListener('click', (event) => {
+          const tag = event.target.closest('[data-filter]');
+          if (!tag) return;
+          homeFilter = tag.dataset.filter || 'all';
+          homeTags.querySelectorAll('[data-filter]').forEach((button) => button.classList.toggle('active', button === tag));
+          filterWaterfall();
+        });
+      }
       homeScreen.addEventListener('click', (event) => {
+        const fakeCreate = event.target.closest('[data-fake-create]');
         const start = event.target.closest('[data-start-feed]');
+        const feature = event.target.closest('[data-feature-open]');
         const card = event.target.closest('[data-open-feed]');
-        if (start) {
+        if (fakeCreate) {
+          openFakePanel();
+        } else if (start) {
           openFeedAt(0);
+        } else if (feature) {
+          openFeedAt(Number(feature.dataset.featureOpen || 0));
         } else if (card) {
           openFeedAt(Number(card.dataset.openFeed || 0));
         }
@@ -13360,6 +13542,8 @@ function indexPage() {
         remix.saves = Math.max(1, Math.floor((source.saves || 1) * .48));
         feedItems.splice(index + 1, 0, remix);
         article.insertAdjacentHTML('afterend', markupFor(remix, index + 1));
+        appendWaterfallCard(remix, index + 1);
+        syncWaterfallIndices();
         showRemixDock(remix);
         const inserted = article.nextElementSibling;
         window.requestAnimationFrame(() => {
@@ -13426,6 +13610,7 @@ function indexPage() {
           articles[Math.min(articles.length - 1, current + 1)].scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         if (event.key === 'ArrowUp') articles[Math.max(0, current - 1)].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (event.key.toLowerCase() === 'f') openFakePanel();
         if (event.key.toLowerCase() === 'r') {
           if (harnessAvailable) openRemixPanel(articles[current]);
           else insertRemix(articles[current]);
@@ -13447,7 +13632,10 @@ function indexPage() {
         remixes: remixCount,
         publishedRemixes: publishedRemixes.length,
         harnessAvailable,
+        homeFilter,
+        homeQuery,
         supportsRemix: true,
+        supportsFakeCreate: true,
       });
     })();
   </script>

@@ -2,7 +2,11 @@
 
 ## Project Overview
 
-Web Printer is a local webpage reconstruction and artifact generation pipeline. It accepts an intent plus inputs such as URLs, screenshots, or MHTML files, then writes self-contained HTML or multi-file artifacts under `output/`.
+Web Printer is a local frontend artifact generation project. It has three active surfaces:
+
+- A webpage reconstruction pipeline that accepts an intent plus URLs, screenshots, or MHTML files, then writes self-contained HTML or multi-file artifacts under `output/`.
+- A generated Fake Game Library made from offline, mobile-first fake game pages and a showcase homepage.
+- A local Fake / Remix harness that creates from-scratch game drafts or remixes existing game artifacts, then publishes them back into `output/` and the remix manifest.
 
 The main Python pipeline is:
 
@@ -20,6 +24,12 @@ Core modules:
 - `src/intent_planner.py` builds an intent plan using LangChain when enabled, with a rule-based fallback.
 - `src/artifact_generator.py` prompts the model and parses generated files.
 - `src/pipeline.py` orchestrates the end-to-end run and writes `run_report.json`.
+
+Fake-library source of truth:
+
+- `tools/generate_fake_library.mjs` writes `output/index.html`, game pages, `fake_manifest.json`, `remix_manifest.json`, and `run_report.json`.
+- `tools/remix_harness_server.py` serves the local showcase and implements `/api/fake/*` plus `/api/remix/*`.
+- `tests/verify_fake_library.mjs` is the primary static acceptance gate for generated game artifacts.
 
 ## Working Directory Notes
 

@@ -193,6 +193,11 @@ for (const file of expectedFiles) {
     if (!html.includes('/api/remix/draft')) failures.push('index.html: missing harness draft API integration');
     if (!html.includes('/api/remix/draft-jobs')) failures.push('index.html: missing async harness draft job integration');
     if (!html.includes('/api/remix/publish')) failures.push('index.html: missing harness publish API integration');
+    if (!html.includes('/api/fake/draft')) failures.push('index.html: missing from-scratch fake draft API integration');
+    if (!html.includes('/api/fake/draft-jobs')) failures.push('index.html: missing async from-scratch fake job integration');
+    if (!html.includes('data-fake-create')) failures.push('index.html: missing visible Fake-create action');
+    if (!html.includes('openFakePanel')) failures.push('index.html: missing Fake-create modal flow');
+    if (!html.includes('supportsFakeCreate: true')) failures.push('index.html: home text state should advertise Fake-create support');
     if (!html.includes('formatRemixError')) failures.push('index.html: missing friendly Remix network error handling');
     if (html.includes("error.message ? error.message : error")) {
       failures.push('index.html: Remix errors should not expose raw Failed to fetch');

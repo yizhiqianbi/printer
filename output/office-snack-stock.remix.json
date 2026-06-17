@@ -9,7 +9,7 @@
     "goods-sort-fake",
     "office-snack-stock"
   ],
-  "created_at": "2026-06-16T01:38:56.108Z",
+  "created_at": "2026-06-17T05:50:57.731Z",
   "prompt": {
     "text": "把 Goods Sort 式货架理货盘改成办公室茶水间补货主题，商品换成冷萃、茶包、饼干、杯面和气泡水，保留前排取货、后排补位和七格三件即清。",
     "voice_transcript": ""

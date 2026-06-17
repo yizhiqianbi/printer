@@ -113,6 +113,20 @@ def normalize_agent_description(value: Optional[Dict[str, Any]]) -> Dict[str, An
     return data
 
 
+def safe_manifest_color(value: Any, default: str = "#ffcf33") -> str:
+    text = str(value or "").strip()
+    if re.fullmatch(r"#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?(?:[0-9a-fA-F]{2})?", text):
+        return text
+    return default
+
+
+def safe_manifest_text(value: Any, default: str, limit: int = 12) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return default
+    return text[:limit]
+
+
 def extract_artifact_metadata(html: str) -> Dict[str, Any]:
     match = re.search(r"window\.__PRINTER_ARTIFACT__\s*=\s*(\{.*?\});", html, re.DOTALL)
     if not match:
@@ -164,7 +178,7 @@ def parse_model_json(text: str) -> Dict[str, Any]:
 
 def parse_model_payload(text: str) -> Dict[str, Any]:
     raw = text.strip()
-    meta_match = re.search(r"<remix_meta>\s*(\{.*?\})\s*</remix_meta>", raw, re.DOTALL)
+    meta_match = re.search(r"<(?:remix|fake)_meta>\s*(\{.*?\})\s*</(?:remix|fake)_meta>", raw, re.DOTALL)
     html_start = raw.find("<!DOCTYPE html>")
     if meta_match and html_start >= 0:
         try:
@@ -172,12 +186,16 @@ def parse_model_payload(text: str) -> Dict[str, Any]:
         except json.JSONDecodeError as exc:
             raise ValueError("model response remix metadata was invalid JSON") from exc
         html = raw[html_start:].strip()
-        return {
+        payload = {
             "title": meta.get("title", "Remix"),
             "slug_suggestion": meta.get("slug_suggestion") or meta.get("slug") or meta.get("title", "remix"),
             "html": html,
             "agent_description": meta.get("agent_description", {}),
         }
+        for optional_key in ("kind", "accent", "glyph", "summary"):
+            if optional_key in meta:
+                payload[optional_key] = meta[optional_key]
+        return payload
 
     try:
         return parse_model_json(text)
@@ -214,6 +232,13 @@ class RemixContext:
     prompt_text: str
     voice_transcript: str
     screenshot_png: Optional[bytes]
+
+
+@dataclass
+class FakeGameContext:
+    prompt_text: str
+    voice_transcript: str
+    library_summary: List[Dict[str, Any]]
 
 
 class OpenAIRemixGenerator:
@@ -302,6 +327,52 @@ one_liner, core_loop, controls, mechanics, visual_language, state_model, share_h
         return parse_model_payload(raw)
 
 
+class OpenAIFakeGameGenerator(OpenAIRemixGenerator):
+    def generate_fake_game(self, context: FakeGameContext) -> Dict[str, Any]:
+        library_json = json.dumps(context.library_summary[:24], ensure_ascii=False, indent=2)
+        prompt = f"""你是一个浏览器小游戏 fake-game agent。请从零生成一款新的单文件 HTML 竖屏小游戏，不要基于任何现有源文件 remix。
+
+硬性要求:
+- 优先输出 `<fake_meta>...</fake_meta>` 加 raw HTML，不要 markdown，不要解释。
+- fake_meta 内是 JSON，字段: title, slug_suggestion, kind, accent, glyph, agent_description。
+- fake_meta 后直接输出完整 HTML；不要把 HTML 放进 JSON 字符串。
+- 如果你无法使用 fake_meta 格式，也可以输出 JSON 对象，字段: title, slug_suggestion, html, kind, accent, glyph, agent_description。
+- html 必须是完整单文件 HTML，包含 <!DOCTYPE html>。
+- html 必须自包含 CSS/JS，无 CDN、无外链、无复制商标素材。
+- html 必须保留 data-printer-artifact="fake-game-library"。
+- html 必须包含 class="phone-shell"。
+- html 必须设置 window.__PRINTER_ARTIFACT__。
+- html 必须暴露 window.render_game_to_text() 和 window.advanceTime(ms)。
+- 游戏必须有一个清晰可玩的核心循环，适合手机竖屏，优先 20-60 秒短局。
+- 为了避免生成慢和响应截断，HTML 尽量控制在 18KB 到 32KB。
+
+agent_description 必须包含:
+one_liner, core_loop, controls, mechanics, visual_language, state_model, share_hook, known_constraints, next_evolution_hooks。
+
+输出格式示例:
+<fake_meta>{{"title":"短标题","slug_suggestion":"short-fake-game","kind":"Fake","accent":"#ffcf33","glyph":"造","agent_description":{{"one_liner":"一句话", "core_loop":"...", "controls":"...", "mechanics":["..."], "visual_language":"...", "state_model":"...", "share_hook":"...", "known_constraints":["离线单文件","移动竖屏","无外链"], "next_evolution_hooks":["..."]}}}}</fake_meta>
+<!DOCTYPE html>
+<html lang="zh-CN">...</html>
+
+用户文本 prompt:
+{context.prompt_text}
+
+用户语音转录:
+{context.voice_transcript}
+
+当前赝品库参考，不要重复这些已有题材和玩法:
+{library_json}
+"""
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+            temperature=self.temperature,
+            max_tokens=int(os.environ.get("OPENAI_REMIX_MAX_TOKENS", "20000")),
+        )
+        raw = response.choices[0].message.content or ""
+        return parse_model_payload(raw)
+
+
 class OpenAITranscriber:
     def __init__(self) -> None:
         from openai import OpenAI
@@ -347,6 +418,7 @@ class RemixHarness:
         self,
         output_dir: Path,
         generator: Optional[Any] = None,
+        fake_generator: Optional[Any] = None,
         transcriber: Optional[Any] = None,
         screenshot_provider: Optional[Callable[[Path], Optional[bytes]]] = None,
     ) -> None:
@@ -355,6 +427,7 @@ class RemixHarness:
         self.drafts_dir = self.output_dir / ".remix_drafts"
         self.drafts_dir.mkdir(parents=True, exist_ok=True)
         self.generator = generator
+        self.fake_generator = fake_generator
         self.transcriber = transcriber
         self.screenshot_provider = screenshot_provider
 
@@ -462,6 +535,103 @@ class RemixHarness:
             "agent_description": agent_description,
         }
 
+    def create_fake_draft(
+        self,
+        prompt_text: str,
+        voice_transcript: str,
+        progress: Optional[Callable[[int, str], None]] = None,
+    ) -> Dict[str, Any]:
+        def report(percent: int, message: str) -> None:
+            if progress:
+                progress(percent, message)
+
+        if not (prompt_text or voice_transcript).strip():
+            raise ValueError("prompt_text or voice_transcript is required")
+
+        report(10, "读取赝品库上下文...")
+        base_manifest = load_json(self.output_dir / "fake_manifest.json", {"games": []})
+        remix_manifest = self._load_remix_manifest()
+        library_summary = [
+            {
+                "title": item.get("title"),
+                "kind": item.get("kind"),
+                "summary": item.get("summary"),
+                "source_game": item.get("source_game") or item.get("source_file"),
+            }
+            for item in [*base_manifest.get("games", []), *remix_manifest.get("remixes", [])]
+        ]
+        report(28, "准备从零 Fake 输入...")
+        generator = self.fake_generator or OpenAIFakeGameGenerator()
+        report(42, "调用模型生成新游戏 HTML...")
+        generated = generator.generate_fake_game(
+            FakeGameContext(
+                prompt_text=prompt_text,
+                voice_transcript=voice_transcript,
+                library_summary=library_summary,
+            )
+        )
+        report(76, "检查模型输出...")
+        html = str(generated.get("html", ""))
+        title = str(generated.get("title") or "Untitled Fake Game")
+        slug_suggestion = sanitize_slug(str(generated.get("slug_suggestion") or title))
+        html = self._patch_published_artifact_metadata(
+            html=html,
+            source_file="__scratch__.html",
+            prompt_text=prompt_text,
+            description_file=f"{slug_suggestion}.remix.json",
+            extra_metadata={"creation_mode": "scratch"},
+        )
+        validate_remix_html(html)
+        report(88, "写入从零草稿预览...")
+        agent_description = normalize_agent_description(generated.get("agent_description"))
+        draft_id = "draft-" + datetime.now().strftime("%Y%m%d%H%M%S") + "-" + uuid.uuid4().hex[:8]
+        draft_dir = self._safe_draft_dir(draft_id)
+        draft_dir.mkdir(parents=True, exist_ok=False)
+        (draft_dir / "index.html").write_text(html, encoding="utf-8")
+        fake_kind = safe_manifest_text(generated.get("kind"), "Fake")
+        draft_meta = {
+            "draft_id": draft_id,
+            "origin": "scratch",
+            "source_file": "__scratch__.html",
+            "source_metadata": {
+                "game": {
+                    "id": slug_suggestion,
+                    "title": title,
+                    "kind": fake_kind,
+                    "source_game": "从零 fake 生成",
+                    "mobile_portrait": True,
+                }
+            },
+            "parent_description": {
+                "schema_version": 1,
+                "slug": "scratch",
+                "title": "From Scratch",
+                "source_file": "__scratch__.html",
+                "lineage": ["scratch"],
+                "agent_description": agent_description,
+            },
+            "prompt": {"text": prompt_text, "voice_transcript": voice_transcript},
+            "title": title,
+            "slug_suggestion": slug_suggestion,
+            "agent_description": agent_description,
+            "manifest": {
+                "kind": fake_kind,
+                "accent": safe_manifest_color(generated.get("accent")),
+                "glyph": safe_manifest_text(generated.get("glyph"), "造", 2),
+                "summary": safe_manifest_text(generated.get("summary"), agent_description.get("one_liner", ""), 120),
+            },
+            "created_at": utc_now(),
+        }
+        write_json(draft_dir / "draft.remix.json", draft_meta)
+        report(100, "新游戏草稿预览已准备好。")
+        return {
+            "draft_id": draft_id,
+            "preview_url": f"/.remix_drafts/{draft_id}/index.html",
+            "title": title,
+            "slug_suggestion": slug_suggestion,
+            "agent_description": agent_description,
+        }
+
     def publish_draft(
         self,
         draft_id: str,
@@ -485,8 +655,9 @@ class RemixHarness:
             raise FileExistsError(f"manifest already contains remix: {cleaned_slug}")
 
         draft_meta = load_json(meta_path, {})
+        origin = draft_meta.get("origin", "remix")
         source_file = draft_meta.get("source_file", "")
-        parent_slug = self._parent_slug(source_file, draft_meta.get("parent_description", {}))
+        parent_slug = "scratch" if origin == "scratch" else self._parent_slug(source_file, draft_meta.get("parent_description", {}))
         parent_lineage = draft_meta.get("parent_description", {}).get("lineage")
         lineage = list(parent_lineage) if isinstance(parent_lineage, list) and parent_lineage else [parent_slug]
         if cleaned_slug not in lineage:
@@ -498,15 +669,21 @@ class RemixHarness:
             source_file=source_file,
             prompt_text=draft_meta.get("prompt", {}).get("text", ""),
             description_file=f"{cleaned_slug}.remix.json",
+            extra_metadata={"creation_mode": "scratch"} if origin == "scratch" else None,
         )
         validate_remix_html(html)
         target_html.write_text(html, encoding="utf-8")
         normalized_description = normalize_agent_description(agent_description)
+        manifest_defaults = draft_meta.get("manifest", {}) if isinstance(draft_meta.get("manifest"), dict) else {}
+        manifest_kind = safe_manifest_text(manifest_defaults.get("kind"), "Fake" if origin == "scratch" else "Remix")
+        manifest_accent = safe_manifest_color(manifest_defaults.get("accent"), "#ffcf33" if origin == "scratch" else "#22f4ee")
+        manifest_glyph = safe_manifest_text(manifest_defaults.get("glyph"), "造" if origin == "scratch" else "改", 2)
         description_payload = {
             "schema_version": 1,
-            "id": "remix-" + uuid.uuid4().hex[:12],
+            "id": ("fake-" if origin == "scratch" else "remix-") + uuid.uuid4().hex[:12],
             "slug": cleaned_slug,
             "title": title,
+            "origin": origin,
             "source_file": source_file,
             "parent_slug": parent_slug,
             "lineage": lineage,
@@ -524,15 +701,16 @@ class RemixHarness:
             "file": f"{cleaned_slug}.html",
             "description_file": f"{cleaned_slug}.remix.json",
             "title": title,
-            "kind": "Remix",
+            "kind": manifest_kind,
             "source_file": source_file,
             "parent_slug": parent_slug,
             "lineage": lineage,
-            "summary": normalized_description.get("one_liner", ""),
-            "accent": "#22f4ee",
-            "glyph": "改",
+            "summary": manifest_defaults.get("summary") or normalized_description.get("one_liner", ""),
+            "accent": manifest_accent,
+            "glyph": manifest_glyph,
             "created_at": description_payload["created_at"],
             "agent_description": normalized_description,
+            "origin": origin,
         }
         manifest["remixes"].append(manifest_entry)
         self._write_remix_manifest(manifest)
@@ -612,6 +790,7 @@ class RemixHarness:
         source_file: str,
         prompt_text: str,
         description_file: str,
+        extra_metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
         match = re.search(r"(window\.__PRINTER_ARTIFACT__\s*=\s*)(\{.*?\})(;)", html, re.DOTALL)
         if not match:
@@ -623,12 +802,19 @@ class RemixHarness:
         data["parent_file"] = source_file
         data["remix_prompt"] = prompt_text
         data["agent_description_file"] = description_file
+        if extra_metadata:
+            data.update(extra_metadata)
         replacement = match.group(1) + json.dumps(data, ensure_ascii=False) + match.group(3)
         return html[: match.start()] + replacement + html[match.end() :]
 
 
 class DraftRequest(BaseModel):
     source_file: str
+    prompt_text: str = ""
+    voice_transcript: str = ""
+
+
+class FakeDraftRequest(BaseModel):
     prompt_text: str = ""
     voice_transcript: str = ""
 
@@ -735,8 +921,62 @@ def create_app(harness: RemixHarness) -> FastAPI:
         threading.Thread(target=run_job, daemon=True).start()
         return read_draft_job(job_id) or {"job_id": job_id, "status": "queued", "percent": 0}
 
+    @app.post("/api/fake/draft")
+    def fake_draft(request: FakeDraftRequest) -> Dict[str, Any]:
+        try:
+            return harness.create_fake_draft(
+                prompt_text=request.prompt_text,
+                voice_transcript=request.voice_transcript,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    @app.post("/api/fake/draft-jobs")
+    def create_fake_draft_job(request: FakeDraftRequest) -> Dict[str, Any]:
+        job_id = "fake-job-" + datetime.now().strftime("%Y%m%d%H%M%S") + "-" + uuid.uuid4().hex[:8]
+        update_draft_job(job_id, status="queued", percent=3, message="已加入新游戏生成队列...")
+
+        def run_job() -> None:
+            def report(percent: int, message: str) -> None:
+                update_draft_job(job_id, status="running", percent=percent, message=message)
+
+            try:
+                report(5, "开始从零 Fake 一款游戏...")
+                draft_result = harness.create_fake_draft(
+                    prompt_text=request.prompt_text,
+                    voice_transcript=request.voice_transcript,
+                    progress=report,
+                )
+                update_draft_job(
+                    job_id,
+                    status="done",
+                    percent=100,
+                    message="新游戏草稿完成，取个名字后发布。",
+                    draft=draft_result,
+                )
+            except Exception as exc:
+                update_draft_job(
+                    job_id,
+                    status="error",
+                    percent=100,
+                    message="生成失败。",
+                    error=str(exc),
+                )
+
+        threading.Thread(target=run_job, daemon=True).start()
+        return read_draft_job(job_id) or {"job_id": job_id, "status": "queued", "percent": 0}
+
     @app.get("/api/remix/draft-jobs/{job_id}")
     def draft_job_status(job_id: str) -> Dict[str, Any]:
+        job = read_draft_job(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail=f"draft job not found: {job_id}")
+        return job
+
+    @app.get("/api/fake/draft-jobs/{job_id}")
+    def fake_draft_job_status(job_id: str) -> Dict[str, Any]:
         job = read_draft_job(job_id)
         if not job:
             raise HTTPException(status_code=404, detail=f"draft job not found: {job_id}")

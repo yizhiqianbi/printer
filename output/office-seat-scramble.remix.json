@@ -9,7 +9,7 @@
     "seat-away-fake",
     "office-seat-scramble"
   ],
-  "created_at": "2026-06-16T01:38:56.108Z",
+  "created_at": "2026-06-17T05:50:57.731Z",
   "prompt": {
     "text": "把 Seat Away 式挪座局改成办公室散场主题，乘客换成工牌，座椅换成工位椅，保留只沿箭头滑出通道的短线决策。",
     "voice_transcript": ""

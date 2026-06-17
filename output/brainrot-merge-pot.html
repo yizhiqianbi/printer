@@ -254,13 +254,13 @@
     </main>
   </div>
   <script>
-    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏 Playable Catalog：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-06-16T01:38:56.108Z","game":{"id":"brainrot-merge-pot","file":"brainrot-merge-pot.html","cover":"covers/brainrot-merge-pot.png","title":"脑腐合成锅","kind":"合成","source_game":"Brainrot Merge / 合成大西瓜式掉落合成","mobile_portrait":true,"canvas_playfield":true},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 Playable Catalog","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":58,"components":14,"interactions":20,"pages":3,"data_flow":9}};
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏 Playable Catalog：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-06-17T05:50:57.731Z","game":{"id":"brainrot-merge-pot","file":"brainrot-merge-pot.html","cover":"covers/brainrot-merge-pot.png","title":"脑腐合成锅","kind":"合成","source_game":"Brainrot Merge / 合成大西瓜式掉落合成","mobile_portrait":true,"canvas_playfield":true},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 Playable Catalog","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":58,"components":14,"interactions":20,"pages":3,"data_flow":9}};
     (() => {
       
       const canvas = document.getElementById('gameCanvas');
       const ctx = canvas.getContext('2d');
       const THEME = {"heading":"脑腐合成锅","subheading":"热点复刻 · 顶部投放、同类升级、堆到警戒线就翻锅","scoreLabel":"脑腐值","queueLabel":"下一个","winLabel":"脑腐值","loseLabel":"翻锅线","dropLabel":"左右挪动预览线，点一下把怪物丢进锅里。","jarFill":"rgba(255,154,61,.14)","jarStroke":"#ff9a3d","bgA":"#2d1718","bgB":"#12090d","accent":"#ff7a59","line":"#ffcf8d","tiers":[{"label":"拖","glyph":"拖","fill":"#ffd166","r":19},{"label":"啦","glyph":"啦","fill":"#ff9f68","r":24},{"label":"啵","glyph":"啵","fill":"#ff7aa2","r":28},{"label":"咚","glyph":"咚","fill":"#c084fc","r":33},{"label":"锅","glyph":"锅","fill":"#7dd3fc","r":38},{"label":"王","glyph":"王","fill":"#a3e635","r":44}]};
-      const seedBase = 20260616;
+      const seedBase = 20260617;
       const bucket = { x: 57, y: 108, w: 276, h: 360 };
       const loseLine = 160;
       const gravity = 0.12;
