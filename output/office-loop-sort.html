@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="icon" href="data:,">
+  <title>夜班传单回路 - Arcade Atelier Remix</title>
+  <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
+  <style>
+    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #9cefd8; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
+    body { display: grid; place-items: start center; overscroll-behavior: none; }
+    button, input { font: inherit; min-width: 0; }
+    button, a, input { touch-action: manipulation; }
+    .phone-shell { width: min(100vw, 430px); min-height: 100svh; background:
+      radial-gradient(circle at 50% 4%, rgba(255,59,134,.42), transparent 34%),
+      radial-gradient(circle at 10% 24%, rgba(34,244,238,.16), transparent 26%),
+      linear-gradient(180deg, #160611 0, #080509 42%, #030303 100%); border-left: 1px solid var(--line); border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; }
+    .app-top { position: sticky; top: 0; z-index: 5; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(14px, env(safe-area-inset-left)); border-bottom: 1px solid rgba(255,255,255,.08); background: linear-gradient(to bottom, rgba(0,0,0,.78), rgba(0,0,0,.28)); color: #fff; backdrop-filter: blur(16px); }
+    .brand { color: inherit; text-decoration: none; font-weight: 900; }
+    .app-top a:last-child { color: #fff; opacity: .72; text-decoration: none; font-weight: 900; font-size: 13px; }
+    .screen { padding: 12px 12px calc(18px + env(safe-area-inset-bottom)); flex: 1; min-width: 0; }
+    .play-screen { display: flex; flex-direction: column; min-height: calc(100svh - 50px); min-width: 0; }
+    .hero { min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; padding: 12px 2px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .play-hero { min-height: 88px; }
+    .kicker { margin: 0; color: var(--cyan); font-size: 11px; font-weight: 1000; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(34px, 11vw, 54px); line-height: .88; letter-spacing: 0; color: #fff; text-shadow: 0 6px 28px rgba(255,59,134,.2); }
+    h2 { margin: 0 0 12px; font-size: clamp(25px, 8vw, 36px); line-height: 1; letter-spacing: 0; }
+    .summary { margin: 0; color: rgba(255,255,255,.62); line-height: 1.42; font-size: 13px; }
+    .game-stage { display: grid; gap: 10px; padding-top: 10px; touch-action: none; flex: 1; align-content: start; min-width: 0; }
+    .game-stage > * { min-width: 0; max-width: 100%; }
+    .panel { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 14px; box-shadow: 0 18px 54px rgba(0,0,0,.28); backdrop-filter: blur(18px); color: #fff; min-width: 0; max-width: 100%; }
+    .compact { padding: 12px; }
+    .primary { min-height: 54px; border: 0; border-radius: 999px; padding: 0 18px; background: linear-gradient(135deg, var(--accent), #ff6aa8); color: #fff; font-weight: 1000; cursor: pointer; box-shadow: 0 12px 30px rgba(255,59,134,.28); }
+    .primary:disabled, button:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
+    .hidden { display: none !important; }
+    .play-canvas { width: 100%; height: auto; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: #09070d; display: block; touch-action: none; box-shadow: 0 24px 70px rgba(0,0,0,.34); }
+    .play-canvas.short { aspect-ratio: 390 / 320; }
+    html.embed-mode, html.embed-mode body { min-height: 100%; background: #000; }
+    html.embed-mode body { display: block; overflow: hidden; }
+    html.embed-mode .phone-shell { width: 100vw; min-height: 100svh; border: 0; background: #000; box-shadow: none; }
+    html.embed-mode .app-top, html.embed-mode .play-hero { display: none; }
+    html.embed-mode .screen { padding: 0 10px 10px; }
+    html.embed-mode .play-screen { min-height: 100svh; }
+    html.embed-mode .game-stage { padding-top: 10px; gap: 8px; }
+    html.embed-mode .play-canvas { max-height: calc(100svh - 116px); object-fit: contain; }
+    html.embed-mode .panel { box-shadow: none; }
+    .stack { display: grid; gap: 10px; }
+    .stat-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: rgba(255,255,255,.84); font-size: 13px; font-weight: 900; }
+    .button-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .choice, .shop-row, .chip, .plot { border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; min-height: 58px; padding: 12px 14px; text-align: left; font-weight: 850; cursor: pointer; }
+    .choice:active, .chip:active, .plot:active, .big-tap:active { transform: scale(.98); }
+    .meter { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+    .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--accent)); }
+    .result-card { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 14px; color: #fff; }
+    .bars { display: grid; gap: 8px; margin: 12px 0; }
+    .bars span { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 8px; font-size: 12px; }
+    .bars i { display: block; height: 9px; border-radius: 999px; background: var(--accent); }
+    .tray { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .tray span { aspect-ratio: 1; border: 1px dashed rgba(255,255,255,.24); border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.09); font-weight: 900; }
+    .triple-playfield { gap: 10px; }
+    .triple-targets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .triple-chip { min-height: 56px; border: 1px solid var(--chip-edge, rgba(255,255,255,.14)); border-radius: 14px; padding: 8px 9px; background: color-mix(in srgb, var(--chip-fill, rgba(255,255,255,.14)), rgba(255,255,255,.08) 76%); color: var(--chip-ink, #fff); display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 6px; }
+    .triple-chip b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 9px; background: rgba(255,255,255,.3); font-size: 13px; }
+    .triple-chip i, .triple-chip u { font-style: normal; text-decoration: none; font-weight: 900; }
+    .triple-chip i { font-size: 11px; }
+    .triple-chip u { font-size: 15px; }
+    .triple-board { position: relative; min-height: 346px; border: 1px solid rgba(255,255,255,.16); border-radius: 20px; background: radial-gradient(circle at 50% 16%, var(--pile-glow, rgba(125,214,255,.18)), transparent 34%), linear-gradient(180deg, var(--board-top, #08131f), var(--board-bottom, #050a12)); overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 20px 50px rgba(0,0,0,.28); }
+    .triple-board::after { content: ""; position: absolute; left: 18px; right: 18px; bottom: 18px; height: 46px; border-radius: 50%; background: rgba(0,0,0,.22); filter: blur(12px); pointer-events: none; }
+    .triple-item { position: absolute; width: 68px; height: 76px; margin-left: -34px; margin-top: -38px; border: 0; background: transparent; padding: 0; display: grid; place-items: center; cursor: pointer; }
+    .triple-item-glyph { width: 64px; height: 64px; border: 2px solid rgba(255,255,255,.22); border-radius: 18px; display: grid; place-items: center; font-size: 27px; font-weight: 1000; box-shadow: 0 14px 24px rgba(0,0,0,.22); }
+    .triple-item-tag { margin-top: -10px; min-width: 42px; border-radius: 999px; padding: 3px 8px; background: rgba(0,0,0,.48); color: rgba(255,255,255,.88); font-size: 10px; font-weight: 900; }
+    .triple-item.top .triple-item-glyph { transform: translateY(-4px); box-shadow: 0 18px 28px rgba(0,0,0,.32); }
+    .triple-item.locked { cursor: not-allowed; }
+    .triple-item.locked .triple-item-glyph { filter: saturate(.55) brightness(.82); opacity: .72; }
+    .triple-tray-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin: 10px 0 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .triple-tray { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; background: color-mix(in srgb, var(--tray-glow, rgba(255,255,255,.08)), rgba(255,255,255,.05) 62%); }
+    .triple-slot { min-height: 38px; border-radius: 12px; border: 1px dashed rgba(255,255,255,.2); display: grid; place-items: center; font-size: 18px; font-weight: 1000; }
+    .triple-slot.empty { background: rgba(255,255,255,.04); }
+    .triple-slot.filled { border-style: solid; box-shadow: inset 0 -6px 10px rgba(0,0,0,.12); }
+    .goods-targets { margin-bottom: 10px; }
+    .goods-shelves { display: grid; gap: 10px; }
+    .goods-shelf { border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 10px; background: rgba(255,255,255,.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .goods-shelf-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .goods-lane-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .goods-lane { position: relative; min-height: 108px; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 10px 8px 8px; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); color: #fff; display: grid; align-content: space-between; justify-items: center; gap: 8px; overflow: hidden; cursor: pointer; }
+    .goods-lane::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 10px; height: 9px; border-radius: 999px; background: rgba(0,0,0,.22); filter: blur(7px); }
+    .goods-lane.empty { opacity: .56; cursor: default; }
+    .goods-backdrop { position: absolute; inset: 0; background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--lane-glow), white 18%), transparent 34%); opacity: .8; pointer-events: none; }
+    .goods-item { position: relative; z-index: 1; width: 70px; min-height: 72px; border: 2px solid rgba(255,255,255,.18); border-radius: 18px; display: grid; place-items: center; gap: 3px; padding: 8px 6px; box-shadow: 0 16px 24px rgba(0,0,0,.22); }
+    .goods-item b { font-size: 26px; line-height: 1; }
+    .goods-item i { font-style: normal; font-size: 11px; font-weight: 900; }
+    .goods-lane u, .goods-empty-copy { position: relative; z-index: 1; text-decoration: none; font-size: 11px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .box-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .color-box { min-height: 78px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 10px; background: color-mix(in srgb, var(--box-fill), rgba(255,255,255,.08) 76%); display: grid; gap: 8px; }
+    .color-box b { font-size: 13px; }
+    .color-box span { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .color-box i { min-height: 28px; border-radius: 10px; display: grid; place-items: center; font-style: normal; font-weight: 1000; background: rgba(0,0,0,.22); color: #fff; }
+    .big-tap { min-height: 118px; border: 0; border-radius: 28px; background: linear-gradient(145deg, var(--accent), #ff8ab9); color: #fff; display: grid; place-items: center; gap: 4px; font-weight: 1000; box-shadow: inset 0 -16px 30px rgba(0,0,0,.18), 0 20px 60px rgba(255,59,134,.32); }
+    .big-tap.dark { background: linear-gradient(145deg, #151018, #31112a 54%, var(--accent)); color: #fff; }
+    .big-tap b { font-size: 32px; }
+    .big-tap span { font-size: 12px; letter-spacing: .2em; }
+    .shop { display: grid; gap: 8px; }
+    .shop-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .shop-row span { color: rgba(255,255,255,.68); font-size: 12px; }
+    .field-label { display: grid; gap: 8px; font-weight: 900; }
+    .input { width: 100%; min-height: 58px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 0 14px; background: rgba(255,255,255,.1); color: #fff; font-size: 20px; font-weight: 900; outline: none; }
+    .input:focus { border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(34,244,238,.15); }
+    .input::placeholder { color: rgba(255,255,255,.42); }
+    .rules { display: grid; gap: 8px; margin-top: 12px; }
+    .rule { display: flex; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px; background: rgba(255,59,134,.11); }
+    .rule.ok { background: rgba(34,244,238,.12); border-color: rgba(34,244,238,.42); }
+    .win-note { padding: 12px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 900; }
+    .slots { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; min-width: 0; }
+    .slots span { min-width: 0; min-height: 84px; display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.22); border-radius: 18px; padding: 8px; text-align: center; font-size: clamp(18px, 6vw, 28px); line-height: 1.08; font-weight: 1000; background: rgba(255,255,255,.09); color: #fff; overflow: hidden; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin: 12px 0; min-width: 0; }
+    .craft-stats { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; margin: 10px 0 0; color: var(--cyan); font-size: 12px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; min-width: 0; }
+    .craft-stats span, #craftLog { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-history { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 0; scrollbar-width: none; }
+    .craft-history::-webkit-scrollbar { display: none; }
+    .craft-history span { flex: 0 0 auto; max-width: 270px; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-weight: 800; white-space: nowrap; }
+    .chip-pool { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; max-width: 100%; }
+    .chip { min-width: 0; min-height: 42px; text-align: center; width: auto; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+    .chip small { display: block; margin-top: 4px; color: rgba(255,255,255,.48); font-size: 10px; font-weight: 900; }
+    .picked { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 78%); }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4px; }
+    .fake-check input { position: absolute; opacity: 0; }
+    .fake-check span { display: block; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.22); border-radius: 6px; background: rgba(255,255,255,.08); }
+    .fake-check input:checked + span { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 3px #050505; }
+    .garden-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .plot { min-height: 98px; background: rgba(255,255,255,.1); text-align: center; display: grid; place-items: center; }
+    .plot.ready { background: linear-gradient(145deg, rgba(34,244,238,.25), rgba(255,59,134,.22)); border-color: rgba(34,244,238,.55); }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .tag { display: inline-flex; margin: 6px 6px 0 0; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); }
+    .mystic-card { background: radial-gradient(circle at 20% 10%, rgba(255,59,134,.34), rgba(255,255,255,.08) 48%); }
+    .oracle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .oracle-card { min-height: 154px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 10px; display: grid; align-content: space-between; background: linear-gradient(160deg, color-mix(in srgb, var(--game-accent), #050505 44%), rgba(255,255,255,.08)); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+    .oracle-card b { font-size: 28px; line-height: 1; }
+    .oracle-card span { color: rgba(255,255,255,.68); font-size: 11px; font-weight: 900; }
+    .oracle-card strong { font-size: 13px; line-height: 1.1; }
+    .pillar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .pillar { min-height: 90px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 9px 6px; display: grid; place-items: center; gap: 4px; background: rgba(255,255,255,.08); text-align: center; }
+    .pillar b { font-size: 28px; line-height: 1; }
+    .pillar span { color: rgba(255,255,255,.58); font-size: 10px; font-weight: 1000; }
+    .element-bars { display: grid; gap: 7px; margin-top: 12px; }
+    .element-bar { display: grid; grid-template-columns: 34px 1fr 30px; align-items: center; gap: 8px; font-size: 12px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .element-bar i { height: 9px; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--game-accent)); }
+    .aspect-list { display: grid; gap: 8px; margin-top: 10px; }
+    .aspect-list span, .cast-log span { display: block; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 9px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-size: 12px; font-weight: 850; }
+    .coin-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 10px 0; }
+    .coin { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.22); background: radial-gradient(circle at 35% 25%, #ffe7a3, #b56d25 64%, #4d2415); color: #2d160c; font-size: 20px; font-weight: 1000; box-shadow: 0 12px 32px rgba(0,0,0,.28); }
+    .hex-lines { display: grid; gap: 7px; padding: 8px 0; }
+    .hex-line { height: 16px; display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .hex-line.broken { grid-template-columns: 1fr 1fr; }
+    .hex-line i { display: block; border-radius: 999px; background: linear-gradient(90deg, #ffe7a3, var(--game-accent)); }
+    .cast-log { display: grid; gap: 8px; }
+    .sim-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .sim-header b { font-size: 18px; }
+    .sim-header span { color: var(--cyan); font-size: 12px; font-weight: 1000; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stat-grid span { min-height: 58px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.08); }
+    .stat-grid b { font-size: 20px; line-height: 1; }
+    .stat-grid i { color: rgba(255,255,255,.58); font-size: 11px; font-style: normal; font-weight: 900; }
+    .action-grid { display: grid; gap: 8px; }
+    .action-grid .choice { display: grid; gap: 4px; }
+    .action-grid .choice span { color: rgba(255,255,255,.62); font-size: 12px; font-weight: 800; overflow-wrap: anywhere; }
+    .student-list, .timeline { display: grid; gap: 8px; }
+    .student-list span, .timeline span { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.84); font-size: 12px; line-height: 1.35; }
+    .student-list b { display: block; color: #fff; font-size: 13px; margin-bottom: 3px; }
+    .student-list i { color: rgba(255,255,255,.62); font-style: normal; font-weight: 800; }
+    .alloc-grid { display: grid; gap: 8px; margin: 10px 0; }
+    .alloc-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 8px; background: rgba(255,255,255,.08); }
+    .alloc-row span { font-weight: 900; }
+    .alloc-row b { text-align: center; font-size: 18px; }
+    .alloc-row button { min-height: 40px; border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-weight: 1000; }
+    body[data-game-page="twitter-governance"] { background: #000; }
+    body[data-game-page="twitter-governance"] .phone-shell { background: #000; color: #e7e9ea; border-color: rgba(255,255,255,.14); }
+    body[data-game-page="twitter-governance"] .app-top,
+    body[data-game-page="twitter-governance"] .play-hero { display: none; }
+    body[data-game-page="twitter-governance"] .play-screen { padding: 0; min-height: 100svh; background: #000; }
+    body[data-game-page="twitter-governance"] .game-stage { display: block; gap: 0; padding-bottom: 78px; }
+    .x-app { position: relative; min-height: 100svh; background: #000; color: #e7e9ea; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    .x-header { position: sticky; top: 0; z-index: 8; height: 50px; display: grid; grid-template-columns: 50px 1fr 50px; align-items: center; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-header b { text-align: center; color: #fff; font-size: 24px; line-height: 1; font-weight: 900; }
+    .x-header button { width: 36px; height: 36px; margin: auto; border: 0; border-radius: 50%; background: transparent; color: #e7e9ea; font-size: 14px; font-weight: 900; }
+    .x-header button:first-child { background: #1d9bf0; color: #001018; }
+    .x-header #agentBtn { border: 1px solid #2f3336; font-size: 11px; color: #1d9bf0; }
+    .x-top-tabs { position: sticky; top: 50px; z-index: 8; display: grid; grid-template-columns: 1fr 1fr; height: 48px; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-top-tabs button { position: relative; border: 0; background: transparent; color: #71767b; font-size: 15px; font-weight: 800; }
+    .x-top-tabs .active { color: #e7e9ea; }
+    .x-top-tabs .active::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 54px; height: 4px; transform: translateX(-50%); border-radius: 999px; background: #1d9bf0; }
+    .x-status-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #2f3336; background: #000; }
+    .x-status-strip span { min-width: 0; min-height: 54px; display: grid; place-items: center; gap: 2px; border-right: 1px solid #16181c; }
+    .x-status-strip span:last-child { border-right: 0; }
+    .x-status-strip b { color: #e7e9ea; font-size: 16px; line-height: 1; }
+    .x-status-strip i { color: #71767b; font-size: 10px; font-style: normal; font-weight: 800; }
+    .x-composer-inline { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid #2f3336; background: #000; }
+    .x-avatar { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #1d9bf0; color: #001018; font-size: 20px; font-weight: 1000; }
+    .x-compose-body { min-width: 0; display: grid; gap: 8px; }
+    .x-composer-inline textarea { width: 100%; min-height: 64px; border: 0; padding: 8px 0; resize: none; background: transparent; color: #e7e9ea; font: inherit; font-size: 19px; line-height: 1.28; outline: none; }
+    .x-composer-inline textarea::placeholder { color: #71767b; }
+    .x-compose-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid #2f3336; padding-top: 8px; }
+    .x-compose-tools button { min-height: 36px; border: 0; border-radius: 999px; padding: 0 13px; background: transparent; color: #1d9bf0; font-weight: 900; }
+    .x-compose-tools #sendTweet { min-width: 68px; background: #1d9bf0; color: #fff; }
+    .x-compose-tools #commandToggle { background: rgba(29,155,240,.14); }
+    .x-timeline { background: #000; }
+    .news-feed { display: grid; }
+    .news-feed article { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; border-bottom: 1px solid #2f3336; padding: 12px 14px 10px; background: #000; }
+    .news-feed article::before { content: attr(data-avatar); width: 40px; height: 40px; grid-row: 1 / span 3; display: grid; place-items: center; border-radius: 50%; background: var(--tweet-avatar, #273340); color: #fff; font-size: 16px; font-weight: 1000; }
+    .news-feed header { min-width: 0; display: flex; align-items: baseline; gap: 5px; color: #71767b; font-size: 13px; line-height: 1.2; }
+    .news-feed header b { min-width: 0; color: #e7e9ea; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .news-feed header span { flex: 0 0 auto; }
+    .news-feed p { grid-column: 2; margin: 3px 0 8px; color: #e7e9ea; font-size: 15px; line-height: 1.34; font-weight: 500; overflow-wrap: anywhere; }
+    .tweet-actions { grid-column: 2; display: grid; grid-template-columns: repeat(4, 1fr); color: #71767b; font-size: 12px; font-weight: 800; }
+    .tweet-actions span { display: inline-flex; align-items: center; gap: 5px; }
+    .x-drawer { display: none; margin: 0; border-bottom: 1px solid #2f3336; padding: 12px 14px; background: #000; }
+    .x-drawer.is-open { display: grid; gap: 12px; }
+    .x-drawer-head { display: flex; justify-content: space-between; gap: 10px; color: #e7e9ea; }
+    .x-drawer-head span { color: #71767b; font-size: 12px; font-weight: 900; }
+    .advisor-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .advisor-roster .choice { min-height: 68px; display: grid; align-content: center; gap: 4px; border: 1px solid #2f3336; border-radius: 16px; padding: 10px; background: #000; color: #e7e9ea; text-align: left; }
+    .advisor-roster .choice b { font-size: 14px; }
+    .advisor-roster .choice span { color: #71767b; font-size: 11px; line-height: 1.2; font-weight: 850; }
+    .command-log span { border-color: #2f3336; background: #000; color: #cfd9de; }
+    .key-drawer { border: 1px solid #2f3336; border-radius: 16px; padding: 10px 12px; background: #000; }
+    .key-drawer summary { color: #71767b; font-size: 12px; font-weight: 1000; cursor: pointer; }
+    .key-drawer input { width: 100%; min-height: 42px; margin-top: 8px; border: 1px solid #2f3336; border-radius: 12px; padding: 0 10px; background: #000; color: #e7e9ea; font: inherit; }
+    .key-drawer button { margin-top: 8px; width: 100%; background: #1d9bf0; }
+    .floating-compose { position: fixed; z-index: 12; right: max(18px, calc((100vw - 430px) / 2 + 18px)); bottom: calc(78px + env(safe-area-inset-bottom)); width: 58px; height: 58px; border: 0; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 30px; line-height: 1; font-weight: 900; box-shadow: 0 12px 34px rgba(29,155,240,.34); }
+    .bottom-nav { position: fixed; left: 50%; bottom: 0; z-index: 10; width: min(100vw, 430px); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr); height: calc(58px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #2f3336; background: rgba(0,0,0,.92); backdrop-filter: blur(18px); }
+    .bottom-nav button { border: 0; background: transparent; color: #e7e9ea; font-size: 23px; }
+    @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
+  </style>
+</head>
+<body data-printer-artifact="fake-game-library" data-game-page="office-loop-sort" data-output-format="multi_html">
+  <div class="phone-shell">
+    <header class="app-top"><a class="brand" href="index.html">Arcade Atelier</a><a href="office-loop-sort.html">重载</a></header>
+    <main class="screen play-screen">
+      <section class="hero play-hero">
+        <p class="kicker">REMIX · 环带分拣</p>
+        <h1>夜班传单回路</h1>
+      </section>
+      <section class="game-stage">
+        
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="row"><b id="clearText"></b><span id="queueText"></span></div>
+        <div class="tray" id="truckRack"></div>
+        <p id="statusText">先找哪一侧投进去能最快凑出三件同类；入口堵住时先让回路转一步。</p>
+        <div class="button-row">
+          <button class="choice" id="stepBtn">回路一步</button>
+          <button class="primary" id="resetBtn">重开这一圈</button>
+        </div>
+      </section>
+    
+      </section>
+    </main>
+  </div>
+  <script>
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏 Playable Catalog：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-06-17T05:50:57.731Z","game":{"id":"office-loop-sort","file":"office-loop-sort.html","cover":"covers/office-loop-sort.png","title":"夜班传单回路","kind":"环带分拣","source_game":"环带理货局 Remix","mobile_portrait":true,"canvas_playfield":true},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 Playable Catalog","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":58,"components":14,"interactions":20,"pages":3,"data_flow":9},"parent_file":"loop-sort-fake.html","remix_prompt":"把 Loop Sort 式卡车放货环带三连清改成办公室夜班传单主题，货箱换成邮件、审批、报销和排班单，保留四侧投放、环带前进和三件即清。","agent_description_file":"office-loop-sort.remix.json"};
+    (() => {
+      
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = {"topCopy":"办公室二创 · 四边投单，让夜班回路自己把同类整走","hint":"先找哪一侧投进去能最快凑出三件同类；入口堵住时先让回路转一步。","injectCopy":" 已经塞进夜班回路入口。","blockedCopy":"这个投递口还堵着旧单据。","emptyCopy":"这条投递线已经暂时清空。","clearCopy":"夜班回路连成 {count} 份，已经整批处理掉。","jamCopy":"整圈回路都被堆单塞满了，这班已经卡死。","winCopy":"所有夜班单据都流完了，整圈回路也已经清空。","stepCopy":"夜班回路又前进了一格，继续等同类单据贴到一起。","buttonCopy":"重开这一圈","stepLabel":"回路一步","clearedLabel":"已处理","queueLabel":"待投单","loopLabel":"夜班回路","bgTop":"#071816","bgBottom":"#030d0c","panelTint":"#102625","beltFill":"rgba(255,255,255,.08)","beltEdge":"rgba(218,255,244,.72)","truckFill":"rgba(156,239,216,.14)","truckEdge":"rgba(156,239,216,.52)","shadow":"rgba(0,0,0,.36)","colors":{"coral":{"fill":"#ffa188","edge":"#ffe4db","ink":"#421208","glyph":"邮","label":"邮件单"},"mint":{"fill":"#97efc6","edge":"#e9fff3","ink":"#0c2d1c","glyph":"审","label":"审批单"},"amber":{"fill":"#ffd98a","edge":"#fff3d6","ink":"#412600","glyph":"报","label":"报销单"},"violet":{"fill":"#cbb6ff","edge":"#f2edff","ink":"#2a194a","glyph":"班","label":"排班单"}},"trucks":["邮件线","审批线","报销线","排班线"]};
+      const LEVEL = {"target":12,"trucks":[{"id":"north","entry":1,"queue":["coral","mint","amber"]},{"id":"east","entry":5,"queue":["coral","violet","mint"]},{"id":"south","entry":8,"queue":["amber","coral","violet"]},{"id":"west","entry":12,"queue":["mint","amber","violet"]}]};
+      const BELT_POINTS = [
+        { x: 126, y: 146 }, { x: 171, y: 146 }, { x: 216, y: 146 }, { x: 261, y: 146 },
+        { x: 291, y: 191 }, { x: 291, y: 236 }, { x: 291, y: 281 },
+        { x: 261, y: 326 }, { x: 216, y: 326 }, { x: 171, y: 326 }, { x: 126, y: 326 },
+        { x: 96, y: 281 }, { x: 96, y: 236 }, { x: 96, y: 191 }
+      ];
+      const TRUCK_POINTS = [
+        { x: 195, y: 76, w: 116, h: 42 },
+        { x: 324, y: 236, w: 42, h: 116 },
+        { x: 195, y: 396, w: 116, h: 42 },
+        { x: 66, y: 236, w: 42, h: 116 }
+      ];
+      const state = { belt: [], trucks: [], cleared: 0, moves: 0, mode: 'playing', note: THEME.hint };
+      function cloneTruck(truck) {
+        return { id: truck.id, entry: truck.entry, queue: truck.queue.slice() };
+      }
+      function cloneLevel() {
+        return {
+          target: LEVEL.target,
+          trucks: LEVEL.trucks.map(cloneTruck),
+        };
+      }
+      function colorMeta(key) {
+        return THEME.colors[key];
+      }
+      function hasQueue() {
+        return state.trucks.some((truck) => truck.queue.length);
+      }
+      function beltFillCount() {
+        return state.belt.filter(Boolean).length;
+      }
+      function checkWinOrJam() {
+        if (!hasQueue() && beltFillCount() === 0) {
+          state.mode = 'won';
+          state.note = THEME.winCopy;
+          return;
+        }
+        if (hasQueue() && beltFillCount() === BELT_POINTS.length) {
+          state.mode = 'lost';
+          state.note = THEME.jamCopy;
+        }
+      }
+      function markMatches() {
+        const filled = state.belt.map((cell) => cell && cell.color);
+        const marks = new Set();
+        let i = 0;
+        while (i < filled.length) {
+          if (!filled[i]) {
+            i += 1;
+            continue;
+          }
+          let j = i + 1;
+          while (j < filled.length && filled[j] === filled[i]) j += 1;
+          if (j - i >= 3) {
+            for (let k = i; k < j; k += 1) marks.add(k);
+          }
+          i = j;
+        }
+        if (filled[0] && filled[filled.length - 1]) {
+          let head = 0;
+          while (head < filled.length && filled[head] === filled[0]) head += 1;
+          let tail = filled.length - 1;
+          while (tail >= 0 && filled[tail] === filled[0]) tail -= 1;
+          const wrapCount = head + (filled.length - 1 - tail);
+          if (wrapCount >= 3) {
+            for (let k = 0; k < head; k += 1) marks.add(k);
+            for (let k = tail + 1; k < filled.length; k += 1) marks.add(k);
+          }
+        }
+        return marks;
+      }
+      function resolveMatches() {
+        let clearedNow = 0;
+        while (true) {
+          const marks = markMatches();
+          if (!marks.size) break;
+          marks.forEach((index) => {
+            if (state.belt[index]) {
+              state.belt[index] = null;
+              clearedNow += 1;
+              state.cleared += 1;
+            }
+          });
+        }
+        if (clearedNow) state.note = THEME.clearCopy.replace('{count}', String(clearedNow));
+        checkWinOrJam();
+      }
+      function reset() {
+        const level = cloneLevel();
+        state.belt = Array.from({ length: BELT_POINTS.length }, () => null);
+        state.trucks = level.trucks;
+        state.cleared = 0;
+        state.moves = 0;
+        state.mode = 'playing';
+        state.note = THEME.hint;
+        render();
+      }
+      function stepLoop() {
+        if (state.mode !== 'playing') return;
+        state.belt.unshift(state.belt.pop());
+        state.note = THEME.stepCopy;
+        resolveMatches();
+        render();
+      }
+      function inject(index) {
+        if (state.mode !== 'playing') return;
+        const truck = state.trucks[index];
+        if (!truck || !truck.queue.length) {
+          state.note = THEME.emptyCopy;
+          render();
+          return;
+        }
+        if (state.belt[truck.entry]) {
+          state.note = THEME.blockedCopy;
+          render();
+          return;
+        }
+        const color = truck.queue.shift();
+        state.belt[truck.entry] = { color };
+        state.moves += 1;
+        state.note = colorMeta(color).label + THEME.injectCopy;
+        resolveMatches();
+        render();
+      }
+      function drawRounded(x, y, w, h, r, fill, stroke, lineWidth = 2) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, r);
+        ctx.fillStyle = fill;
+        ctx.fill();
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+      }
+      function drawBoard() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, THEME.bgTop);
+        bg.addColorStop(1, THEME.bgBottom);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 21px sans-serif';
+        ctx.fillText("夜班传单回路", 24, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.72)';
+        ctx.font = '700 12px sans-serif';
+        ctx.fillText(THEME.topCopy, 24, 58);
+        drawRounded(54, 106, 282, 260, 30, THEME.panelTint, THEME.beltEdge, 3);
+        ctx.fillStyle = 'rgba(255,255,255,.56)';
+        ctx.font = '800 12px sans-serif';
+        ctx.fillText(THEME.loopLabel, 68, 126);
+        ctx.fillStyle = THEME.shadow;
+        ctx.beginPath();
+        ctx.ellipse(195, 236, 128, 104, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      function drawCell(index) {
+        const point = BELT_POINTS[index];
+        const cell = state.belt[index];
+        drawRounded(point.x - 18, point.y - 18, 36, 36, 12, cell ? colorMeta(cell.color).fill : THEME.beltFill, cell ? colorMeta(cell.color).edge : THEME.beltEdge);
+        ctx.fillStyle = cell ? colorMeta(cell.color).ink : 'rgba(255,255,255,.16)';
+        ctx.font = '900 14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(cell ? colorMeta(cell.color).glyph : '·', point.x, point.y + 1);
+      }
+      function drawConnectors() {
+        ctx.strokeStyle = 'rgba(255,255,255,.22)';
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'round';
+        for (let i = 0; i < BELT_POINTS.length; i += 1) {
+          const a = BELT_POINTS[i];
+          const b = BELT_POINTS[(i + 1) % BELT_POINTS.length];
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+      function drawTruck(index) {
+        const point = TRUCK_POINTS[index];
+        const truck = state.trucks[index];
+        const active = truck && truck.queue.length;
+        drawRounded(point.x - point.w / 2, point.y - point.h / 2, point.w, point.h, 20, active ? THEME.truckFill : 'rgba(255,255,255,.06)', active ? THEME.truckEdge : 'rgba(255,255,255,.12)', active ? 2.5 : 2);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const meta = active ? colorMeta(truck.queue[0]) : null;
+        const label = THEME.trucks[index];
+        if (point.w > point.h) {
+          ctx.fillText(label, point.x - 26, point.y);
+          ctx.fillStyle = meta ? meta.fill : 'rgba(255,255,255,.2)';
+          ctx.beginPath();
+          ctx.arc(point.x + 16, point.y, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = meta ? meta.ink : '#fff';
+          ctx.font = '900 11px sans-serif';
+          ctx.fillText(meta ? meta.glyph : '空', point.x + 16, point.y + 1);
+          ctx.fillStyle = 'rgba(255,255,255,.76)';
+          ctx.font = '800 10px sans-serif';
+          ctx.fillText('x' + (truck ? truck.queue.length : 0), point.x + 42, point.y + 1);
+        } else {
+          ctx.save();
+          ctx.translate(point.x, point.y);
+          ctx.rotate(Math.PI / 2);
+          ctx.fillText(label, -26, 0);
+          ctx.fillStyle = meta ? meta.fill : 'rgba(255,255,255,.2)';
+          ctx.beginPath();
+          ctx.arc(16, 0, 11, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = meta ? meta.ink : '#fff';
+          ctx.font = '900 11px sans-serif';
+          ctx.fillText(meta ? meta.glyph : '空', 16, 1);
+          ctx.fillStyle = 'rgba(255,255,255,.76)';
+          ctx.font = '800 10px sans-serif';
+          ctx.fillText('x' + (truck ? truck.queue.length : 0), 42, 1);
+          ctx.restore();
+        }
+      }
+      function truckButtonMarkup(truck, index) {
+        const meta = truck && truck.queue.length ? colorMeta(truck.queue[0]) : null;
+        return '<button class="chip' + (meta ? '' : ' picked') + '" data-truck-index="' + index + '" style="' + (meta ? '--chip-fill:' + meta.fill + '; --chip-edge:' + meta.edge + '; --chip-ink:' + meta.ink + ';' : '') + '">' +
+          '<b>' + THEME.trucks[index] + '</b><small>' + (meta ? meta.label + ' x' + truck.queue.length : '已空') + '</small></button>';
+      }
+      function renderRack() {
+        const rack = document.getElementById('truckRack');
+        rack.innerHTML = state.trucks.map(truckButtonMarkup).join('');
+        rack.querySelectorAll('[data-truck-index]').forEach((button) => {
+          button.addEventListener('click', () => inject(Number(button.dataset.truckIndex)));
+        });
+      }
+      function render() {
+        drawBoard();
+        drawConnectors();
+        for (let i = 0; i < BELT_POINTS.length; i += 1) drawCell(i);
+        for (let i = 0; i < TRUCK_POINTS.length; i += 1) drawTruck(i);
+        renderRack();
+        document.getElementById('clearText').textContent = THEME.clearedLabel + ' ' + state.cleared + ' / ' + LEVEL.target;
+        document.getElementById('queueText').textContent = THEME.queueLabel + ' ' + state.trucks.reduce((sum, truck) => sum + truck.queue.length, 0);
+        document.getElementById('statusText').textContent = state.note;
+      }
+      document.getElementById('stepBtn').addEventListener('click', stepLoop);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(stepLoop, 900);
+      window.advanceTime = (ms) => {
+        const steps = Math.max(1, Math.round(ms / 900));
+        for (let i = 0; i < steps; i += 1) stepLoop();
+      };
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 with 14-slot rectangular conveyor loop and 4 truck injectors',
+        mode: state.mode,
+        cleared: state.cleared,
+        moves: state.moves,
+        queued: state.trucks.reduce((sum, truck) => sum + truck.queue.length, 0),
+        belt: state.belt.map((cell) => cell ? cell.color : null),
+        trucks: state.trucks.map((truck) => ({ entry: truck.entry, next: truck.queue[0] || null, left: truck.queue.length })),
+      });
+    
+    })();
+  </script>
+</body>
+</html>

@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Web Printer** (网页复印机) is a web page replication and code generation system. It takes user intent descriptions with multi-modal inputs (URLs, screenshots, MHTML files) and generates self-contained HTML or React page replicas using OpenAI's vision API.
+**Web Printer** (网页复印机) is a local frontend artifact generation project. It includes:
+
+- A web page reconstruction pipeline that turns user intent plus multi-modal inputs (URLs, screenshots, MHTML files) into self-contained single-page or multi-page HTML artifacts.
+- A generated Fake Game Library of offline, mobile-first fake game pages.
+- A local Fake / Remix harness that can create a game from scratch or remix an existing artifact, then publish it back into `output/`.
 
 ## Setup & Running
 
@@ -34,17 +38,22 @@ python web_printer_selenium.py \
 python web_printer_selenium.py https://example.com output.html 5
 ```
 
-**Validate generated artifacts (Node.js):**
+**Validate generated artifacts (Node.js, from the parent workspace):**
 ```bash
-node tests/verify_fake_library.mjs
-node tests/verify_game_alignment.mjs
-node tests/verify_sheep_stack.mjs
+cd /Users/pencil/Documents/Printer
+node printer/tests/verify_fake_library.mjs
+node printer/tests/verify_game_alignment.mjs
+node printer/tests/verify_sheep_stack.mjs
 ```
 
-**Build generated React output (if applicable):**
+**Run Python tests (from the repo root):**
 ```bash
-cd output/react_project_*
-npm install && npm run dev
+python -m unittest tests/test_env_config.py tests/test_remix_harness.py
+```
+
+**Run the Fake / Remix harness:**
+```bash
+python tools/remix_harness_server.py --port 8787
 ```
 
 ## Key Environment Variables (`.env`)
@@ -53,7 +62,8 @@ npm install && npm run dev
 |---|---|---|
 | `OPENAI_API_KEY` | — | Required |
 | `OPENAI_BASE_URL` | `https://api.openai.com/v1` | API endpoint |
-| `OPENAI_MODEL` | `gpt-4o` | Model used for generation |
+| `OPENAI_MODEL` | `moonshotai/kimi-k2.6` | Model used for the main generation pipeline |
+| `OPENAI_REMIX_MODEL` | `moonshotai/kimi-k2.6` | Model used by the Fake / Remix harness |
 | `HEADLESS` | `true` | Run Chrome headlessly |
 | `WAIT_TIME` | `5` | Seconds to wait for dynamic content |
 | `MAX_TOKENS` | `16000` | Max tokens per generation call |
@@ -84,10 +94,27 @@ InputParser → PageExtractor → ComplexityAnalyzer → IntentPlanner
 
 - **`single_html`** — one self-contained `.html` file
 - **`multi_html`** — `index.html` + supporting files in a directory
-- React/Vite output is mentioned in `artifact_generator.py` but not yet surfaced by `complexity_analyzer.py`
+- React/Vite output is legacy fallback code only. The current `OutputFormat` enum exposes `single_html` and `multi_html`.
 
 Each run produces `run_report.json` in the output directory with format, complexity scores, intent plan, warnings, and file list.
 
+## Fake Game Library and Harness
+
+The fake-game showcase is generated from `tools/generate_fake_library.mjs`, not hand-maintained in `output/*.html`. Durable changes should go into the generator, then `output/` should be regenerated.
+
+The local harness is implemented in `tools/remix_harness_server.py` and provides:
+
+- `/api/fake/draft-jobs` for from-scratch game generation.
+- `/api/remix/draft-jobs` for remixing an existing source artifact.
+- `/api/remix/publish` for writing `output/<slug>.html`, `output/<slug>.remix.json`, and updating `remix_manifest.json` / `remix_manifest.js`.
+
 ## Testing
 
-There is no Python test suite. Validation is done via Node.js ESM scripts in `tests/` that check generated HTML artifacts for correct structure (doctype, viewport, no external HTTP deps, required canvas/game hooks).
+The repo has both Python unit tests and Node.js ESM validators:
+
+- `python -m unittest tests/test_env_config.py tests/test_remix_harness.py`
+- `node printer/tests/verify_fake_library.mjs`
+- `node printer/tests/verify_game_alignment.mjs`
+- `node printer/tests/verify_remix_outputs.mjs`
+
+The Node validators check generated HTML artifacts for required structure, metadata, no external HTTP dependencies, mobile shell layout, and game hooks.

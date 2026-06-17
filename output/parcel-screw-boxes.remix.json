@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-parcel-screw-boxes",
+  "slug": "parcel-screw-boxes",
+  "title": "分拨拆钉台",
+  "source_file": "screw-box-blitz.html",
+  "parent_slug": "screw-box-blitz",
+  "lineage": [
+    "screw-box-blitz",
+    "parcel-screw-boxes"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把同色彩盒拆钉局改成快递分拨台主题，盒子换成包裹框，保留三枚同色立即出库的节奏。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "快递分拨主题的彩盒拆钉二创：先拆挡板，再把同色封签塞进对应包裹框。",
+    "core_loop": "玩家先从上层可点击位置拆出封签钉，露出被包材压住的下层钉件；每枚钉件会进入对应颜色的包裹框，同色累计到三枚就会立刻整框出库清空；如果四个包裹框总待处理量堆到六枚，分拨台就会堵塞失败。",
+    "controls": "触摸点击发亮的可拆封签钉；被高层包材遮挡的钉件不能点；点击“重开这一局”恢复固定板面。",
+    "mechanics": [
+      "层叠遮挡：只有最上层不被遮住的钉件才能被拆出",
+      "同色入框：拆下来的钉件直接进入对应颜色的包裹框，不再进入混合暂存栏",
+      "三枚即出库：任意颜色累计到三枚会立刻清空该框，形成明确节奏点",
+      "六格堵塞失败：所有包裹框的待处理量合计到六枚时失败，逼玩家按颜色规划顺序",
+      "短局强复盘：板面固定、反馈清晰，适合反复优化拆钉路径"
+    ],
+    "visual_language": "把工业拆板主题换成快递分拨台：暖橙背景、纸箱色挡板、四色包裹框，钉件标签则改成急件与色签的分拨符号。",
+    "state_model": "state.screws 记录每枚钉件的层级、颜色、位置与激活状态；state.bins 记录四个包裹框当前各自待处理数量；state.mode 为 playing/won/lost；state.removed 记录已出库数量。",
+    "share_hook": "“这车封签又把分拨台堵死了”这类失败文案很适合做梗图，成功清空时也有明确的收尾截图点。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保留 printer artifact 元数据与页面契约"
+    ],
+    "next_evolution_hooks": [
+      "加入万能快递框",
+      "加入限时快件倒计时",
+      "加入第二块更密的分拨板面"
+    ]
+  },
+  "files": {
+    "html": "parcel-screw-boxes.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

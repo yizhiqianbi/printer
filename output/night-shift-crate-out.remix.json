@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-night-shift-crate-out",
+  "slug": "night-shift-crate-out",
+  "title": "夜班货架出箱",
+  "source_file": "tap-away-fake.html",
+  "parent_slug": "tap-away-fake",
+  "lineage": [
+    "tap-away-fake",
+    "night-shift-crate-out"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 Tap Away 式 3D 箭头出块改成夜班仓储主题，彩块换成不同标签货箱，保留旋转货架和顺着箭头推出外层箱子的节奏。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "夜班仓储主题的 3D 出块二创：先推出外层货箱，再靠旋转货架把整架清空。",
+    "core_loop": "玩家面对一团堆在夜班货架上的立体货箱，只要某个箱子的贴纸箭头方向没有别箱阻挡，点它就会顺着货道直接推出货架；中层和内层暂时被外壳包住时，需要先左右旋转货架，换一个角度继续拆露在外面的箱子，直到 15 个货箱全部出完。",
+    "controls": "单指点货箱尝试推出；左右滑动或点“左转 / 右转”旋转货架；点击“重开这架”恢复固定堆叠。",
+    "mechanics": [
+      "箭头即出路：每个货箱都绑定一个固定推出方向，只要那条线上没有别箱就会立刻出架",
+      "外层先拆：内层货箱天然被外层包住，必须先清掉包壳，保留 Tap Away 最核心的剥层爽点",
+      "旋转找角度：不能平移整团，只能旋转视角重新判断哪些货箱已经露在边缘",
+      "无时间压力：没有计时和道具，只靠顺序与空间判断制造短线策略",
+      "固定短局：单团 15 箱，十几秒到几十秒就能完整复盘一轮"
+    ],
+    "visual_language": "把高饱和彩色方块换成冷色夜班货箱、仓储标签和低照度货架，继续保持离线单文件、手机竖屏和纯画布渲染。",
+    "state_model": "state.blocks 保存每个货箱的 3D 坐标、箭头方向、颜色标签和是否仍在架上；state.yaw 记录当前货架旋转角度；state.cleared 记录已推出数量；state.mode 在 playing/won 间切换。",
+    "share_hook": "“这一架终于拆空了”比普通方块更像打工人夜班梗图，也方便继续往仓储题材扩。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入第二套更厚的 3x3x3 牌面",
+      "加入上下倾斜视角切换",
+      "加入最少步数或最快清架文案"
+    ]
+  },
+  "files": {
+    "html": "night-shift-crate-out.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

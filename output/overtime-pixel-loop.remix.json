@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-overtime-pixel-loop",
+  "slug": "overtime-pixel-loop",
+  "title": "加班像素回路",
+  "source_file": "pixel-loop-fake.html",
+  "parent_slug": "pixel-loop-fake",
+  "lineage": [
+    "pixel-loop-fake",
+    "overtime-pixel-loop"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 Pixel Flow 式像素环流局改成夜班工位主题，彩块换成邮件、表格、会议和报销，保留实时堵槽压力。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "夜班工位主题的像素环流二创：处理头同色消件，五个夜班槽一旦报废就会堵死全局。",
+    "core_loop": "玩家面对一条绕着像素任务板循环移动的杂务环带，持续把当前处理头部署到下方空槽；已部署处理头会自动拦截同色工单并点亮中间像素板，电量耗尽后会变成废槽，需要玩家手动清走；在堆单上限与五格废槽之间维持平衡，直到整块像素板被点亮。",
+    "controls": "点击下方空槽部署当前处理头；点击已报废槽位可立刻清槽；点击“重开这一环”恢复固定循环序列。",
+    "mechanics": [
+      "实时环带：工单沿固定路径持续绕圈，拖久就会形成稳定压迫",
+      "同色自动拦截：处理头只会清掉自己颜色的工单，玩家要先分配有限槽位",
+      "五格堵槽：每个处理头只有固定电量，用尽会占住槽位，全部报废会直接失败",
+      "像素点亮：每次正确拦截都会把中间任务板点亮一格，形成清晰的进度反馈",
+      "固定序列短局：颜色与来件顺序是确定的，天然适合反复复盘最优部署节奏"
+    ],
+    "visual_language": "夜班工位主题，深蓝黑底、冷青发光环带，中间像素板像发亮任务屏，颜色字块全部原创且无外部素材。",
+    "state_model": "state.carriers 保存环带工单的颜色与位置；state.slots 记录五个处理槽的颜色、电量与报废状态；state.nextColor 为待部署处理头；state.overflow 是漏件计数；state.painted 记录已点亮像素格。",
+    "share_hook": "“我把整块加班像素屏一把点亮了”这种结果很适合做短视频封面或截图。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更长的环带与多层像素图",
+      "加入一次性清槽道具",
+      "加入每日工单 seed 与极限分数"
+    ]
+  },
+  "files": {
+    "html": "overtime-pixel-loop.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

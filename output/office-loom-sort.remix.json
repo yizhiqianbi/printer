@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-loom-sort",
+  "slug": "office-loom-sort",
+  "title": "工位理线板",
+  "source_file": "wool-sort-fake.html",
+  "parent_slug": "wool-sort-fake",
+  "lineage": [
+    "wool-sort-fake",
+    "office-loom-sort"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 Wool Sort 式绕线分拣改成夜班工位理线主题，保留同色绕线和逐步显图，但把绣片换成工牌面板。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "夜班工位主题的绕线分拣二创：先把四路线束理顺，再让工牌像素图完整亮出来。",
+    "core_loop": "玩家先点选一卷顶部可见的线束，再把顶部连续同色的一组绕进空卷轴或同色顶层卷轴；只要某个卷轴被整理成满四层单色，这一路就会被视为归束完成，同时点亮上方工牌面板里对应颜色的像素绣块；当所有非空卷轴都变成单色满卷，整块图案也随之亮满，当前短局结束。",
+    "controls": "单指点击执行“选源卷轴 -> 选目标卷轴”；再次点击同一卷轴可取消；点击“重开这一绷”恢复固定牌面。",
+    "mechanics": [
+      "单指绕线：操作门槛与热门 sort puzzle 一样低，保持两次点击完成一次转移",
+      "连续同色搬运：源卷顶部连续同色会被整段搬走，完整保留原玩法最关键的读顶层手感",
+      "目标约束：只能绕进空卷轴，或绕到同色顶层且仍有剩余容量的卷轴",
+      "显图反馈：每理顺一路颜色，就会同步亮起一部分工牌像素图，强化“排序不只是清关而是在补图”的爽点",
+      "固定短局：固定六卷牌面几十步内可解完，天然适合反复优化路径"
+    ],
+    "visual_language": "深蓝夜班工位色板，卷轴像收线盘，预览区不再是手工绣片而是发光工牌像素面板，整体更像办公桌面的冷色收线工具。",
+    "state_model": "state.spools 记录六个卷轴当前的颜色栈；state.selected 记录当前源卷轴；state.moves 记录排线手数；state.stitched 保存已经因归束而点亮的像素格；state.mode 在 playing/won 间切换。",
+    "share_hook": "“终于把工位理线板一次收干净了”这种结果文案很像打工人梗图，适合继续往办公室题材扩。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更多像素图 seed",
+      "加入撤回一步",
+      "加入更长的五色线束局"
+    ]
+  },
+  "files": {
+    "html": "office-loom-sort.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-night-shift-shuttle",
+  "slug": "night-shift-shuttle",
+  "title": "夜班摆渡车",
+  "source_file": "bus-jam-fake.html",
+  "parent_slug": "bus-jam-fake",
+  "lineage": [
+    "bus-jam-fake",
+    "night-shift-shuttle"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 Bus Jam 式乘客分流改成夜班园区摆渡车，乘客换成工牌队列，整体更冷更硬。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "夜班园区主题的 Bus Jam 二创：点发对应班车，把门口这排工牌快速分流送走。",
+    "core_loop": "玩家面对四列堵在夜班园区门口的工牌队列，只能处理每列最靠门的那张；下方三辆不同组别的摆渡车持续轮换，点中某辆车后，它会立刻带走当前所有能直接上车的同组工牌，前排一空，后排人才会继续露头。",
+    "controls": "单指点击底部摆渡车发车；如果当前门口没有对应颜色的工牌，这辆车不会动；点击“重开这一班”恢复固定牌面。",
+    "mechanics": [
+      "前排可见约束：只有每列最靠门的那张工牌是可操作对象，完整保留 Bus Jam 的“先清前排再露后排”压力",
+      "同色批量上车：一辆摆渡车发出后，会把当前所有能直接登车的同组工牌连续带走，形成爽快的链式揭露",
+      "三车轮换：底部始终只给三辆当前车，旧车发走后新车顶上，保留对颜色次序的短线决策",
+      "堵死判负：如果露出来的工牌颜色和眼前三辆车全部不匹配，整站会直接卡死失败",
+      "固定短局：单局十几秒到几十秒，天然适合碎片时间复玩和截图传播"
+    ],
+    "visual_language": "把明亮通勤站换成冷色夜班园区：深蓝门岗、低饱和车灯、工牌标签替代普通乘客，整体更像凌晨换班的摆渡口。",
+    "state_model": "state.lanes 保存四列门口队伍；state.buses 保存当前三个车位里的班车颜色、已载人数与发车动画；state.queueIndex 指向后续进站车辆；state.mode 在 playing/won/lost 间切换。",
+    "share_hook": "“夜班门口又堵住了”或者“这班摆渡我一把清完”都很像办公室段子，适合拿来做封面和二创。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更长的发车队列",
+      "加入每日门口 seed",
+      "加入一键提示下一辆该先发哪台"
+    ]
+  },
+  "files": {
+    "html": "night-shift-shuttle.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

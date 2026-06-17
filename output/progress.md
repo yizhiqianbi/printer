@@ -1,5 +1,173 @@
 Original prompt: 调研最近中英文互联网很火的 抽象的 好玩的 评测的 热的小游戏, 并且尽量1比1复刻, 比如 SBTI, 羊了个羊, 玄学的, 各种.io的游戏方便爬的, 谷歌小恐龙, 等等等等, 全都做成html, 放在/Users/pencil/Documents/Printer/printer/output 里面, 建立一个赝品库
 
+## 2026-06-15 daily classic game
+
+- Research refresh focused on a currently visible hot mini-game wording cluster around `挪车打螺丝`, rather than opening a brand-new mechanic family.
+- Public references checked on June 15, 2026:
+  - Tencent App Store search-visible pages for `挪车打螺丝` and `螺丝排序` showed the naming/packaging of these lightweight WeChat mini-games remains active in 2026.
+  - A Douyin search result snippet still surfaced recent `挪车打螺丝` stage-guide clips, which I used as evidence that the term remains socially legible.
+  - `Screw Jam` store listings remained supporting evidence that screw-adjacent puzzle wording is still active, but I did not copy any screw-board UI from them.
+- Implementation choice:
+  - do not add a dependency or new subsystem
+  - reuse the existing `createParkingJamGame` engine, phone-shell page contract, manifest flow, and static verifier
+  - add one new base page: `traffic-bolt-jam.html` / `挪车打螺丝`
+  - add one new deterministic remix: `factory-bolt-jam.html` / `夜班进厂通车`
+- New behavior:
+  - keeps the existing short-and-long vehicle unblock interaction
+  - repackages the board around the current `挪车打螺丝` naming pressure and factory-lot fiction
+  - office-style remix shifts the same core loop into a night-shift factory gate scene
+- Files updated:
+  - `printer/tools/generate_fake_library.mjs`
+  - `printer/tests/verify_fake_library.mjs`
+  - `printer/research/fake_game_alignment_sources.md`
+  - regenerated `printer/output/*` including `index.html`, `run_report.json`, `remix_manifest.json`, `traffic-bolt-jam.html`, `factory-bolt-jam.html`, and `factory-bolt-jam.remix.json`
+- Validation:
+  - pending regeneration and verifier run in this turn
+
+## 2026-06-12 daily classic game
+
+- Research refresh focused on a currently visible hot `Hexa Away` loop that was not yet represented in the library.
+- Public references checked on June 12, 2026:
+  - The US App Store listing for `Hexa Away` showed 313K ratings at 4.6, chart `#35 Puzzle`, and described moving hex pieces by tapping them out while later stages add gimmicks.
+  - The Google Play listing showed 5M+ downloads, 209K reviews, update date `May 8, 2026`, and described tapping one-direction hexagon tiles away while planning clear paths.
+- Implementation choice:
+  - do not add a dependency or new subsystem
+  - reuse the existing fake-library generator, manifest flow, canvas tap-away structure, and static verifier
+  - add one new base page: `hexa-away-fake.html` / `六角弹出盘`
+  - add one new deterministic remix: `office-stamp-away.html` / `工单盖章弹出`
+- New behavior:
+  - compact axial-coordinate hex cluster instead of the existing cube cluster
+  - six horizontal arrow directions plus upward pop
+  - whole-board rotation to reveal new clear paths
+  - office remix swaps colored hex blocks for approval-form paperwork without changing the core loop
+- Files updated:
+  - `printer/tools/generate_fake_library.mjs`
+  - `printer/tests/verify_fake_library.mjs`
+  - `printer/research/fake_game_alignment_sources.md`
+  - regenerated `printer/output/*` including `index.html`, `run_report.json`, `remix_manifest.json`, `hexa-away-fake.html`, `office-stamp-away.html`, and `office-stamp-away.remix.json`
+- Validation:
+  - `node --check printer/tools/generate_fake_library.mjs` passed
+  - `node --check printer/tests/verify_fake_library.mjs` passed
+  - `node printer/tools/generate_fake_library.mjs` passed
+  - `node printer/tests/verify_fake_library.mjs` passed
+
+## 2026-06-02 daily classic game
+
+- Research refresh focused on a currently visible hot yarn-sort / wool-sort loop that was not yet represented in the library.
+- Public references checked on June 2, 2026:
+  - AppMagic's public LinkedIn trend post described `Wool Sort` as a fresh Top Trending screw-puzzle-adjacent format with rapid spring 2026 download growth.
+  - Google Play and App Store listings visible in search results described the loop as sorting colored yarn onto matching spools/bars and gradually revealing pixel-art embroidery.
+- Implementation choice:
+  - do not add a dependency or new subsystem
+  - reuse the existing fake-library generator, deterministic remix manifest, phone-shell page contract, and static verifier
+  - add one new base page: `wool-sort-fake.html` / `线团绣图局`
+  - add one new deterministic remix: `office-loom-sort.html` / `工位理线板`
+- New behavior:
+  - six-spool same-color sorting with two empty spools for maneuvering
+  - top-run pours only into empty or same-color target spools
+  - each completed single-color spool reveals its color region inside an embroidery preview grid
+  - office remix swaps embroidery framing for a cooler badge-panel / wiring theme without changing the core loop
+- Files updated:
+  - `printer/tools/generate_fake_library.mjs`
+  - `printer/tests/verify_fake_library.mjs`
+  - `printer/research/fake_game_alignment_sources.md`
+  - regenerated `printer/output/*` including `index.html`, `run_report.json`, `remix_manifest.json`, `wool-sort-fake.html`, `office-loom-sort.html`, and `office-loom-sort.remix.json`
+- Validation:
+  - `node --check printer/tools/generate_fake_library.mjs` passed
+  - `node --check printer/tests/verify_fake_library.mjs` passed
+  - `node printer/tools/generate_fake_library.mjs` passed
+  - `node printer/tests/verify_fake_library.mjs` passed
+- Environment note:
+  - browser-level smoke checks were not run in this sandbox; this turn completed generator + static verification only.
+
+## 2026-05-26 daily classic game
+
+- Research refresh focused on a currently visible hot logic-board loop that was not yet represented in the library.
+- Public references checked on May 26, 2026:
+  - `easegame.cn` chart updated May 20, 2026 listed `佛系消消消` at No. 4 on the Douyin mini-game hot chart.
+  - 4399's May 7, 2026 H5 page described the loop as a Sudoku-and-Minesweeper-like puzzle: place one sheep per color/region, keep row/column uniqueness, and forbid adjacency including diagonals.
+- Implementation choice:
+  - do not add a new dependency or subsystem
+  - reuse the existing fake-library generator, output shelf, run report, and deterministic remix manifest
+  - add one new base page: `zen-logic-fake.html` / `佛系排排坐`
+  - add one new deterministic remix: `meeting-gridlock.html` / `会议室别挨着`
+- New behavior:
+  - fixed 6x6 colored-region logic board
+  - one target per row, column, and region
+  - no orthogonal or diagonal adjacency
+  - conflicting cells auto-grey with X overlays
+  - single-candidate cells auto-highlight for the “only one place left” feel
+- Files updated:
+  - `printer/tools/generate_fake_library.mjs`
+  - `printer/tests/verify_fake_library.mjs`
+  - `printer/research/fake_game_alignment_sources.md`
+  - regenerated `printer/output/*` including `index.html`, `run_report.json`, `remix_manifest.json`, `zen-logic-fake.html`, `meeting-gridlock.html`, and `meeting-gridlock.remix.json`
+- Validation:
+  - `node --check printer/tools/generate_fake_library.mjs` passed
+  - `node printer/tools/generate_fake_library.mjs` passed
+  - `node printer/tests/verify_fake_library.mjs` passed
+- Environment note:
+  - browser-level smoke checks were not run in this sandbox; this turn only completed generator + static verification.
+
+## 2026-05-20 daily classic game
+
+- Research refresh focused on currently visible hot screw-sort mini-game loops rather than adding a new genre.
+- Public references checked on May 20, 2026:
+  - 7K7K's page for `一起拧螺丝` described the loop as removing screws and placing three same-colored screws into matching boxes to clear them.
+  - App Store search-visible screw-sort listings described layered board removal plus filling color-coded boxes to release the board.
+  - Game Daily's April 6, 2026 Q1 WeChat mini-game recap supported the choice to stay in hot-reactive lightweight casual mechanics.
+- Implementation choice:
+  - do not add a new dependency or new pipeline
+  - reuse the existing fake-library generator, screw board data, home shelf, and deterministic remix manifest
+  - add one new base page: `screw-box-blitz.html` / `彩盒拧钉局`
+  - add one new deterministic remix: `parcel-screw-boxes.html` / `分拨拆钉台`
+- New behavior:
+  - keeps layered removable screws from the existing board family
+  - switches the lower storage model from a generic mixed tray to four same-color boxes
+  - any box clears immediately at three matching screws
+  - failure now triggers when total pending screws across boxes reaches six
+- Files updated:
+  - `printer/tools/generate_fake_library.mjs`
+  - `printer/tests/verify_fake_library.mjs`
+  - `printer/research/fake_game_alignment_sources.md`
+  - regenerated `printer/output/*` including `index.html`, `run_report.json`, `remix_manifest.json`, `screw-box-blitz.html`, `parcel-screw-boxes.html`, and `parcel-screw-boxes.remix.json`
+  - added placeholder cover copies `printer/output/covers/screw-box-blitz.png` and `printer/output/covers/parcel-screw-boxes.png`
+- Validation:
+  - `node --check printer/tools/generate_fake_library.mjs` passed
+  - `node --check printer/tests/verify_fake_library.mjs` passed
+  - `node printer/tools/generate_fake_library.mjs` passed
+  - `node printer/tests/verify_fake_library.mjs` passed
+- Environment note:
+  - browser-level smoke checks could not run in this sandbox because binding `python3 -m http.server 8765` failed with `PermissionError: [Errno 1] Operation not permitted`, and the Node REPL did not have a `playwright` package available.
+
+## 2026-05-11 daily classic game
+
+- Research refresh focused on currently visible mini-game heat rather than historical candidates.
+- Public references checked on May 11, 2026:
+  - `easegame.cn` chart updated May 6, 2026 listed `抓大鹅` as No. 1 on the Douyin mini-game hot chart.
+  - the App Store listing described `抓大鹅` as a 3D elimination game with multiple scenes and an easy first level followed by a hard second level.
+  - a Sina commentary published February 22, 2026 called out the “颠锅” interaction and the deliberate second-level difficulty spike.
+- Implementation choice:
+  - do not add a new system or dependency
+  - reuse the existing `goose-ladle` base loop and the current remix manifest/index pipeline
+  - add one new deterministic remix: `midnight-goose-rush.html` / `夜宵颠锅抓鸽王`
+- New remix behavior:
+  - stage 1 warmup pot with a smaller board and short timer
+  - stage 2 pressure pot with a denser layered board, more matching clutter, and stronger time pressure
+  - limited `颠锅` count per stage
+  - explicit “露鹅即点击带走” end condition
+- Files updated:
+  - `printer/tools/generate_fake_library.mjs`
+  - `printer/research/fake_game_alignment_sources.md`
+  - regenerated `printer/output/*` including `remix_manifest.json`, `remix_manifest.js`, `midnight-goose-rush.html`, and `midnight-goose-rush.remix.json`
+  - added cover fallback file `printer/output/covers/midnight-goose-rush.png`
+- Validation:
+  - `node --check printer/tools/generate_fake_library.mjs` passed
+  - `node printer/tools/generate_fake_library.mjs` passed
+  - `node printer/tests/verify_fake_library.mjs` passed
+- Environment note:
+  - `node printer/tools/render_fake_covers.mjs` failed in this sandbox because Playwright Chromium could not launch under current macOS permission restrictions, so the new cover was generated locally as a static fallback PNG instead of a browser screenshot.
+
 ## 2026-04-25
 
 - Scope approved by user with "做".
@@ -218,6 +386,29 @@ Original prompt: 调研最近中英文互联网很火的 抽象的 好玩的 评
   - inline post composer with voice, command, and Post controls
   - tweet-shaped timeline cards with avatar, display name, handle, time, body, reply/repost/like/view row
   - expandable executive group-chat drawer for commands and OpenRouter setup
+
+## 2026-05-05 nostalgia anomaly-hunt addition
+
+- Chosen direction: a smallest-scope, today-relevant clone lane based on retro anomaly-hunt / `找茬大湿怀旧版` style gameplay rather than adding a broader system.
+- Added `nostalgia-spotter.html` through `printer/tools/generate_fake_library.mjs`.
+- Game scope:
+  - single 390x560 canvas classroom scene
+  - 7 hidden modern objects
+  - 90-second timer
+  - wrong-tap penalty of 6 seconds
+  - found-order tracking plus retro scanline presentation
+- Integrated the page into the fake-game manifest and home feed cover glyph order.
+- Updated validation:
+  - `printer/tests/verify_fake_library.mjs` now expects `nostalgia-spotter.html`
+  - `printer/tests/verify_game_alignment.mjs` now checks `window.__NOSTALGIA_SPOTTER__` and core state tokens
+- Validation run:
+  - `node printer/tools/generate_fake_library.mjs` passed
+  - `node printer/tests/verify_fake_library.mjs` passed
+  - `node printer/tests/verify_game_alignment.mjs` passed
+- Runtime caveat:
+  - local Playwright/Chromium launch failed in this sandboxed macOS environment with Mach port permission denial, so no browser smoke screenshot was captured through the normal harness on this run
+- Asset note:
+  - created `printer/output/covers/nostalgia-spotter.png` manually with Pillow because the existing Playwright cover renderer hit the same browser-launch sandbox issue
   - bottom navigation and floating compose button
 - Added alignment assertions for `xTopTabs`, `forYouTab`, `xTimeline`, `bottomNav`, and `floatingCompose`.
 - Validation:

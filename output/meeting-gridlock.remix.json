@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-meeting-gridlock",
+  "slug": "meeting-gridlock",
+  "title": "会议室别挨着",
+  "source_file": "zen-logic-fake.html",
+  "parent_slug": "zen-logic-fake",
+  "lineage": [
+    "zen-logic-fake",
+    "meeting-gridlock"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把佛系逻辑羊盘改成会议室座位安排：保留每行每列每色块唯一、且不能相邻的硬约束。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "会议室座位版逻辑盘：按行列和分区排人，每块区域只能坐一位，还不能挨着。",
+    "core_loop": "玩家面对一个被划成六块区域的 6x6 座位盘，需要把六位参会人安排进不同格子里；每一行、每一列、每个色块区域都只能出现一位，而且任何两位都不能横竖或斜角相邻，直到整盘约束同时成立。",
+    "controls": "点击空格放下一位参会人；再点已放的人即可撤回；点到冲突格只会给出冲突原因，不会落子；点击“重开这盘”恢复空盘。",
+    "mechanics": [
+      "行列唯一：每一行、每一列最终都只能保留一位参会人",
+      "色块唯一：每个彩色分区也只能放一位，直接复刻热门逻辑盘的区域约束",
+      "斜角禁贴：八方向相邻都算冲突，保留原作最关键的高压限制",
+      "自动排除：已放角色会自动让同行、同列、同区和相邻格变灰，形成扫雷式排除反馈",
+      "唯一候选提示：当某行、某列或某分区只剩一个可放点时，会被高亮提示，复刻“只剩一格就该落子”的爽点"
+    ],
+    "visual_language": "把柔和小羊盘换成会议室座位图：冷色背景、彩色会议分区、圆点头像符号，仍旧保持单屏竖版和极简离线风格。",
+    "state_model": "state.queens 保存当前已放角色的行列位置；forced 记录由行列分区推导出的唯一候选格；state.note 记录最近一次冲突或撤回提示；state.mode 在 playing/won 间切换。",
+    "share_hook": "“终于把这 6 个人排开了”天然像办公室梗图，适合做轻度传播和再二创。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入每日盘面 seed",
+      "加入手动叉号笔记层",
+      "加入完成步数或误触统计"
+    ]
+  },
+  "files": {
+    "html": "meeting-gridlock.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

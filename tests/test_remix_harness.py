@@ -48,6 +48,19 @@ window.advanceTime = () => {};
 </body></html>"""
 
 
+GENERATED_FAKE_HTML = """<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Drawer Storm</title></head>
+<body data-printer-artifact="fake-game-library" data-game-page="drawer-storm">
+<div class="phone-shell">fake from scratch</div>
+<script>
+window.__PRINTER_ARTIFACT__ = {"game":{"id":"drawer-storm","title":"Drawer Storm","kind":"Fake"}};
+window.render_game_to_text = () => JSON.stringify({mode:"fake"});
+window.advanceTime = () => {};
+</script>
+</body></html>"""
+
+
 class FakeGenerator:
     def generate_remix(self, context):
         return {
@@ -64,6 +77,29 @@ class FakeGenerator:
                 "share_hook": "Queue rank card.",
                 "known_constraints": ["离线单文件", "移动竖屏", "无外链"],
                 "next_evolution_hooks": ["add boss rush"],
+            },
+        }
+
+
+class FakeFromScratchGenerator:
+    def generate_fake_game(self, context):
+        return {
+            "title": "Drawer Storm",
+            "slug_suggestion": "drawer-storm",
+            "kind": "Fake",
+            "accent": "#ffcf33",
+            "glyph": "造",
+            "html": GENERATED_FAKE_HTML,
+            "agent_description": {
+                "one_liner": "A from-scratch drawer sorting fake game.",
+                "core_loop": "Drag loose items into matching drawers before the desk overflows.",
+                "controls": "Touch drag or click.",
+                "mechanics": ["sorting", "overflow timer"],
+                "visual_language": "Warm desk lights with punchy item pops.",
+                "state_model": "score, streak, desk clutter, timer",
+                "share_hook": "Desk cleanliness rank card.",
+                "known_constraints": ["离线单文件", "移动竖屏", "无外链"],
+                "next_evolution_hooks": ["add rare item events"],
             },
         }
 
@@ -157,6 +193,31 @@ class RemixHarnessTest(unittest.TestCase):
                 agent_description=draft["agent_description"],
             )
 
+    def test_create_fake_draft_publishes_as_fake_manifest_entry(self):
+        harness = RemixHarness(self.output_dir, fake_generator=FakeFromScratchGenerator())
+
+        draft = harness.create_fake_draft(
+            prompt_text="fake a drawer sorting game from zero",
+            voice_transcript="",
+        )
+        published = harness.publish_draft(
+            draft_id=draft["draft_id"],
+            slug="drawer-storm",
+            title=draft["title"],
+            agent_description=draft["agent_description"],
+        )
+
+        self.assertEqual(published["file"], "drawer-storm.html")
+        html = (self.output_dir / "drawer-storm.html").read_text(encoding="utf-8")
+        self.assertIn('"creation_mode": "scratch"', html)
+        self.assertIn('"parent_file": "__scratch__.html"', html)
+        description = json.loads((self.output_dir / "drawer-storm.remix.json").read_text(encoding="utf-8"))
+        self.assertEqual(description["origin"], "scratch")
+        self.assertEqual(description["source_file"], "__scratch__.html")
+        manifest = json.loads((self.output_dir / "remix_manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["remixes"][0]["kind"], "Fake")
+        self.assertEqual(manifest["remixes"][0]["glyph"], "造")
+
     def test_api_draft_publish_and_transcribe_with_fake_clients(self):
         harness = RemixHarness(self.output_dir, generator=FakeGenerator(), transcriber=FakeTranscriber())
         client = TestClient(create_app(harness))
@@ -216,6 +277,31 @@ class RemixHarnessTest(unittest.TestCase):
         self.assertEqual(body["percent"], 100)
         self.assertIn("draft", body)
         self.assertTrue(body["draft"]["preview_url"].endswith("/index.html"))
+
+    def test_api_fake_draft_job_reports_progress_and_completes(self):
+        harness = RemixHarness(self.output_dir, fake_generator=FakeFromScratchGenerator())
+        client = TestClient(create_app(harness))
+
+        created = client.post(
+            "/api/fake/draft-jobs",
+            json={"prompt_text": "fake a drawer sorting game from zero", "voice_transcript": ""},
+        )
+        self.assertEqual(created.status_code, 200)
+        job_id = created.json()["job_id"]
+
+        status = client.get(f"/api/fake/draft-jobs/{job_id}")
+        for _ in range(20):
+            body = status.json()
+            if body["status"] == "done":
+                break
+            time.sleep(0.02)
+            status = client.get(f"/api/fake/draft-jobs/{job_id}")
+
+        body = status.json()
+        self.assertEqual(body["status"], "done")
+        self.assertEqual(body["percent"], 100)
+        self.assertIn("draft", body)
+        self.assertEqual(body["draft"]["title"], "Drawer Storm")
 
 
 if __name__ == "__main__":

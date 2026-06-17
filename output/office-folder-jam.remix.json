@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-folder-jam",
+  "slug": "office-folder-jam",
+  "title": "工位文件归槽",
+  "source_file": "color-block-jam-fake.html",
+  "parent_slug": "color-block-jam-fake",
+  "lineage": [
+    "color-block-jam-fake",
+    "office-folder-jam"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 Color Block Jam 式彩块滑门谜题改成办公室文件归档主题，彩块换成不同部门文件夹，出口换成收纳槽。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室主题的彩块滑门二创：先给大文件夹让路，再把所有部门件滑进对应收纳槽。",
+    "core_loop": "玩家面对一块被柜体挡住的 6x6 工位归档板，先选中文件夹，再朝四个方向一划；文件夹会沿空路一直滑到停点，若正好贴到同部门收纳槽边缘就会直接归档离场；把大文件夹先挪走、为后排小件腾出通道，直到整盘文件都滑进各自槽位。",
+    "controls": "单指点中文件夹后朝四个方向滑动，或使用下方方向按钮微调；点击“重开这一层”恢复固定牌面。",
+    "mechanics": [
+      "任意方向滑动：不同于固定箭头位移，这类彩块可以朝四个方向尝试，直到撞到柜体或别的文件夹才停下",
+      "同色门口离场：只有对应部门文件夹贴到自己的收纳槽边缘时才会立刻消失，保留 Color Block Jam 的核心目标",
+      "尺寸差异：盘里同时有长条夹和小件夹，必须先处理占位最大的长条件",
+      "固定障碍：柜体不会移动，只负责制造窄通道和卡位，强化短线空间规划",
+      "短局复玩：单盘几步到十几步即可解完，天然适合快速连刷和再二创"
+    ],
+    "visual_language": "把亮色彩块换成冷色办公室文件夹与收纳槽，深蓝背景配玻璃感面板，仍保持离线单文件和手机竖屏的轻量节奏。",
+    "state_model": "state.blocks 保存每个文件夹的行列位置、尺寸、颜色和是否已归档；state.selectedId 记录当前被选中的文件夹；state.moves 统计推档次数；state.mode 在 playing/won 间切换。",
+    "share_hook": "“把一层文件一次性归槽完了”很像办公室段子截图，也适合作为同一玩法线的轻主题二创。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更多固定盘面 seed",
+      "加入一步撤回",
+      "加入更长的双格和三格文件夹组合"
+    ]
+  },
+  "files": {
+    "html": "office-folder-jam.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

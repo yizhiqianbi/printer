@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-raider-yard",
+  "slug": "office-raider-yard",
+  "title": "工位摸鱼盘",
+  "source_file": "brainrot-raider-yard.html",
+  "parent_slug": "brainrot-raider-yard",
+  "lineage": [
+    "brainrot-raider-yard",
+    "office-raider-yard"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把偷家脑腐怪改成工位杂物主题，保留生单位、拖拽合成、产币和定时防偷。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "工位杂物主题的偷家合成盘：摆物件、拖同类升级、挂机摸鱼，还得拦住巡查经理。",
+    "core_loop": "玩家用摸鱼币不断往工位盘里摆进便签、咖啡杯和表格等低阶杂物，再把两个同类拖到一起升级成更值钱的大件；工位会持续自动产出摸鱼币，但每隔一段时间巡查经理都会来收走最低阶物件，玩家必须在倒计时结束前按下拦截按钮，否则节奏会被打断。",
+    "controls": "点击“摆一件”消耗货币生成新物件；按住并拖动物件，把同级物件拖到一起完成合成；巡查经理弹窗出现时点“拦截小偷”；点击“重开这块场”重置局面。",
+    "mechanics": [
+      "生成单位：花费随场上单位数上涨，逼玩家平衡扩张速度",
+      "拖拽合成：只有同级物件可以合成，合成后会直接抬高秒产",
+      "挂机产币：每个物件每秒稳定产出，形成明确的养成坡度",
+      "定时防偷：巡查经理总是盯最低阶物件，形成轻度实时打断",
+      "格子解锁：随着合成次数增长，工位盘会逐步开放更多位置"
+    ],
+    "visual_language": "夜班工位主题，深青背景加冷色霓虹，圆形单位改成工位杂物徽章，保持离线单文件和手机竖屏的轻量手感。",
+    "state_model": "state.units 保存每个单位的 tier 与 slot；state.coins 与 totalIncome 组成养成经济；state.raid 记录当前巡查事件；state.slotCount 控制已解锁工位数。",
+    "share_hook": "“经理一来我就被偷走三杯咖啡”这种结果文案很适合做轻吐槽截图。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更强偷家事件",
+      "加入随机 buff 物件",
+      "加入结果卡和最高摸鱼币排行"
+    ]
+  },
+  "files": {
+    "html": "office-raider-yard.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

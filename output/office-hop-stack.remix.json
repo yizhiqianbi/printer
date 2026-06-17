@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-hop-stack",
+  "slug": "office-hop-stack",
+  "title": "工牌踩箱梯",
+  "source_file": "emoji-gator-hop.html",
+  "parent_slug": "emoji-gator-hop",
+  "lineage": [
+    "emoji-gator-hop",
+    "office-hop-stack"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 TikTok 隐藏表情跳跃游戏改成夜班工位主题，保留自动弹跳、易碎台、危险台和表情/道具冲刺。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "夜班工位主题的纵向跳跃二创：托盘接跳、破箱会塌、咖啡徽章给一次猛冲。",
+    "core_loop": "玩家控制一个工牌徽章在一串向上排列的文件托盘和纸箱间自动回弹，只需要左右接下一个落点；普通托盘稳定回弹，破箱只会承重一次，灰色危险托盘会直接让本局结束，而漂浮的咖啡徽章会把角色猛冲到更高的楼层。",
+    "controls": "单指左右拖动控制落点，角色落到平台就会自动弹起；点击“重开这一跳”回到固定开局节奏。",
+    "mechanics": [
+      "自动弹跳：保留社交 App 彩蛋小游戏那种零学习成本，上手即玩",
+      "纵向追镜头：镜头始终追着最高点走，失误掉屏就结束，短局复玩很强",
+      "一次性破箱：黄箱踩过就塌，逼玩家及时横移换线",
+      "危险托盘：灰色骷髅托盘碰到即死，保留原始玩法的明确惩罚点",
+      "加速徽章：漂浮咖啡徽章提供强上冲，复刻原作里表情/道具触发的爽点"
+    ],
+    "visual_language": "把绿色鳄梯换成冷色工位托盘和纸箱，角色改成工牌徽章，保持单屏纵向跳跃和社交彩蛋游戏的轻量感。",
+    "state_model": "state.player 保存横向位置、纵向速度和当前冲刺尾迹；state.platforms 记录不同平台类型与是否已损坏；state.pickups 记录漂浮咖啡徽章；state.cameraY 决定纵向追踪镜头；state.score 与 combo 管理当前高度与连踩表现。",
+    "share_hook": "“夜班工牌连踩 80 层才掉下去”这种成绩天然适合截图分享。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入每日固定平台 seed",
+      "加入好友最高层文案",
+      "加入冲刺后短暂无敌特效"
+    ]
+  },
+  "files": {
+    "html": "office-hop-stack.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

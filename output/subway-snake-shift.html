@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="icon" href="data:,">
+  <title>地铁刷卡蛇 - Arcade Atelier Remix</title>
+  <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
+  <style>
+    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #5dc2ff; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
+    body { display: grid; place-items: start center; overscroll-behavior: none; }
+    button, input { font: inherit; min-width: 0; }
+    button, a, input { touch-action: manipulation; }
+    .phone-shell { width: min(100vw, 430px); min-height: 100svh; background:
+      radial-gradient(circle at 50% 4%, rgba(255,59,134,.42), transparent 34%),
+      radial-gradient(circle at 10% 24%, rgba(34,244,238,.16), transparent 26%),
+      linear-gradient(180deg, #160611 0, #080509 42%, #030303 100%); border-left: 1px solid var(--line); border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; }
+    .app-top { position: sticky; top: 0; z-index: 5; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(14px, env(safe-area-inset-left)); border-bottom: 1px solid rgba(255,255,255,.08); background: linear-gradient(to bottom, rgba(0,0,0,.78), rgba(0,0,0,.28)); color: #fff; backdrop-filter: blur(16px); }
+    .brand { color: inherit; text-decoration: none; font-weight: 900; }
+    .app-top a:last-child { color: #fff; opacity: .72; text-decoration: none; font-weight: 900; font-size: 13px; }
+    .screen { padding: 12px 12px calc(18px + env(safe-area-inset-bottom)); flex: 1; min-width: 0; }
+    .play-screen { display: flex; flex-direction: column; min-height: calc(100svh - 50px); min-width: 0; }
+    .hero { min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; padding: 12px 2px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .play-hero { min-height: 88px; }
+    .kicker { margin: 0; color: var(--cyan); font-size: 11px; font-weight: 1000; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(34px, 11vw, 54px); line-height: .88; letter-spacing: 0; color: #fff; text-shadow: 0 6px 28px rgba(255,59,134,.2); }
+    h2 { margin: 0 0 12px; font-size: clamp(25px, 8vw, 36px); line-height: 1; letter-spacing: 0; }
+    .summary { margin: 0; color: rgba(255,255,255,.62); line-height: 1.42; font-size: 13px; }
+    .game-stage { display: grid; gap: 10px; padding-top: 10px; touch-action: none; flex: 1; align-content: start; min-width: 0; }
+    .game-stage > * { min-width: 0; max-width: 100%; }
+    .panel { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 14px; box-shadow: 0 18px 54px rgba(0,0,0,.28); backdrop-filter: blur(18px); color: #fff; min-width: 0; max-width: 100%; }
+    .compact { padding: 12px; }
+    .primary { min-height: 54px; border: 0; border-radius: 999px; padding: 0 18px; background: linear-gradient(135deg, var(--accent), #ff6aa8); color: #fff; font-weight: 1000; cursor: pointer; box-shadow: 0 12px 30px rgba(255,59,134,.28); }
+    .primary:disabled, button:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
+    .hidden { display: none !important; }
+    .play-canvas { width: 100%; height: auto; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: #09070d; display: block; touch-action: none; box-shadow: 0 24px 70px rgba(0,0,0,.34); }
+    .play-canvas.short { aspect-ratio: 390 / 320; }
+    html.embed-mode, html.embed-mode body { min-height: 100%; background: #000; }
+    html.embed-mode body { display: block; overflow: hidden; }
+    html.embed-mode .phone-shell { width: 100vw; min-height: 100svh; border: 0; background: #000; box-shadow: none; }
+    html.embed-mode .app-top, html.embed-mode .play-hero { display: none; }
+    html.embed-mode .screen { padding: 0 10px 10px; }
+    html.embed-mode .play-screen { min-height: 100svh; }
+    html.embed-mode .game-stage { padding-top: 10px; gap: 8px; }
+    html.embed-mode .play-canvas { max-height: calc(100svh - 116px); object-fit: contain; }
+    html.embed-mode .panel { box-shadow: none; }
+    .stack { display: grid; gap: 10px; }
+    .stat-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: rgba(255,255,255,.84); font-size: 13px; font-weight: 900; }
+    .button-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .choice, .shop-row, .chip, .plot { border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; min-height: 58px; padding: 12px 14px; text-align: left; font-weight: 850; cursor: pointer; }
+    .choice:active, .chip:active, .plot:active, .big-tap:active { transform: scale(.98); }
+    .meter { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+    .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--accent)); }
+    .result-card { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 14px; color: #fff; }
+    .bars { display: grid; gap: 8px; margin: 12px 0; }
+    .bars span { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 8px; font-size: 12px; }
+    .bars i { display: block; height: 9px; border-radius: 999px; background: var(--accent); }
+    .tray { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .tray span { aspect-ratio: 1; border: 1px dashed rgba(255,255,255,.24); border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.09); font-weight: 900; }
+    .triple-playfield { gap: 10px; }
+    .triple-targets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .triple-chip { min-height: 56px; border: 1px solid var(--chip-edge, rgba(255,255,255,.14)); border-radius: 14px; padding: 8px 9px; background: color-mix(in srgb, var(--chip-fill, rgba(255,255,255,.14)), rgba(255,255,255,.08) 76%); color: var(--chip-ink, #fff); display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 6px; }
+    .triple-chip b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 9px; background: rgba(255,255,255,.3); font-size: 13px; }
+    .triple-chip i, .triple-chip u { font-style: normal; text-decoration: none; font-weight: 900; }
+    .triple-chip i { font-size: 11px; }
+    .triple-chip u { font-size: 15px; }
+    .triple-board { position: relative; min-height: 346px; border: 1px solid rgba(255,255,255,.16); border-radius: 20px; background: radial-gradient(circle at 50% 16%, var(--pile-glow, rgba(125,214,255,.18)), transparent 34%), linear-gradient(180deg, var(--board-top, #08131f), var(--board-bottom, #050a12)); overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 20px 50px rgba(0,0,0,.28); }
+    .triple-board::after { content: ""; position: absolute; left: 18px; right: 18px; bottom: 18px; height: 46px; border-radius: 50%; background: rgba(0,0,0,.22); filter: blur(12px); pointer-events: none; }
+    .triple-item { position: absolute; width: 68px; height: 76px; margin-left: -34px; margin-top: -38px; border: 0; background: transparent; padding: 0; display: grid; place-items: center; cursor: pointer; }
+    .triple-item-glyph { width: 64px; height: 64px; border: 2px solid rgba(255,255,255,.22); border-radius: 18px; display: grid; place-items: center; font-size: 27px; font-weight: 1000; box-shadow: 0 14px 24px rgba(0,0,0,.22); }
+    .triple-item-tag { margin-top: -10px; min-width: 42px; border-radius: 999px; padding: 3px 8px; background: rgba(0,0,0,.48); color: rgba(255,255,255,.88); font-size: 10px; font-weight: 900; }
+    .triple-item.top .triple-item-glyph { transform: translateY(-4px); box-shadow: 0 18px 28px rgba(0,0,0,.32); }
+    .triple-item.locked { cursor: not-allowed; }
+    .triple-item.locked .triple-item-glyph { filter: saturate(.55) brightness(.82); opacity: .72; }
+    .triple-tray-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin: 10px 0 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .triple-tray { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; background: color-mix(in srgb, var(--tray-glow, rgba(255,255,255,.08)), rgba(255,255,255,.05) 62%); }
+    .triple-slot { min-height: 38px; border-radius: 12px; border: 1px dashed rgba(255,255,255,.2); display: grid; place-items: center; font-size: 18px; font-weight: 1000; }
+    .triple-slot.empty { background: rgba(255,255,255,.04); }
+    .triple-slot.filled { border-style: solid; box-shadow: inset 0 -6px 10px rgba(0,0,0,.12); }
+    .goods-targets { margin-bottom: 10px; }
+    .goods-shelves { display: grid; gap: 10px; }
+    .goods-shelf { border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 10px; background: rgba(255,255,255,.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .goods-shelf-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .goods-lane-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .goods-lane { position: relative; min-height: 108px; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 10px 8px 8px; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); color: #fff; display: grid; align-content: space-between; justify-items: center; gap: 8px; overflow: hidden; cursor: pointer; }
+    .goods-lane::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 10px; height: 9px; border-radius: 999px; background: rgba(0,0,0,.22); filter: blur(7px); }
+    .goods-lane.empty { opacity: .56; cursor: default; }
+    .goods-backdrop { position: absolute; inset: 0; background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--lane-glow), white 18%), transparent 34%); opacity: .8; pointer-events: none; }
+    .goods-item { position: relative; z-index: 1; width: 70px; min-height: 72px; border: 2px solid rgba(255,255,255,.18); border-radius: 18px; display: grid; place-items: center; gap: 3px; padding: 8px 6px; box-shadow: 0 16px 24px rgba(0,0,0,.22); }
+    .goods-item b { font-size: 26px; line-height: 1; }
+    .goods-item i { font-style: normal; font-size: 11px; font-weight: 900; }
+    .goods-lane u, .goods-empty-copy { position: relative; z-index: 1; text-decoration: none; font-size: 11px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .box-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .color-box { min-height: 78px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 10px; background: color-mix(in srgb, var(--box-fill), rgba(255,255,255,.08) 76%); display: grid; gap: 8px; }
+    .color-box b { font-size: 13px; }
+    .color-box span { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .color-box i { min-height: 28px; border-radius: 10px; display: grid; place-items: center; font-style: normal; font-weight: 1000; background: rgba(0,0,0,.22); color: #fff; }
+    .big-tap { min-height: 118px; border: 0; border-radius: 28px; background: linear-gradient(145deg, var(--accent), #ff8ab9); color: #fff; display: grid; place-items: center; gap: 4px; font-weight: 1000; box-shadow: inset 0 -16px 30px rgba(0,0,0,.18), 0 20px 60px rgba(255,59,134,.32); }
+    .big-tap.dark { background: linear-gradient(145deg, #151018, #31112a 54%, var(--accent)); color: #fff; }
+    .big-tap b { font-size: 32px; }
+    .big-tap span { font-size: 12px; letter-spacing: .2em; }
+    .shop { display: grid; gap: 8px; }
+    .shop-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .shop-row span { color: rgba(255,255,255,.68); font-size: 12px; }
+    .field-label { display: grid; gap: 8px; font-weight: 900; }
+    .input { width: 100%; min-height: 58px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 0 14px; background: rgba(255,255,255,.1); color: #fff; font-size: 20px; font-weight: 900; outline: none; }
+    .input:focus { border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(34,244,238,.15); }
+    .input::placeholder { color: rgba(255,255,255,.42); }
+    .rules { display: grid; gap: 8px; margin-top: 12px; }
+    .rule { display: flex; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px; background: rgba(255,59,134,.11); }
+    .rule.ok { background: rgba(34,244,238,.12); border-color: rgba(34,244,238,.42); }
+    .win-note { padding: 12px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 900; }
+    .slots { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; min-width: 0; }
+    .slots span { min-width: 0; min-height: 84px; display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.22); border-radius: 18px; padding: 8px; text-align: center; font-size: clamp(18px, 6vw, 28px); line-height: 1.08; font-weight: 1000; background: rgba(255,255,255,.09); color: #fff; overflow: hidden; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin: 12px 0; min-width: 0; }
+    .craft-stats { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; margin: 10px 0 0; color: var(--cyan); font-size: 12px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; min-width: 0; }
+    .craft-stats span, #craftLog { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-history { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 0; scrollbar-width: none; }
+    .craft-history::-webkit-scrollbar { display: none; }
+    .craft-history span { flex: 0 0 auto; max-width: 270px; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-weight: 800; white-space: nowrap; }
+    .chip-pool { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; max-width: 100%; }
+    .chip { min-width: 0; min-height: 42px; text-align: center; width: auto; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+    .chip small { display: block; margin-top: 4px; color: rgba(255,255,255,.48); font-size: 10px; font-weight: 900; }
+    .picked { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 78%); }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4px; }
+    .fake-check input { position: absolute; opacity: 0; }
+    .fake-check span { display: block; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.22); border-radius: 6px; background: rgba(255,255,255,.08); }
+    .fake-check input:checked + span { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 3px #050505; }
+    .garden-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .plot { min-height: 98px; background: rgba(255,255,255,.1); text-align: center; display: grid; place-items: center; }
+    .plot.ready { background: linear-gradient(145deg, rgba(34,244,238,.25), rgba(255,59,134,.22)); border-color: rgba(34,244,238,.55); }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .tag { display: inline-flex; margin: 6px 6px 0 0; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); }
+    .mystic-card { background: radial-gradient(circle at 20% 10%, rgba(255,59,134,.34), rgba(255,255,255,.08) 48%); }
+    .oracle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .oracle-card { min-height: 154px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 10px; display: grid; align-content: space-between; background: linear-gradient(160deg, color-mix(in srgb, var(--game-accent), #050505 44%), rgba(255,255,255,.08)); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+    .oracle-card b { font-size: 28px; line-height: 1; }
+    .oracle-card span { color: rgba(255,255,255,.68); font-size: 11px; font-weight: 900; }
+    .oracle-card strong { font-size: 13px; line-height: 1.1; }
+    .pillar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .pillar { min-height: 90px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 9px 6px; display: grid; place-items: center; gap: 4px; background: rgba(255,255,255,.08); text-align: center; }
+    .pillar b { font-size: 28px; line-height: 1; }
+    .pillar span { color: rgba(255,255,255,.58); font-size: 10px; font-weight: 1000; }
+    .element-bars { display: grid; gap: 7px; margin-top: 12px; }
+    .element-bar { display: grid; grid-template-columns: 34px 1fr 30px; align-items: center; gap: 8px; font-size: 12px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .element-bar i { height: 9px; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--game-accent)); }
+    .aspect-list { display: grid; gap: 8px; margin-top: 10px; }
+    .aspect-list span, .cast-log span { display: block; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 9px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-size: 12px; font-weight: 850; }
+    .coin-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 10px 0; }
+    .coin { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.22); background: radial-gradient(circle at 35% 25%, #ffe7a3, #b56d25 64%, #4d2415); color: #2d160c; font-size: 20px; font-weight: 1000; box-shadow: 0 12px 32px rgba(0,0,0,.28); }
+    .hex-lines { display: grid; gap: 7px; padding: 8px 0; }
+    .hex-line { height: 16px; display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .hex-line.broken { grid-template-columns: 1fr 1fr; }
+    .hex-line i { display: block; border-radius: 999px; background: linear-gradient(90deg, #ffe7a3, var(--game-accent)); }
+    .cast-log { display: grid; gap: 8px; }
+    .sim-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .sim-header b { font-size: 18px; }
+    .sim-header span { color: var(--cyan); font-size: 12px; font-weight: 1000; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stat-grid span { min-height: 58px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.08); }
+    .stat-grid b { font-size: 20px; line-height: 1; }
+    .stat-grid i { color: rgba(255,255,255,.58); font-size: 11px; font-style: normal; font-weight: 900; }
+    .action-grid { display: grid; gap: 8px; }
+    .action-grid .choice { display: grid; gap: 4px; }
+    .action-grid .choice span { color: rgba(255,255,255,.62); font-size: 12px; font-weight: 800; overflow-wrap: anywhere; }
+    .student-list, .timeline { display: grid; gap: 8px; }
+    .student-list span, .timeline span { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.84); font-size: 12px; line-height: 1.35; }
+    .student-list b { display: block; color: #fff; font-size: 13px; margin-bottom: 3px; }
+    .student-list i { color: rgba(255,255,255,.62); font-style: normal; font-weight: 800; }
+    .alloc-grid { display: grid; gap: 8px; margin: 10px 0; }
+    .alloc-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 8px; background: rgba(255,255,255,.08); }
+    .alloc-row span { font-weight: 900; }
+    .alloc-row b { text-align: center; font-size: 18px; }
+    .alloc-row button { min-height: 40px; border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-weight: 1000; }
+    body[data-game-page="twitter-governance"] { background: #000; }
+    body[data-game-page="twitter-governance"] .phone-shell { background: #000; color: #e7e9ea; border-color: rgba(255,255,255,.14); }
+    body[data-game-page="twitter-governance"] .app-top,
+    body[data-game-page="twitter-governance"] .play-hero { display: none; }
+    body[data-game-page="twitter-governance"] .play-screen { padding: 0; min-height: 100svh; background: #000; }
+    body[data-game-page="twitter-governance"] .game-stage { display: block; gap: 0; padding-bottom: 78px; }
+    .x-app { position: relative; min-height: 100svh; background: #000; color: #e7e9ea; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    .x-header { position: sticky; top: 0; z-index: 8; height: 50px; display: grid; grid-template-columns: 50px 1fr 50px; align-items: center; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-header b { text-align: center; color: #fff; font-size: 24px; line-height: 1; font-weight: 900; }
+    .x-header button { width: 36px; height: 36px; margin: auto; border: 0; border-radius: 50%; background: transparent; color: #e7e9ea; font-size: 14px; font-weight: 900; }
+    .x-header button:first-child { background: #1d9bf0; color: #001018; }
+    .x-header #agentBtn { border: 1px solid #2f3336; font-size: 11px; color: #1d9bf0; }
+    .x-top-tabs { position: sticky; top: 50px; z-index: 8; display: grid; grid-template-columns: 1fr 1fr; height: 48px; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-top-tabs button { position: relative; border: 0; background: transparent; color: #71767b; font-size: 15px; font-weight: 800; }
+    .x-top-tabs .active { color: #e7e9ea; }
+    .x-top-tabs .active::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 54px; height: 4px; transform: translateX(-50%); border-radius: 999px; background: #1d9bf0; }
+    .x-status-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #2f3336; background: #000; }
+    .x-status-strip span { min-width: 0; min-height: 54px; display: grid; place-items: center; gap: 2px; border-right: 1px solid #16181c; }
+    .x-status-strip span:last-child { border-right: 0; }
+    .x-status-strip b { color: #e7e9ea; font-size: 16px; line-height: 1; }
+    .x-status-strip i { color: #71767b; font-size: 10px; font-style: normal; font-weight: 800; }
+    .x-composer-inline { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid #2f3336; background: #000; }
+    .x-avatar { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #1d9bf0; color: #001018; font-size: 20px; font-weight: 1000; }
+    .x-compose-body { min-width: 0; display: grid; gap: 8px; }
+    .x-composer-inline textarea { width: 100%; min-height: 64px; border: 0; padding: 8px 0; resize: none; background: transparent; color: #e7e9ea; font: inherit; font-size: 19px; line-height: 1.28; outline: none; }
+    .x-composer-inline textarea::placeholder { color: #71767b; }
+    .x-compose-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid #2f3336; padding-top: 8px; }
+    .x-compose-tools button { min-height: 36px; border: 0; border-radius: 999px; padding: 0 13px; background: transparent; color: #1d9bf0; font-weight: 900; }
+    .x-compose-tools #sendTweet { min-width: 68px; background: #1d9bf0; color: #fff; }
+    .x-compose-tools #commandToggle { background: rgba(29,155,240,.14); }
+    .x-timeline { background: #000; }
+    .news-feed { display: grid; }
+    .news-feed article { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; border-bottom: 1px solid #2f3336; padding: 12px 14px 10px; background: #000; }
+    .news-feed article::before { content: attr(data-avatar); width: 40px; height: 40px; grid-row: 1 / span 3; display: grid; place-items: center; border-radius: 50%; background: var(--tweet-avatar, #273340); color: #fff; font-size: 16px; font-weight: 1000; }
+    .news-feed header { min-width: 0; display: flex; align-items: baseline; gap: 5px; color: #71767b; font-size: 13px; line-height: 1.2; }
+    .news-feed header b { min-width: 0; color: #e7e9ea; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .news-feed header span { flex: 0 0 auto; }
+    .news-feed p { grid-column: 2; margin: 3px 0 8px; color: #e7e9ea; font-size: 15px; line-height: 1.34; font-weight: 500; overflow-wrap: anywhere; }
+    .tweet-actions { grid-column: 2; display: grid; grid-template-columns: repeat(4, 1fr); color: #71767b; font-size: 12px; font-weight: 800; }
+    .tweet-actions span { display: inline-flex; align-items: center; gap: 5px; }
+    .x-drawer { display: none; margin: 0; border-bottom: 1px solid #2f3336; padding: 12px 14px; background: #000; }
+    .x-drawer.is-open { display: grid; gap: 12px; }
+    .x-drawer-head { display: flex; justify-content: space-between; gap: 10px; color: #e7e9ea; }
+    .x-drawer-head span { color: #71767b; font-size: 12px; font-weight: 900; }
+    .advisor-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .advisor-roster .choice { min-height: 68px; display: grid; align-content: center; gap: 4px; border: 1px solid #2f3336; border-radius: 16px; padding: 10px; background: #000; color: #e7e9ea; text-align: left; }
+    .advisor-roster .choice b { font-size: 14px; }
+    .advisor-roster .choice span { color: #71767b; font-size: 11px; line-height: 1.2; font-weight: 850; }
+    .command-log span { border-color: #2f3336; background: #000; color: #cfd9de; }
+    .key-drawer { border: 1px solid #2f3336; border-radius: 16px; padding: 10px 12px; background: #000; }
+    .key-drawer summary { color: #71767b; font-size: 12px; font-weight: 1000; cursor: pointer; }
+    .key-drawer input { width: 100%; min-height: 42px; margin-top: 8px; border: 1px solid #2f3336; border-radius: 12px; padding: 0 10px; background: #000; color: #e7e9ea; font: inherit; }
+    .key-drawer button { margin-top: 8px; width: 100%; background: #1d9bf0; }
+    .floating-compose { position: fixed; z-index: 12; right: max(18px, calc((100vw - 430px) / 2 + 18px)); bottom: calc(78px + env(safe-area-inset-bottom)); width: 58px; height: 58px; border: 0; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 30px; line-height: 1; font-weight: 900; box-shadow: 0 12px 34px rgba(29,155,240,.34); }
+    .bottom-nav { position: fixed; left: 50%; bottom: 0; z-index: 10; width: min(100vw, 430px); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr); height: calc(58px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #2f3336; background: rgba(0,0,0,.92); backdrop-filter: blur(18px); }
+    .bottom-nav button { border: 0; background: transparent; color: #e7e9ea; font-size: 23px; }
+    @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
+  </style>
+</head>
+<body data-printer-artifact="fake-game-library" data-game-page="subway-snake-shift" data-output-format="multi_html">
+  <div class="phone-shell">
+    <header class="app-top"><a class="brand" href="index.html">Arcade Atelier</a><a href="subway-snake-shift.html">重载</a></header>
+    <main class="screen play-screen">
+      <section class="hero play-hero">
+        <p class="kicker">REMIX · 竞技</p>
+        <h1>地铁刷卡蛇</h1>
+      </section>
+      <section class="game-stage">
+        
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact">
+        <div class="stat-row"><b id="snakeScore">长度 12</b><span id="snakeRank">第 5 名</span></div>
+        <p id="snakeStatus">拖动像给列车变道，长按冲刺会掉票，但能抢到换乘豆。</p>
+        <div class="button-row">
+          <button class="choice" id="boostBtn">长按冲刺</button>
+          <button class="primary" id="resetBtn">重开</button>
+        </div>
+      </section>
+    
+      </section>
+    </main>
+  </div>
+  <script>
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏 Playable Catalog：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-06-17T05:50:57.731Z","game":{"id":"subway-snake-shift","file":"subway-snake-shift.html","cover":"covers/subway-snake-shift.png","title":"地铁刷卡蛇","kind":"竞技","source_game":"贪吃蛇大作战式通勤二创","mobile_portrait":true,"canvas_playfield":true},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 Playable Catalog","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":58,"components":14,"interactions":20,"pages":3,"data_flow":9},"parent_file":"snake-battle-fake.html","remix_prompt":"把贪吃蛇大作战式冲榜局改成地铁通勤主题，光豆换成刷卡点，冲刺掉出票根，整体更像晚高峰换乘。","agent_description_file":"subway-snake-shift.remix.json"};
+    (() => {
+      
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const CONFIG = {"hudLead":"先吃进站点，再冲过换乘口，长度到 40 就算通勤通关。","goalCopy":"拖动像给列车变道，长按冲刺会掉票，但能抢到换乘豆。","boostCopy":"正在压站冲刺，尾巴会抖出票根，别一头撞进别车。","arenaTitle":"换乘大厅","boostLabel":"长按冲刺","baseColor":"#5dc2ff","boostColor":"#c4f0ff","pelletA":"#ffd166","pelletB":"#ff8f5e","arenaTop":"#0b1830","arenaBottom":"#09111f","ring":"#5dc2ff","grid":"rgba(93,194,255,.11)","botNames":["二号线","九号线","末班车","闸机口"]};
+      window.__SNAKE_DEBUG_CONFIG__ = { reference: "贪吃蛇大作战式通勤二创", canvas: [390, 560], boost: true, bots: CONFIG.botNames.length, targetLength: 40 };
+      const WORLD = { w: 820, h: 1180 };
+      const SEGMENT = 10;
+      const BASE_SPEED = 94;
+      const BOOST_SPEED = 154;
+      const TURN_RATE = 3.8;
+      const GOAL = 40;
+      const botColors = ['#ff8a65', '#ffd54f', '#81c784', '#64b5f6', '#ce93d8'];
+      const pointer = { active: false, x: WORLD.w / 2, y: WORLD.h / 2 };
+      const state = { mode: 'playing', player: null, bots: [], pellets: [], boostHeld: false, tick: 0, deathBursts: 0 };
+      function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+      function wrapAngle(angle) {
+        while (angle > Math.PI) angle -= Math.PI * 2;
+        while (angle < -Math.PI) angle += Math.PI * 2;
+        return angle;
+      }
+      function rand(seed) {
+        const x = Math.sin(seed * 12.9898) * 43758.5453;
+        return x - Math.floor(x);
+      }
+      function spawnPellet(seed, bonus) {
+        return {
+          x: 26 + rand(seed * 3 + 1) * (WORLD.w - 52),
+          y: 30 + rand(seed * 5 + 2) * (WORLD.h - 60),
+          r: bonus ? 7 : 5,
+          gain: bonus ? 2 : 1,
+          hue: bonus ? CONFIG.pelletB : CONFIG.pelletA,
+        };
+      }
+      function makeSnake(name, color, x, y, angle, ai) {
+        const trail = [];
+        for (let i = 0; i < 160; i += 1) trail.push({ x: x - i * SEGMENT * Math.cos(angle), y: y - i * SEGMENT * Math.sin(angle) });
+        return { name, color, x, y, angle, ai, alive: true, speed: BASE_SPEED, target: { x, y }, length: 12, trail, think: 0, boostMeter: 0 };
+      }
+      function segmentsOf(snake) {
+        const needed = Math.max(12, snake.length * SEGMENT);
+        return snake.trail.filter((_, index) => index % SEGMENT === 0).slice(0, Math.max(3, Math.floor(needed / SEGMENT)));
+      }
+      function sprinkle(x, y, count, hue) {
+        for (let i = 0; i < count; i += 1) {
+          state.pellets.push({
+            x: clamp(x + Math.cos(i * 2.2) * (10 + i * 3), 20, WORLD.w - 20),
+            y: clamp(y + Math.sin(i * 1.7) * (10 + i * 3), 20, WORLD.h - 20),
+            r: i % 3 === 0 ? 7 : 5,
+            gain: i % 3 === 0 ? 2 : 1,
+            hue: i % 2 === 0 ? hue : CONFIG.pelletB,
+          });
+        }
+      }
+      function eliminateSnake(snake, droppedByPlayer) {
+        snake.alive = false;
+        const points = segmentsOf(snake).slice(1);
+        points.forEach((point, index) => {
+          state.pellets.push({
+            x: clamp(point.x + Math.sin(index * 2.4) * 4, 18, WORLD.w - 18),
+            y: clamp(point.y + Math.cos(index * 1.8) * 4, 18, WORLD.h - 18),
+            r: index % 5 === 0 ? 7 : 5,
+            gain: index % 5 === 0 ? 2 : 1,
+            hue: droppedByPlayer ? CONFIG.pelletB : snake.color,
+          });
+        });
+        state.deathBursts += 1;
+      }
+      function reset() {
+        state.mode = 'playing';
+        state.boostHeld = false;
+        state.tick = 0;
+        state.deathBursts = 0;
+        state.player = makeSnake('YOU', CONFIG.baseColor, WORLD.w / 2, WORLD.h * 0.72, -Math.PI / 2, false);
+        state.bots = CONFIG.botNames.map((name, index) => makeSnake(name, botColors[index % botColors.length], 140 + (index % 2) * 300, 180 + index * 150, index % 2 ? Math.PI * 0.15 : Math.PI * 0.85, true));
+        state.pellets = Array.from({ length: 120 }, (_, index) => spawnPellet(index + 1, index % 9 === 0));
+        render();
+      }
+      function updateTrail(snake) {
+        snake.trail.unshift({ x: snake.x, y: snake.y });
+        const maxTrail = Math.max(180, snake.length * SEGMENT + 80);
+        if (snake.trail.length > maxTrail) snake.trail.length = maxTrail;
+      }
+      function trimForBoost(snake, dt) {
+        if (snake.length <= 12) return;
+        snake.boostMeter += dt * 7;
+        while (snake.boostMeter >= 1 && snake.length > 12) {
+          snake.boostMeter -= 1;
+          snake.length -= 1;
+          const tail = snake.trail[Math.min(snake.trail.length - 1, snake.length * SEGMENT - 1)];
+          if (tail) state.pellets.push({ x: tail.x, y: tail.y, r: 5, gain: 1, hue: CONFIG.pelletA });
+        }
+      }
+      function steerSnake(snake, targetX, targetY, dt, boosting) {
+        const desired = Math.atan2(targetY - snake.y, targetX - snake.x);
+        const diff = wrapAngle(desired - snake.angle);
+        snake.angle += clamp(diff, -TURN_RATE * dt, TURN_RATE * dt);
+        snake.speed += ((boosting ? BOOST_SPEED : BASE_SPEED) - snake.speed) * Math.min(1, dt * 4.4);
+        snake.x = clamp(snake.x + Math.cos(snake.angle) * snake.speed * dt, 16, WORLD.w - 16);
+        snake.y = clamp(snake.y + Math.sin(snake.angle) * snake.speed * dt, 16, WORLD.h - 16);
+        updateTrail(snake);
+      }
+      function thinkBot(bot, dt) {
+        bot.think -= dt;
+        if (bot.think <= 0) {
+          const juicy = state.pellets.slice(0, 80).sort((a, b) => Math.hypot(bot.x - a.x, bot.y - a.y) - Math.hypot(bot.x - b.x, bot.y - b.y))[0];
+          bot.target = juicy ? { x: juicy.x, y: juicy.y } : { x: WORLD.w / 2, y: WORLD.h / 2 };
+          bot.think = 0.35 + rand(state.tick + bot.x + bot.y) * 0.5;
+        }
+        if (bot.x < 80) bot.target.x = WORLD.w - 80;
+        if (bot.x > WORLD.w - 80) bot.target.x = 80;
+        if (bot.y < 80) bot.target.y = WORLD.h - 80;
+        if (bot.y > WORLD.h - 80) bot.target.y = 80;
+      }
+      function collectPellets(snake) {
+        state.pellets = state.pellets.filter((pellet) => {
+          if (Math.hypot(snake.x - pellet.x, snake.y - pellet.y) > 14 + pellet.r) return true;
+          snake.length = Math.min(60, snake.length + pellet.gain);
+          return false;
+        });
+      }
+      function hitTrail(head, owner) {
+        const snakes = [state.player, ...state.bots].filter((snake) => snake.alive);
+        for (const snake of snakes) {
+          const segments = segmentsOf(snake);
+          for (let i = snake === owner ? 9 : 4; i < segments.length; i += 1) {
+            const point = segments[i];
+            if (Math.hypot(head.x - point.x, head.y - point.y) < 9) return snake;
+          }
+        }
+        return null;
+      }
+      function ranking() {
+        return [state.player, ...state.bots].filter((snake) => snake.alive).sort((a, b) => b.length - a.length);
+      }
+      function pointerEvent(event) {
+        const box = canvas.getBoundingClientRect();
+        pointer.active = true;
+        pointer.x = (event.clientX - box.left) * canvas.width / box.width;
+        pointer.y = (event.clientY - box.top) * canvas.height / box.height;
+      }
+      canvas.addEventListener('pointerdown', pointerEvent);
+      canvas.addEventListener('pointermove', (event) => { if (event.buttons) pointerEvent(event); });
+      canvas.addEventListener('pointerup', () => { pointer.active = false; });
+      window.addEventListener('keydown', (event) => {
+        if (event.key === ' ') state.boostHeld = true;
+        if (event.key === 'ArrowLeft') pointer.x -= 32;
+        if (event.key === 'ArrowRight') pointer.x += 32;
+        if (event.key === 'ArrowUp') pointer.y -= 32;
+        if (event.key === 'ArrowDown') pointer.y += 32;
+      });
+      window.addEventListener('keyup', (event) => { if (event.key === ' ') state.boostHeld = false; });
+      const boostBtn = document.getElementById('boostBtn');
+      ['pointerdown', 'pointerenter'].forEach((type) => boostBtn.addEventListener(type, () => { state.boostHeld = true; }));
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach((type) => boostBtn.addEventListener(type, () => { state.boostHeld = false; }));
+      function step(ms) {
+        if (state.mode !== 'playing') { render(); return; }
+        const dt = Math.min(0.032, ms / 1000);
+        state.tick += dt;
+        const player = state.player;
+        const targetX = pointer.active ? pointer.x / canvas.width * WORLD.w : player.x + Math.cos(player.angle) * 120;
+        const targetY = pointer.active ? pointer.y / canvas.height * WORLD.h : player.y + Math.sin(player.angle) * 120;
+        steerSnake(player, targetX, targetY, dt, state.boostHeld);
+        if (state.boostHeld) trimForBoost(player, dt);
+        collectPellets(player);
+        state.bots.forEach((bot) => {
+          if (!bot.alive) return;
+          thinkBot(bot, dt);
+          const shouldBoost = bot.length > 15 && rand(state.tick * 40 + bot.x) > 0.94;
+          steerSnake(bot, bot.target.x, bot.target.y, dt, shouldBoost);
+          if (shouldBoost && bot.length > 12 && rand(state.tick * 90 + bot.y) > 0.45) bot.length -= 1;
+          collectPellets(bot);
+        });
+        const playerHit = hitTrail(player, player);
+        if (playerHit) state.mode = 'lost';
+        state.bots.forEach((bot) => {
+          if (!bot.alive) return;
+          const collided = hitTrail(bot, bot);
+          if (collided) eliminateSnake(bot, collided === state.player);
+        });
+        if (state.bots.filter((bot) => bot.alive).length < CONFIG.botNames.length) {
+          while (state.pellets.length < 140) state.pellets.push(spawnPellet(state.pellets.length + state.tick * 100, state.pellets.length % 11 === 0));
+        }
+        if (player.length >= GOAL) state.mode = 'won';
+        render();
+      }
+      function drawArena() {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 560);
+        gradient.addColorStop(0, CONFIG.arenaTop);
+        gradient.addColorStop(1, CONFIG.arenaBottom);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.strokeStyle = CONFIG.ring;
+        ctx.lineWidth = 5;
+        ctx.strokeRect(14, 14, 362, 532);
+        ctx.strokeStyle = CONFIG.grid;
+        ctx.lineWidth = 1;
+        for (let x = 38; x < 360; x += 44) { ctx.beginPath(); ctx.moveTo(x, 18); ctx.lineTo(x, 542); ctx.stroke(); }
+        for (let y = 38; y < 540; y += 44) { ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(372, y); ctx.stroke(); }
+        ctx.fillStyle = 'rgba(255,255,255,.86)';
+        ctx.font = '900 14px sans-serif';
+        ctx.fillText(CONFIG.arenaTitle, 24, 34);
+      }
+      function project(point) {
+        return { x: point.x / WORLD.w * 350 + 20, y: point.y / WORLD.h * 500 + 38 };
+      }
+      function drawSnake(snake, playerLike) {
+        const segments = segmentsOf(snake);
+        segments.slice().reverse().forEach((segment, index) => {
+          const p = project(segment);
+          const radius = Math.max(4, 9 - index * 0.16);
+          ctx.fillStyle = snake.color;
+          ctx.globalAlpha = playerLike && state.boostHeld ? 0.9 : 0.78;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        const head = project({ x: snake.x, y: snake.y });
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(head.x, head.y, 3.2, 0, Math.PI * 2);
+        ctx.arc(head.x + Math.cos(snake.angle) * 4, head.y + Math.sin(snake.angle) * 4, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = playerLike ? '#0a0a0a' : 'rgba(255,255,255,.92)';
+        ctx.font = '800 10px sans-serif';
+        ctx.fillText(snake.name, head.x - 14, head.y - 14);
+      }
+      function render() {
+        drawArena();
+        state.pellets.forEach((pellet) => {
+          const p = project(pellet);
+          ctx.fillStyle = pellet.hue;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, pellet.r * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        state.bots.filter((bot) => bot.alive).forEach((bot) => drawSnake(bot, false));
+        if (state.player.alive) drawSnake(state.player, true);
+        if (state.mode !== 'playing') {
+          ctx.fillStyle = 'rgba(0,0,0,.42)';
+          ctx.fillRect(56, 212, 278, 120);
+          ctx.strokeStyle = CONFIG.ring;
+          ctx.strokeRect(56, 212, 278, 120);
+          ctx.fillStyle = '#fff';
+          ctx.font = '900 30px sans-serif';
+          ctx.fillText(state.mode === 'won' ? '冲榜成功' : '蛇头撞没了', 108, 266);
+          ctx.font = '700 14px sans-serif';
+          ctx.fillText(state.mode === 'won' ? CONFIG.hudLead : CONFIG.boostCopy, 88, 296);
+        }
+        const order = ranking();
+        const rank = Math.max(1, order.findIndex((snake) => snake === state.player) + 1);
+        document.getElementById('snakeScore').textContent = '长度 ' + state.player.length;
+        document.getElementById('snakeRank').textContent = '第 ' + rank + ' 名 / ' + order.length;
+        document.getElementById('snakeStatus').textContent = state.mode === 'playing'
+          ? (state.boostHeld ? CONFIG.boostCopy : CONFIG.goalCopy)
+          : (state.mode === 'won' ? CONFIG.hudLead : '撞到别人的蛇身了，重开再冲。');
+        boostBtn.textContent = state.boostHeld ? '松开停冲' : CONFIG.boostLabel;
+      }
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(16), 16);
+      window.advanceTime = (ms) => { for (let i = 0; i < Math.max(1, Math.round(ms / 16)); i += 1) step(16); };
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 mapped from 820x1180 arena',
+        mode: state.mode,
+        playerLength: state.player.length,
+        aliveBots: state.bots.filter((bot) => bot.alive).length,
+        pellets: state.pellets.length,
+        deathBursts: state.deathBursts,
+        rank: ranking().findIndex((snake) => snake === state.player) + 1,
+        boostHeld: state.boostHeld
+      });
+    
+    })();
+  </script>
+</body>
+</html>

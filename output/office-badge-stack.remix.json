@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-badge-stack",
+  "slug": "office-badge-stack",
+  "title": "工牌六角归档",
+  "source_file": "hexa-sort-fake.html",
+  "parent_slug": "hexa-sort-fake",
+  "lineage": [
+    "hexa-sort-fake",
+    "office-badge-stack"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 Hexa Sort 式六角堆叠分色盘改成办公室归档主题，六角块换成不同部门工牌，保留整段搬运和满柱整批清空。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室主题的 Hexa Sort 二创：先腾空归档栏，再把同部门工牌叠满一柱整批收走。",
+    "core_loop": "玩家面对七根蜂巢式归档栏，只能搬运每栏最上方连续相同部门的一段工牌；把它们倒进空栏，或倒到同部门顶牌上继续叠高；任意一栏叠满四张同部门工牌就会整栏直接归档消失，直到五个部门都被清空。",
+    "controls": "单指先点源栏锁定，再点空栏或同部门顶牌栏执行搬运；再次点同一栏取消选择；点击“重开这一栏”恢复固定盘面。",
+    "mechanics": [
+      "顶层连续搬运：不是一张一张挪，而是顶层连着的同部门整段一起滑走，复刻 Hexa Sort 最关键的爽点",
+      "空栏缓冲：两根空栏负责中转，玩家先腾位再归并，形成连续短线决策",
+      "满柱即清：四张同部门叠满整栏会直接整批归档，给出很强的节奏反馈",
+      "蜂巢布局：七栏按六角蜂窝排开，不再是试管或直排瓶子，视觉和操作都更贴近这个玩法族",
+      "固定短局：五种部门牌、两根缓冲栏，几十秒到一两分钟就能完整复盘一轮"
+    ],
+    "visual_language": "冷绿办公夜班配色，六角工牌取代普通色块，归档栏像玻璃文件槽，仍保持单文件竖屏与纯画布渲染。",
+    "state_model": "state.columns 记录七个归档栏自底向上的部门牌序列；state.selected 记录当前源栏；state.cleared 保存已整批归档的部门；state.moves 统计搬运步数；state.mode 在 playing/won 间切换。",
+    "share_hook": "“我把五个部门的工牌一把归完了”很像办公室梗图，也方便继续往归档、排班、审批主题扩。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入更多蜂巢盘面 seed",
+      "加入一步撤回",
+      "加入限步三星文案"
+    ]
+  },
+  "files": {
+    "html": "office-badge-stack.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

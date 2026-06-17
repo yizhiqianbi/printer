@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-stamp-away",
+  "slug": "office-stamp-away",
+  "title": "工单盖章弹出",
+  "source_file": "hexa-away-fake.html",
+  "parent_slug": "hexa-away-fake",
+  "lineage": [
+    "hexa-away-fake",
+    "office-stamp-away"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 Hexa Away 式六角箭头弹出盘改成办公室审批主题，六角块换成采购、报销、差旅等工单，保留只能顺箭头流转和转盘换角度。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室主题的 Hexa Away 二创：先把边缘工单流转走，再逐层清空整张审批盘。",
+    "core_loop": "玩家面对一团堆叠的六角审批工单，只能点击那些能顺着箭头直接流转出边界的单据；如果某张单据的箭路被其他工单挡住，就要先转动整盘审批视角，换出新的空边；当所有工单都被流转走，这轮审批盘才算彻底清空。",
+    "controls": "单指点击可直接流转的六角工单；左右按钮或左右划动旋转整盘；点击“重开审批盘”恢复固定布局。",
+    "mechanics": [
+      "顺箭头弹出：每张工单只有在箭头指向的整条路径都畅通时才能直接流转走，复刻这个玩法最关键的判断压力",
+      "转盘换边：玩家需要不断旋转六角团，找出不同视角下新露出的可弹出边缘块",
+      "六角布局：不是立方方块，而是蜂窝式六边形堆叠，视觉上和当前库里的 Tap Away 家族拉开差异",
+      "短局固定盘：十几块工单、一个固定 seed，几十秒就能完整刷完一盘",
+      "逐层露出：外层先走，中心与上层块随后变成可操作目标，维持连锁揭示节奏"
+    ],
+    "visual_language": "冷绿夜班办公室配色，把彩色六角块换成不同流程单据，玻璃审批板承接画布场景，继续保持离线单文件和手机竖屏。",
+    "state_model": "state.tiles 记录每张工单的轴坐标、高度、箭头方向和激活状态；state.yaw 记录当前六向旋转；state.cleared 统计已流转工单数；state.mode 在 playing/won 间切换。",
+    "share_hook": "“把整盘待审批工单一把盖空了”天然适合办公室二创梗图。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入第二套 hex seed",
+      "加入一步提示按钮",
+      "加入限旋转挑战文案"
+    ]
+  },
+  "files": {
+    "html": "office-stamp-away.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

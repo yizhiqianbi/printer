@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <link rel="icon" href="data:,">
+  <title>工位摸鱼盘 - Arcade Atelier Remix</title>
+  <script>if (new URLSearchParams(window.location.search).has('embed')) document.documentElement.classList.add('embed-mode');</script>
+  <style>
+    :root { --accent: #ff3b86; --cyan: #22f4ee; --violet: #7c5cff; --game-accent: #22f4ee; --ink: #fff; --paper: #050505; --panel: rgba(255,255,255,.08); --line: rgba(255,255,255,.14); }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; min-height: 100%; background: #040404; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; overflow-x: hidden; }
+    body { display: grid; place-items: start center; overscroll-behavior: none; }
+    button, input { font: inherit; min-width: 0; }
+    button, a, input { touch-action: manipulation; }
+    .phone-shell { width: min(100vw, 430px); min-height: 100svh; background:
+      radial-gradient(circle at 50% 4%, rgba(255,59,134,.42), transparent 34%),
+      radial-gradient(circle at 10% 24%, rgba(34,244,238,.16), transparent 26%),
+      linear-gradient(180deg, #160611 0, #080509 42%, #030303 100%); border-left: 1px solid var(--line); border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; }
+    .app-top { position: sticky; top: 0; z-index: 5; height: 50px; display: flex; align-items: center; justify-content: space-between; padding: 0 max(14px, env(safe-area-inset-left)); border-bottom: 1px solid rgba(255,255,255,.08); background: linear-gradient(to bottom, rgba(0,0,0,.78), rgba(0,0,0,.28)); color: #fff; backdrop-filter: blur(16px); }
+    .brand { color: inherit; text-decoration: none; font-weight: 900; }
+    .app-top a:last-child { color: #fff; opacity: .72; text-decoration: none; font-weight: 900; font-size: 13px; }
+    .screen { padding: 12px 12px calc(18px + env(safe-area-inset-bottom)); flex: 1; min-width: 0; }
+    .play-screen { display: flex; flex-direction: column; min-height: calc(100svh - 50px); min-width: 0; }
+    .hero { min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; padding: 12px 2px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .play-hero { min-height: 88px; }
+    .kicker { margin: 0; color: var(--cyan); font-size: 11px; font-weight: 1000; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(34px, 11vw, 54px); line-height: .88; letter-spacing: 0; color: #fff; text-shadow: 0 6px 28px rgba(255,59,134,.2); }
+    h2 { margin: 0 0 12px; font-size: clamp(25px, 8vw, 36px); line-height: 1; letter-spacing: 0; }
+    .summary { margin: 0; color: rgba(255,255,255,.62); line-height: 1.42; font-size: 13px; }
+    .game-stage { display: grid; gap: 10px; padding-top: 10px; touch-action: none; flex: 1; align-content: start; min-width: 0; }
+    .game-stage > * { min-width: 0; max-width: 100%; }
+    .panel { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 14px; box-shadow: 0 18px 54px rgba(0,0,0,.28); backdrop-filter: blur(18px); color: #fff; min-width: 0; max-width: 100%; }
+    .compact { padding: 12px; }
+    .primary { min-height: 54px; border: 0; border-radius: 999px; padding: 0 18px; background: linear-gradient(135deg, var(--accent), #ff6aa8); color: #fff; font-weight: 1000; cursor: pointer; box-shadow: 0 12px 30px rgba(255,59,134,.28); }
+    .primary:disabled, button:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; }
+    .hidden { display: none !important; }
+    .play-canvas { width: 100%; height: auto; border: 1px solid rgba(255,255,255,.16); border-radius: 18px; background: #09070d; display: block; touch-action: none; box-shadow: 0 24px 70px rgba(0,0,0,.34); }
+    .play-canvas.short { aspect-ratio: 390 / 320; }
+    html.embed-mode, html.embed-mode body { min-height: 100%; background: #000; }
+    html.embed-mode body { display: block; overflow: hidden; }
+    html.embed-mode .phone-shell { width: 100vw; min-height: 100svh; border: 0; background: #000; box-shadow: none; }
+    html.embed-mode .app-top, html.embed-mode .play-hero { display: none; }
+    html.embed-mode .screen { padding: 0 10px 10px; }
+    html.embed-mode .play-screen { min-height: 100svh; }
+    html.embed-mode .game-stage { padding-top: 10px; gap: 8px; }
+    html.embed-mode .play-canvas { max-height: calc(100svh - 116px); object-fit: contain; }
+    html.embed-mode .panel { box-shadow: none; }
+    .stack { display: grid; gap: 10px; }
+    .stat-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: rgba(255,255,255,.84); font-size: 13px; font-weight: 900; }
+    .button-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .choice, .shop-row, .chip, .plot { border: 1px solid rgba(255,255,255,.16); border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; min-height: 58px; padding: 12px 14px; text-align: left; font-weight: 850; cursor: pointer; }
+    .choice:active, .chip:active, .plot:active, .big-tap:active { transform: scale(.98); }
+    .meter { height: 10px; background: rgba(255,255,255,.1); border-radius: 999px; overflow: hidden; margin-bottom: 12px; }
+    .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--cyan), var(--accent)); }
+    .result-card { background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 14px; color: #fff; }
+    .bars { display: grid; gap: 8px; margin: 12px 0; }
+    .bars span { display: grid; grid-template-columns: 72px 1fr; align-items: center; gap: 8px; font-size: 12px; }
+    .bars i { display: block; height: 9px; border-radius: 999px; background: var(--accent); }
+    .tray { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+    .tray span { aspect-ratio: 1; border: 1px dashed rgba(255,255,255,.24); border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.09); font-weight: 900; }
+    .triple-playfield { gap: 10px; }
+    .triple-targets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .triple-chip { min-height: 56px; border: 1px solid var(--chip-edge, rgba(255,255,255,.14)); border-radius: 14px; padding: 8px 9px; background: color-mix(in srgb, var(--chip-fill, rgba(255,255,255,.14)), rgba(255,255,255,.08) 76%); color: var(--chip-ink, #fff); display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 6px; }
+    .triple-chip b { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 9px; background: rgba(255,255,255,.3); font-size: 13px; }
+    .triple-chip i, .triple-chip u { font-style: normal; text-decoration: none; font-weight: 900; }
+    .triple-chip i { font-size: 11px; }
+    .triple-chip u { font-size: 15px; }
+    .triple-board { position: relative; min-height: 346px; border: 1px solid rgba(255,255,255,.16); border-radius: 20px; background: radial-gradient(circle at 50% 16%, var(--pile-glow, rgba(125,214,255,.18)), transparent 34%), linear-gradient(180deg, var(--board-top, #08131f), var(--board-bottom, #050a12)); overflow: hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 20px 50px rgba(0,0,0,.28); }
+    .triple-board::after { content: ""; position: absolute; left: 18px; right: 18px; bottom: 18px; height: 46px; border-radius: 50%; background: rgba(0,0,0,.22); filter: blur(12px); pointer-events: none; }
+    .triple-item { position: absolute; width: 68px; height: 76px; margin-left: -34px; margin-top: -38px; border: 0; background: transparent; padding: 0; display: grid; place-items: center; cursor: pointer; }
+    .triple-item-glyph { width: 64px; height: 64px; border: 2px solid rgba(255,255,255,.22); border-radius: 18px; display: grid; place-items: center; font-size: 27px; font-weight: 1000; box-shadow: 0 14px 24px rgba(0,0,0,.22); }
+    .triple-item-tag { margin-top: -10px; min-width: 42px; border-radius: 999px; padding: 3px 8px; background: rgba(0,0,0,.48); color: rgba(255,255,255,.88); font-size: 10px; font-weight: 900; }
+    .triple-item.top .triple-item-glyph { transform: translateY(-4px); box-shadow: 0 18px 28px rgba(0,0,0,.32); }
+    .triple-item.locked { cursor: not-allowed; }
+    .triple-item.locked .triple-item-glyph { filter: saturate(.55) brightness(.82); opacity: .72; }
+    .triple-tray-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin: 10px 0 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .triple-tray { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; background: color-mix(in srgb, var(--tray-glow, rgba(255,255,255,.08)), rgba(255,255,255,.05) 62%); }
+    .triple-slot { min-height: 38px; border-radius: 12px; border: 1px dashed rgba(255,255,255,.2); display: grid; place-items: center; font-size: 18px; font-weight: 1000; }
+    .triple-slot.empty { background: rgba(255,255,255,.04); }
+    .triple-slot.filled { border-style: solid; box-shadow: inset 0 -6px 10px rgba(0,0,0,.12); }
+    .goods-targets { margin-bottom: 10px; }
+    .goods-shelves { display: grid; gap: 10px; }
+    .goods-shelf { border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 10px; background: rgba(255,255,255,.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .goods-shelf-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; color: rgba(255,255,255,.84); font-size: 12px; font-weight: 900; }
+    .goods-lane-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .goods-lane { position: relative; min-height: 108px; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 10px 8px 8px; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); color: #fff; display: grid; align-content: space-between; justify-items: center; gap: 8px; overflow: hidden; cursor: pointer; }
+    .goods-lane::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 10px; height: 9px; border-radius: 999px; background: rgba(0,0,0,.22); filter: blur(7px); }
+    .goods-lane.empty { opacity: .56; cursor: default; }
+    .goods-backdrop { position: absolute; inset: 0; background: radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--lane-glow), white 18%), transparent 34%); opacity: .8; pointer-events: none; }
+    .goods-item { position: relative; z-index: 1; width: 70px; min-height: 72px; border: 2px solid rgba(255,255,255,.18); border-radius: 18px; display: grid; place-items: center; gap: 3px; padding: 8px 6px; box-shadow: 0 16px 24px rgba(0,0,0,.22); }
+    .goods-item b { font-size: 26px; line-height: 1; }
+    .goods-item i { font-style: normal; font-size: 11px; font-weight: 900; }
+    .goods-lane u, .goods-empty-copy { position: relative; z-index: 1; text-decoration: none; font-size: 11px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .box-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .color-box { min-height: 78px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 10px; background: color-mix(in srgb, var(--box-fill), rgba(255,255,255,.08) 76%); display: grid; gap: 8px; }
+    .color-box b { font-size: 13px; }
+    .color-box span { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .color-box i { min-height: 28px; border-radius: 10px; display: grid; place-items: center; font-style: normal; font-weight: 1000; background: rgba(0,0,0,.22); color: #fff; }
+    .big-tap { min-height: 118px; border: 0; border-radius: 28px; background: linear-gradient(145deg, var(--accent), #ff8ab9); color: #fff; display: grid; place-items: center; gap: 4px; font-weight: 1000; box-shadow: inset 0 -16px 30px rgba(0,0,0,.18), 0 20px 60px rgba(255,59,134,.32); }
+    .big-tap.dark { background: linear-gradient(145deg, #151018, #31112a 54%, var(--accent)); color: #fff; }
+    .big-tap b { font-size: 32px; }
+    .big-tap span { font-size: 12px; letter-spacing: .2em; }
+    .shop { display: grid; gap: 8px; }
+    .shop-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .shop-row span { color: rgba(255,255,255,.68); font-size: 12px; }
+    .field-label { display: grid; gap: 8px; font-weight: 900; }
+    .input { width: 100%; min-height: 58px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 0 14px; background: rgba(255,255,255,.1); color: #fff; font-size: 20px; font-weight: 900; outline: none; }
+    .input:focus { border-color: var(--cyan); box-shadow: 0 0 0 4px rgba(34,244,238,.15); }
+    .input::placeholder { color: rgba(255,255,255,.42); }
+    .rules { display: grid; gap: 8px; margin-top: 12px; }
+    .rule { display: flex; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px; background: rgba(255,59,134,.11); }
+    .rule.ok { background: rgba(34,244,238,.12); border-color: rgba(34,244,238,.42); }
+    .win-note { padding: 12px; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 900; }
+    .slots { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; min-width: 0; }
+    .slots span { min-width: 0; min-height: 84px; display: grid; place-items: center; border: 1px dashed rgba(255,255,255,.22); border-radius: 18px; padding: 8px; text-align: center; font-size: clamp(18px, 6vw, 28px); line-height: 1.08; font-weight: 1000; background: rgba(255,255,255,.09); color: #fff; overflow: hidden; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-toolbar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin: 12px 0; min-width: 0; }
+    .craft-stats { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 10px; margin: 10px 0 0; color: var(--cyan); font-size: 12px; font-weight: 1000; letter-spacing: .08em; text-transform: uppercase; min-width: 0; }
+    .craft-stats span, #craftLog { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+    .craft-history { display: flex; gap: 8px; overflow-x: auto; padding: 8px 0 0; scrollbar-width: none; }
+    .craft-history::-webkit-scrollbar { display: none; }
+    .craft-history span { flex: 0 0 auto; max-width: 270px; overflow: hidden; text-overflow: ellipsis; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-weight: 800; white-space: nowrap; }
+    .chip-pool { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; max-width: 100%; }
+    .chip { min-width: 0; min-height: 42px; text-align: center; width: auto; max-width: 100%; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+    .chip small { display: block; margin-top: 4px; color: rgba(255,255,255,.48); font-size: 10px; font-weight: 900; }
+    .picked { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 78%); }
+    .checkbox-grid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 4px; }
+    .fake-check input { position: absolute; opacity: 0; }
+    .fake-check span { display: block; aspect-ratio: 1; border: 1px solid rgba(255,255,255,.22); border-radius: 6px; background: rgba(255,255,255,.08); }
+    .fake-check input:checked + span { background: var(--accent); border-color: var(--accent); box-shadow: inset 0 0 0 3px #050505; }
+    .garden-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .plot { min-height: 98px; background: rgba(255,255,255,.1); text-align: center; display: grid; place-items: center; }
+    .plot.ready { background: linear-gradient(145deg, rgba(34,244,238,.25), rgba(255,59,134,.22)); border-color: rgba(34,244,238,.55); }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .tag { display: inline-flex; margin: 6px 6px 0 0; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 8px 10px; background: rgba(255,255,255,.08); }
+    .mystic-card { background: radial-gradient(circle at 20% 10%, rgba(255,59,134,.34), rgba(255,255,255,.08) 48%); }
+    .oracle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .oracle-card { min-height: 154px; border: 1px solid rgba(255,255,255,.18); border-radius: 16px; padding: 10px; display: grid; align-content: space-between; background: linear-gradient(160deg, color-mix(in srgb, var(--game-accent), #050505 44%), rgba(255,255,255,.08)); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+    .oracle-card b { font-size: 28px; line-height: 1; }
+    .oracle-card span { color: rgba(255,255,255,.68); font-size: 11px; font-weight: 900; }
+    .oracle-card strong { font-size: 13px; line-height: 1.1; }
+    .pillar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .pillar { min-height: 90px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; padding: 9px 6px; display: grid; place-items: center; gap: 4px; background: rgba(255,255,255,.08); text-align: center; }
+    .pillar b { font-size: 28px; line-height: 1; }
+    .pillar span { color: rgba(255,255,255,.58); font-size: 10px; font-weight: 1000; }
+    .element-bars { display: grid; gap: 7px; margin-top: 12px; }
+    .element-bar { display: grid; grid-template-columns: 34px 1fr 30px; align-items: center; gap: 8px; font-size: 12px; font-weight: 900; color: rgba(255,255,255,.76); }
+    .element-bar i { height: 9px; border-radius: 999px; background: linear-gradient(90deg, var(--cyan), var(--game-accent)); }
+    .aspect-list { display: grid; gap: 8px; margin-top: 10px; }
+    .aspect-list span, .cast-log span { display: block; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 9px 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.82); font-size: 12px; font-weight: 850; }
+    .coin-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 10px 0; }
+    .coin { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.22); background: radial-gradient(circle at 35% 25%, #ffe7a3, #b56d25 64%, #4d2415); color: #2d160c; font-size: 20px; font-weight: 1000; box-shadow: 0 12px 32px rgba(0,0,0,.28); }
+    .hex-lines { display: grid; gap: 7px; padding: 8px 0; }
+    .hex-line { height: 16px; display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .hex-line.broken { grid-template-columns: 1fr 1fr; }
+    .hex-line i { display: block; border-radius: 999px; background: linear-gradient(90deg, #ffe7a3, var(--game-accent)); }
+    .cast-log { display: grid; gap: 8px; }
+    .sim-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .sim-header b { font-size: 18px; }
+    .sim-header span { color: var(--cyan); font-size: 12px; font-weight: 1000; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .stat-grid span { min-height: 58px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.08); }
+    .stat-grid b { font-size: 20px; line-height: 1; }
+    .stat-grid i { color: rgba(255,255,255,.58); font-size: 11px; font-style: normal; font-weight: 900; }
+    .action-grid { display: grid; gap: 8px; }
+    .action-grid .choice { display: grid; gap: 4px; }
+    .action-grid .choice span { color: rgba(255,255,255,.62); font-size: 12px; font-weight: 800; overflow-wrap: anywhere; }
+    .student-list, .timeline { display: grid; gap: 8px; }
+    .student-list span, .timeline span { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.84); font-size: 12px; line-height: 1.35; }
+    .student-list b { display: block; color: #fff; font-size: 13px; margin-bottom: 3px; }
+    .student-list i { color: rgba(255,255,255,.62); font-style: normal; font-weight: 800; }
+    .alloc-grid { display: grid; gap: 8px; margin: 10px 0; }
+    .alloc-row { display: grid; grid-template-columns: 1fr 44px 44px 44px; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 8px; background: rgba(255,255,255,.08); }
+    .alloc-row span { font-weight: 900; }
+    .alloc-row b { text-align: center; font-size: 18px; }
+    .alloc-row button { min-height: 40px; border: 0; border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; font-weight: 1000; }
+    body[data-game-page="twitter-governance"] { background: #000; }
+    body[data-game-page="twitter-governance"] .phone-shell { background: #000; color: #e7e9ea; border-color: rgba(255,255,255,.14); }
+    body[data-game-page="twitter-governance"] .app-top,
+    body[data-game-page="twitter-governance"] .play-hero { display: none; }
+    body[data-game-page="twitter-governance"] .play-screen { padding: 0; min-height: 100svh; background: #000; }
+    body[data-game-page="twitter-governance"] .game-stage { display: block; gap: 0; padding-bottom: 78px; }
+    .x-app { position: relative; min-height: 100svh; background: #000; color: #e7e9ea; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+    .x-header { position: sticky; top: 0; z-index: 8; height: 50px; display: grid; grid-template-columns: 50px 1fr 50px; align-items: center; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-header b { text-align: center; color: #fff; font-size: 24px; line-height: 1; font-weight: 900; }
+    .x-header button { width: 36px; height: 36px; margin: auto; border: 0; border-radius: 50%; background: transparent; color: #e7e9ea; font-size: 14px; font-weight: 900; }
+    .x-header button:first-child { background: #1d9bf0; color: #001018; }
+    .x-header #agentBtn { border: 1px solid #2f3336; font-size: 11px; color: #1d9bf0; }
+    .x-top-tabs { position: sticky; top: 50px; z-index: 8; display: grid; grid-template-columns: 1fr 1fr; height: 48px; border-bottom: 1px solid #2f3336; background: rgba(0,0,0,.88); backdrop-filter: blur(18px); }
+    .x-top-tabs button { position: relative; border: 0; background: transparent; color: #71767b; font-size: 15px; font-weight: 800; }
+    .x-top-tabs .active { color: #e7e9ea; }
+    .x-top-tabs .active::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 54px; height: 4px; transform: translateX(-50%); border-radius: 999px; background: #1d9bf0; }
+    .x-status-strip { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #2f3336; background: #000; }
+    .x-status-strip span { min-width: 0; min-height: 54px; display: grid; place-items: center; gap: 2px; border-right: 1px solid #16181c; }
+    .x-status-strip span:last-child { border-right: 0; }
+    .x-status-strip b { color: #e7e9ea; font-size: 16px; line-height: 1; }
+    .x-status-strip i { color: #71767b; font-size: 10px; font-style: normal; font-weight: 800; }
+    .x-composer-inline { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid #2f3336; background: #000; }
+    .x-avatar { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; background: #1d9bf0; color: #001018; font-size: 20px; font-weight: 1000; }
+    .x-compose-body { min-width: 0; display: grid; gap: 8px; }
+    .x-composer-inline textarea { width: 100%; min-height: 64px; border: 0; padding: 8px 0; resize: none; background: transparent; color: #e7e9ea; font: inherit; font-size: 19px; line-height: 1.28; outline: none; }
+    .x-composer-inline textarea::placeholder { color: #71767b; }
+    .x-compose-tools { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid #2f3336; padding-top: 8px; }
+    .x-compose-tools button { min-height: 36px; border: 0; border-radius: 999px; padding: 0 13px; background: transparent; color: #1d9bf0; font-weight: 900; }
+    .x-compose-tools #sendTweet { min-width: 68px; background: #1d9bf0; color: #fff; }
+    .x-compose-tools #commandToggle { background: rgba(29,155,240,.14); }
+    .x-timeline { background: #000; }
+    .news-feed { display: grid; }
+    .news-feed article { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr); column-gap: 10px; border-bottom: 1px solid #2f3336; padding: 12px 14px 10px; background: #000; }
+    .news-feed article::before { content: attr(data-avatar); width: 40px; height: 40px; grid-row: 1 / span 3; display: grid; place-items: center; border-radius: 50%; background: var(--tweet-avatar, #273340); color: #fff; font-size: 16px; font-weight: 1000; }
+    .news-feed header { min-width: 0; display: flex; align-items: baseline; gap: 5px; color: #71767b; font-size: 13px; line-height: 1.2; }
+    .news-feed header b { min-width: 0; color: #e7e9ea; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .news-feed header span { flex: 0 0 auto; }
+    .news-feed p { grid-column: 2; margin: 3px 0 8px; color: #e7e9ea; font-size: 15px; line-height: 1.34; font-weight: 500; overflow-wrap: anywhere; }
+    .tweet-actions { grid-column: 2; display: grid; grid-template-columns: repeat(4, 1fr); color: #71767b; font-size: 12px; font-weight: 800; }
+    .tweet-actions span { display: inline-flex; align-items: center; gap: 5px; }
+    .x-drawer { display: none; margin: 0; border-bottom: 1px solid #2f3336; padding: 12px 14px; background: #000; }
+    .x-drawer.is-open { display: grid; gap: 12px; }
+    .x-drawer-head { display: flex; justify-content: space-between; gap: 10px; color: #e7e9ea; }
+    .x-drawer-head span { color: #71767b; font-size: 12px; font-weight: 900; }
+    .advisor-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .advisor-roster .choice { min-height: 68px; display: grid; align-content: center; gap: 4px; border: 1px solid #2f3336; border-radius: 16px; padding: 10px; background: #000; color: #e7e9ea; text-align: left; }
+    .advisor-roster .choice b { font-size: 14px; }
+    .advisor-roster .choice span { color: #71767b; font-size: 11px; line-height: 1.2; font-weight: 850; }
+    .command-log span { border-color: #2f3336; background: #000; color: #cfd9de; }
+    .key-drawer { border: 1px solid #2f3336; border-radius: 16px; padding: 10px 12px; background: #000; }
+    .key-drawer summary { color: #71767b; font-size: 12px; font-weight: 1000; cursor: pointer; }
+    .key-drawer input { width: 100%; min-height: 42px; margin-top: 8px; border: 1px solid #2f3336; border-radius: 12px; padding: 0 10px; background: #000; color: #e7e9ea; font: inherit; }
+    .key-drawer button { margin-top: 8px; width: 100%; background: #1d9bf0; }
+    .floating-compose { position: fixed; z-index: 12; right: max(18px, calc((100vw - 430px) / 2 + 18px)); bottom: calc(78px + env(safe-area-inset-bottom)); width: 58px; height: 58px; border: 0; border-radius: 50%; background: #1d9bf0; color: #fff; font-size: 30px; line-height: 1; font-weight: 900; box-shadow: 0 12px 34px rgba(29,155,240,.34); }
+    .bottom-nav { position: fixed; left: 50%; bottom: 0; z-index: 10; width: min(100vw, 430px); transform: translateX(-50%); display: grid; grid-template-columns: repeat(4, 1fr); height: calc(58px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid #2f3336; background: rgba(0,0,0,.92); backdrop-filter: blur(18px); }
+    .bottom-nav button { border: 0; background: transparent; color: #e7e9ea; font-size: 23px; }
+    @media (min-width: 700px) { body { padding: 18px 0; } .phone-shell { min-height: calc(100svh - 36px); border-radius: 22px; box-shadow: 0 30px 100px rgba(0,0,0,.22); } }
+  </style>
+</head>
+<body data-printer-artifact="fake-game-library" data-game-page="office-raider-yard" data-output-format="multi_html">
+  <div class="phone-shell">
+    <header class="app-top"><a class="brand" href="index.html">Arcade Atelier</a><a href="office-raider-yard.html">重载</a></header>
+    <main class="screen play-screen">
+      <section class="hero play-hero">
+        <p class="kicker">REMIX · 养成合成</p>
+        <h1>工位摸鱼盘</h1>
+      </section>
+      <section class="game-stage">
+        
+      <canvas id="gameCanvas" width="390" height="560" class="play-canvas"></canvas>
+      <section class="panel compact stack">
+        <div class="row"><b id="coinText">摸鱼币 0</b><span id="incomeText">偷闲 0/s</span></div>
+        <div class="row"><button class="primary" id="spawnBtn">摆一件</button><button class="primary" id="upgradeBtn">补咖啡</button></div>
+        <div class="row"><button class="primary" id="alarmBtn">拦截小偷</button><span id="statusText">先摆满工位杂物，再把同类拖到一起升级成更值钱的大件。</span></div>
+        <button class="primary" id="resetBtn">重开这块场</button>
+      </section>
+    
+      </section>
+    </main>
+  </div>
+  <script>
+    window.__PRINTER_ARTIFACT__ = {"generator":"printer/tools/generate_fake_library.mjs","pipeline":"WebPrinterPipeline-compatible deterministic fake-game generator","output_format":"multi_html","intent":"建立移动端竖屏 Playable Catalog：按热门小游戏机制生成离线 HTML，保留交互、节奏和传播点，不复制原站代码或素材。","generated_at":"2026-06-17T05:50:57.731Z","game":{"id":"office-raider-yard","file":"office-raider-yard.html","cover":"covers/office-raider-yard.png","title":"工位摸鱼盘","kind":"养成合成","source_game":"脑腐偷家场 Remix","mobile_portrait":true,"canvas_playfield":true},"intent_plan":{"summary":"基于游戏参考意图生成移动端竖屏多页面 Playable Catalog","ui_requirements":["所有游戏优先适配手机竖屏，桌面端居中显示手机 shell","动作和实时反馈类游戏使用 canvas playfield","每个产物必须自包含、无外链、可双击打开"],"technical_requirements":["每个游戏暴露 window.render_game_to_text()","每个游戏暴露 window.advanceTime(ms)","输出 run_report.json 模拟 WebPrinterPipeline 的执行摘要"],"complexity_bias":18,"output_hint":"multi_html","confidence":0.82,"requires_interactivity":true,"interaction_features":["触摸操作","Canvas 游戏循环","本地状态管理","移动端竖屏布局"]},"complexity":{"total":58,"components":14,"interactions":20,"pages":3,"data_flow":9},"parent_file":"brainrot-raider-yard.html","remix_prompt":"把偷家脑腐怪改成工位杂物主题，保留生单位、拖拽合成、产币和定时防偷。","agent_description_file":"office-raider-yard.remix.json"};
+    (() => {
+      
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const THEME = {"heading":"工位摸鱼盘","subheading":"二创版 · 把偷家合成场翻译成夜班工位养成盘","scoreLabel":"摸鱼币","incomeLabel":"偷闲","recruitLabel":"摆一件","upgradeLabel":"补咖啡","alertIdle":"先摆满工位杂物，再把同类拖到一起升级成更值钱的大件。","alertLive":"巡查经理来收东西了，赶紧拦住。","alertLose":"刚才被经理收走了","accent":"#22f4ee","bgA":"#0d1d24","bgB":"#05090b","arena":"#0e161b","tiers":[{"label":"签","glyph":"签","fill":"#ffe082","r":20,"income":1},{"label":"杯","glyph":"杯","fill":"#8be9fd","r":22,"income":3},{"label":"表","glyph":"表","fill":"#fda4af","r":24,"income":6},{"label":"屏","glyph":"屏","fill":"#67e8f9","r":26,"income":10},{"label":"椅","glyph":"椅","fill":"#86efac","r":29,"income":16},{"label":"王","glyph":"王","fill":"#c4b5fd","r":31,"income":24}]};
+      const slots = [
+        { x: 104, y: 184 }, { x: 194, y: 184 }, { x: 284, y: 184 },
+        { x: 104, y: 278 }, { x: 194, y: 278 }, { x: 284, y: 278 },
+        { x: 104, y: 372 }, { x: 194, y: 372 }, { x: 284, y: 372 },
+      ];
+      const state = {
+        coins: 8,
+        incomeBonus: 1,
+        units: [],
+        slotCount: 5,
+        nextId: 1,
+        dragId: null,
+        dragX: 0,
+        dragY: 0,
+        merges: 0,
+        blocked: 0,
+        stolen: 0,
+        threat: 7.5,
+        raid: null,
+        flash: 0,
+        ticker: 0,
+      };
+      function tier(index) {
+        return THEME.tiers[Math.max(0, Math.min(THEME.tiers.length - 1, index))];
+      }
+      function spawnCost() {
+        return 6 + Math.max(0, state.units.length - 2) * 3;
+      }
+      function upgradeCost() {
+        return 22 + Math.round(state.incomeBonus * 12);
+      }
+      function activeSlots() {
+        return slots.slice(0, state.slotCount);
+      }
+      function unitAtSlot(slotIndex) {
+        return state.units.find((unit) => unit.slot === slotIndex) || null;
+      }
+      function totalIncome() {
+        return Number((state.units.reduce((sum, unit) => sum + tier(unit.tier).income, 0) * state.incomeBonus).toFixed(1));
+      }
+      function openSlots() {
+        return activeSlots().map((_, index) => index).filter((index) => !unitAtSlot(index));
+      }
+      function nextRaidDelay() {
+        return 8 + Math.max(0, 3 - Math.min(3, state.merges)) * 1.2;
+      }
+      function reset() {
+        state.coins = 8;
+        state.incomeBonus = 1;
+        state.units = [];
+        state.slotCount = 5;
+        state.nextId = 1;
+        state.dragId = null;
+        state.dragX = 0;
+        state.dragY = 0;
+        state.merges = 0;
+        state.blocked = 0;
+        state.stolen = 0;
+        state.threat = 7.5;
+        state.raid = null;
+        state.flash = 0;
+        state.ticker = 0;
+        recruit();
+        recruit();
+        render();
+      }
+      function recruit(free = false) {
+        const empty = openSlots();
+        const cost = spawnCost();
+        if (!empty.length || (!free && state.coins < cost)) return false;
+        if (!free) state.coins -= cost;
+        const slot = empty[(state.nextId + state.merges) % empty.length];
+        state.units.push({
+          id: state.nextId++,
+          slot,
+          tier: 0,
+          pulse: 1,
+        });
+        state.flash = 0.28;
+        render();
+        return true;
+      }
+      function upgradeIncome() {
+        const cost = upgradeCost();
+        if (state.coins < cost) return false;
+        state.coins -= cost;
+        state.incomeBonus = Number((state.incomeBonus + 0.35).toFixed(2));
+        state.flash = 0.4;
+        render();
+        return true;
+      }
+      function startRaid() {
+        if (state.raid) return;
+        const target = [...state.units].sort((a, b) => a.tier - b.tier || a.slot - b.slot)[0];
+        state.raid = { ttl: 2.2, targetId: target ? target.id : null, mood: target ? 'armed' : 'idle' };
+      }
+      function blockRaid() {
+        if (!state.raid || state.raid.mood !== 'armed') return false;
+        state.blocked += 1;
+        state.coins += 12 + state.blocked * 2;
+        state.raid = null;
+        state.threat = nextRaidDelay();
+        state.flash = 0.55;
+        render();
+        return true;
+      }
+      function resolveRaid() {
+        if (!state.raid) return;
+        if (state.raid.targetId == null) {
+          state.raid = null;
+          state.threat = nextRaidDelay() - 1.5;
+          return;
+        }
+        const target = state.units.find((unit) => unit.id === state.raid.targetId);
+        if (target) {
+          state.units = state.units.filter((unit) => unit.id !== target.id);
+          state.stolen += 1;
+        }
+        state.raid = null;
+        state.threat = nextRaidDelay();
+        render();
+      }
+      function point(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * canvas.width / rect.width,
+          y: (event.clientY - rect.top) * canvas.height / rect.height,
+        };
+      }
+      function findUnitAt(x, y) {
+        return state.units.find((unit) => {
+          const slot = slots[unit.slot];
+          const px = state.dragId === unit.id ? state.dragX : slot.x;
+          const py = state.dragId === unit.id ? state.dragY : slot.y;
+          return Math.hypot(px - x, py - y) < tier(unit.tier).r;
+        }) || null;
+      }
+      function slotForPoint(x, y) {
+        let best = null;
+        activeSlots().forEach((slot, index) => {
+          const distance = Math.hypot(slot.x - x, slot.y - y);
+          if (!best || distance < best.distance) best = { index, distance };
+        });
+        return best && best.distance < 54 ? best.index : null;
+      }
+      function mergeInto(target, source) {
+        target.tier = Math.min(THEME.tiers.length - 1, target.tier + 1);
+        target.pulse = 1.18;
+        state.units = state.units.filter((unit) => unit.id !== source.id);
+        state.merges += 1;
+        state.coins += tier(target.tier).income * 5;
+        if (state.slotCount < slots.length && state.merges >= 3 && state.slotCount < 6) state.slotCount = 6;
+        if (state.slotCount < slots.length && state.merges >= 6 && state.slotCount < 7) state.slotCount = 7;
+        if (state.slotCount < slots.length && state.merges >= 9 && state.slotCount < 8) state.slotCount = 8;
+        if (state.slotCount < slots.length && state.merges >= 12 && state.slotCount < 9) state.slotCount = 9;
+        state.flash = 0.42;
+      }
+      function releaseDrag() {
+        const drag = state.units.find((unit) => unit.id === state.dragId);
+        if (!drag) return;
+        const targetSlot = slotForPoint(state.dragX, state.dragY);
+        const mergeTarget = state.units.find((unit) => unit.id !== drag.id && Math.hypot(slots[unit.slot].x - state.dragX, slots[unit.slot].y - state.dragY) < 34);
+        if (mergeTarget && mergeTarget.tier === drag.tier) {
+          mergeInto(mergeTarget, drag);
+        } else if (targetSlot != null && !unitAtSlot(targetSlot)) {
+          drag.slot = targetSlot;
+        }
+        state.dragId = null;
+        render();
+      }
+      function step(ms) {
+        const dt = ms / 1000;
+        state.coins = Number((state.coins + totalIncome() * dt).toFixed(1));
+        state.ticker += dt;
+        state.flash = Math.max(0, state.flash - dt);
+        state.units.forEach((unit) => {
+          unit.pulse = Math.max(1, unit.pulse - dt * 0.8);
+        });
+        if (!state.raid) {
+          state.threat -= dt;
+          if (state.threat <= 0) startRaid();
+        } else {
+          state.raid.ttl -= dt;
+          if (state.raid.ttl <= 0) resolveRaid();
+        }
+        render();
+      }
+      function drawArena() {
+        const bg = ctx.createLinearGradient(0, 0, 0, 560);
+        bg.addColorStop(0, THEME.bgA);
+        bg.addColorStop(1, THEME.bgB);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 390, 560);
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        ctx.font = '900 20px sans-serif';
+        ctx.fillText(THEME.heading, 20, 38);
+        ctx.fillStyle = 'rgba(255,255,255,.68)';
+        ctx.font = '12px sans-serif';
+        ctx.fillText(THEME.subheading, 20, 58);
+        ctx.fillStyle = 'rgba(255,255,255,.08)';
+        ctx.strokeStyle = 'rgba(255,255,255,.12)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(38, 108, 314, 334, 28);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.6)';
+        ctx.font = '900 12px sans-serif';
+        ctx.fillText('合成场', 52, 132);
+        activeSlots().forEach((slot, index) => {
+          ctx.fillStyle = index < state.slotCount ? 'rgba(255,255,255,.06)' : 'rgba(255,255,255,.03)';
+          ctx.strokeStyle = 'rgba(255,255,255,.12)';
+          ctx.beginPath();
+          ctx.roundRect(slot.x - 34, slot.y - 34, 68, 68, 22);
+          ctx.fill();
+          ctx.stroke();
+        });
+        const meter = Math.max(0, Math.min(1, state.raid ? state.raid.ttl / 2.2 : state.threat / nextRaidDelay()));
+        ctx.fillStyle = 'rgba(255,255,255,.1)';
+        ctx.fillRect(52, 456, 286, 12);
+        ctx.fillStyle = state.raid ? '#ff7a59' : '#22f4ee';
+        ctx.fillRect(52, 456, 286 * meter, 12);
+        ctx.fillStyle = '#fff';
+        ctx.font = '900 11px sans-serif';
+        ctx.fillText(state.raid ? '小偷倒计时' : '下次偷袭', 52, 449);
+      }
+      function drawUnit(unit) {
+        const slot = slots[unit.slot];
+        const info = tier(unit.tier);
+        const x = state.dragId === unit.id ? state.dragX : slot.x;
+        const y = state.dragId === unit.id ? state.dragY : slot.y;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(unit.pulse, unit.pulse);
+        ctx.beginPath();
+        ctx.arc(0, 0, info.r, 0, Math.PI * 2);
+        ctx.fillStyle = info.fill;
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(255,255,255,.82)';
+        ctx.stroke();
+        ctx.fillStyle = '#1d1320';
+        ctx.font = '900 ' + Math.round(info.r * 0.8) + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(info.glyph, 0, 1);
+        ctx.restore();
+        ctx.fillStyle = 'rgba(255,255,255,.84)';
+        ctx.font = '900 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('+' + info.income + '/s', x, y + info.r + 16);
+      }
+      function render() {
+        drawArena();
+        state.units.filter((unit) => unit.id !== state.dragId).forEach(drawUnit);
+        const drag = state.units.find((unit) => unit.id === state.dragId);
+        if (drag) drawUnit(drag);
+        if (state.raid) {
+          ctx.fillStyle = 'rgba(0,0,0,.36)';
+          ctx.fillRect(0, 0, 390, 560);
+          ctx.fillStyle = '#ff7a59';
+          ctx.beginPath();
+          ctx.roundRect(84, 138, 222, 94, 24);
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = '900 22px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(state.raid.targetId == null ? '空场巡逻' : '小偷来抢了', 195, 176);
+          ctx.font = '12px sans-serif';
+          ctx.fillText(state.raid.targetId == null ? '这轮没人可抢，继续养成。' : THEME.alertLive, 195, 202);
+        }
+        if (state.flash > 0) {
+          ctx.fillStyle = 'rgba(255,255,255,' + (state.flash * 0.22) + ')';
+          ctx.fillRect(0, 0, 390, 560);
+        }
+        document.getElementById('coinText').textContent = THEME.scoreLabel + ' ' + Math.floor(state.coins);
+        document.getElementById('incomeText').textContent = THEME.incomeLabel + ' ' + totalIncome().toFixed(1) + '/s';
+        document.getElementById('spawnBtn').textContent = THEME.recruitLabel + ' ' + spawnCost();
+        document.getElementById('upgradeBtn').textContent = THEME.upgradeLabel + ' ' + upgradeCost();
+        document.getElementById('spawnBtn').disabled = !openSlots().length || state.coins < spawnCost();
+        document.getElementById('upgradeBtn').disabled = state.coins < upgradeCost();
+        document.getElementById('alarmBtn').disabled = !state.raid || state.raid.targetId == null;
+        document.getElementById('statusText').textContent = state.raid
+          ? THEME.alertLive
+          : (state.stolen > 0 ? THEME.alertLose + ' ' + state.stolen + ' 次' : THEME.alertIdle);
+      }
+      canvas.addEventListener('pointerdown', (event) => {
+        const p = point(event);
+        const unit = findUnitAt(p.x, p.y);
+        if (!unit) return;
+        state.dragId = unit.id;
+        state.dragX = p.x;
+        state.dragY = p.y;
+        render();
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        if (state.dragId == null) return;
+        const p = point(event);
+        state.dragX = p.x;
+        state.dragY = p.y;
+        render();
+      });
+      canvas.addEventListener('pointerup', releaseDrag);
+      canvas.addEventListener('pointercancel', () => { state.dragId = null; render(); });
+      document.getElementById('spawnBtn').addEventListener('click', () => recruit());
+      document.getElementById('upgradeBtn').addEventListener('click', upgradeIncome);
+      document.getElementById('alarmBtn').addEventListener('click', blockRaid);
+      document.getElementById('resetBtn').addEventListener('click', reset);
+      reset();
+      setInterval(() => step(16), 16);
+      window.advanceTime = (ms) => step(ms);
+      window.render_game_to_text = () => JSON.stringify({
+        coordinate_system: 'canvas 390x560 grid merge yard',
+        coins: Math.floor(state.coins),
+        income: totalIncome(),
+        units: state.units.map((unit) => ({ tier: tier(unit.tier).label, slot: unit.slot })),
+        merges: state.merges,
+        blocked: state.blocked,
+        stolen: state.stolen,
+        raidActive: Boolean(state.raid),
+        slotsOpen: state.slotCount,
+      });
+    
+    })();
+  </script>
+</body>
+</html>

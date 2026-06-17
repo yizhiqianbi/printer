@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-subway-snake-shift",
+  "slug": "subway-snake-shift",
+  "title": "地铁刷卡蛇",
+  "source_file": "snake-battle-fake.html",
+  "parent_slug": "snake-battle-fake",
+  "lineage": [
+    "snake-battle-fake",
+    "subway-snake-shift"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把贪吃蛇大作战式冲榜局改成地铁通勤主题，光豆换成刷卡点，冲刺掉出票根，整体更像晚高峰换乘。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "通勤主题的蛇局二创：单指变道、长按冲刺、吃刷卡点把列车长龙冲进榜单。",
+    "core_loop": "玩家操控一列蛇形通勤列车在竖屏大厅内单指变道，持续吃掉散落的刷卡点来增长车厢长度；长按冲刺可以快速抢点，但尾部会不断掉出票根，既可能被自己回收，也会给对手留下可抢资源；只要把列车长度冲到 40 就算通勤通关。",
+    "controls": "手指在画布上拖动决定车头朝向；长按“长按冲刺”按钮或空格键进入加速；点击“重开”立即重置一局。",
+    "mechanics": [
+      "单指转向：车头始终朝最近指针方向平滑扭动，保留热门蛇局最核心的低门槛手感",
+      "冲刺掉尾：长按冲刺显著提速，但会把尾部长度逐段抖成票根豆点，形成经典风险换速度",
+      "撞身判负：只要蛇头蹭到任意蛇身就会立刻出局，逼玩家在换乘口做极短决策",
+      "Bot 冲榜：四条 AI 列车也会抢点、撞线、爆豆，场面始终维持轻度 io 压迫",
+      "短局目标：长度冲到 40 即胜，适合十几秒到几十秒的碎片复玩"
+    ],
+    "visual_language": "深蓝换乘大厅、荧蓝轨道网格、暖黄刷卡点与橙色票根，蛇身更像一串发光车厢，整体比原型更偏通勤夜色。",
+    "state_model": "state.player 保存玩家列车的头部坐标、角度、长度与轨迹；state.bots 是四条 AI 列车；state.pellets 是大厅内散落的刷卡点与票根；state.mode 在 playing/won/lost 之间切换。",
+    "share_hook": "“晚高峰我把地铁蛇冲到榜一了”这类结果文案天然适合截图传播。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入换乘高峰时段速度波动",
+      "加入站台广播倒计时",
+      "加入双蛇交错的更密车流 seed"
+    ]
+  },
+  "files": {
+    "html": "subway-snake-shift.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

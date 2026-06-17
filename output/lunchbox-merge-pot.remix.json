@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-lunchbox-merge-pot",
+  "slug": "lunchbox-merge-pot",
+  "title": "午饭合成锅",
+  "source_file": "brainrot-merge-pot.html",
+  "parent_slug": "brainrot-merge-pot",
+  "lineage": [
+    "brainrot-merge-pot",
+    "lunchbox-merge-pot"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把脑腐梗怪改成午饭配菜版，保留合成大西瓜式掉落手感和翻锅警戒线。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "午饭配菜主题的掉落合成锅：同类碰撞升级，越堆越大，别越过打包线。",
+    "core_loop": "玩家在锅口上方左右瞄准，把当前配菜球投进容器；球体会在重力与碰撞下滚动堆叠，两颗同级食材接触后合成为更大一级；持续叠高直到触碰上方打包线即失败，分数来自每次升级合成。",
+    "controls": "手指在锅口上方移动改变预览落点；点击屏幕把当前食材投下；点“重开这一锅”重置局面。",
+    "mechanics": [
+      "顶部投放：始终只有一个当前球与一个下一球提示，决策节奏非常快",
+      "刚体堆叠：球体受重力、边界与相互挤压影响，会自然滚动寻找缝隙",
+      "同级升级：只有相同等级球体能合成为更大一档，形成连锁空间管理",
+      "翻锅失败：稳定堆叠高度越过警戒线并维持一段时间即结束",
+      "短回合复玩：单局几十秒即可结束，天然适合反复开新局冲更高合成链"
+    ],
+    "visual_language": "便当午饭主题，冷青锅体配暖色食材，顶部虚线改成打包线，所有球面只用单字标签和纯色圆形表达，保持离线单文件的轻量感。",
+    "state_model": "state.pieces 保存所有活跃球体的 tier、位置、速度与合成冷却；state.next 是下一个食材等级；state.hold 记录危险线停留时长；state.mode 为 aiming/falling/lost。",
+    "share_hook": "“今天午饭合成到盒饭王了吗”这种结果文案天然能截图传播。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入连续合成 bonus",
+      "加入每日固定投放序列",
+      "加入锅体皮肤与结果卡"
+    ]
+  },
+  "files": {
+    "html": "lunchbox-merge-pot.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}

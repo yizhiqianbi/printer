@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "id": "remix-office-egg-run",
+  "slug": "office-egg-run",
+  "title": "快递柜摸鱼蛋",
+  "source_file": "brainrot-egg-run.html",
+  "parent_slug": "brainrot-egg-run",
+  "lineage": [
+    "brainrot-egg-run",
+    "office-egg-run"
+  ],
+  "created_at": "2026-06-17T05:50:57.731Z",
+  "prompt": {
+    "text": "把 Collect Brainrot Egg 的买蛋-拖回基地-孵化产币-偷蛋窗口改成办公室快递盲盒题材，保持单屏小循环。",
+    "voice_transcript": ""
+  },
+  "agent_description": {
+    "one_liner": "办公室快递盲盒二创：拿盒、拖回工位拆、持续产币，再截胡隔壁加急件。",
+    "core_loop": "玩家先花摸鱼币从快递柜传送带拿盲盒，把盒子直接拖回下方空工位开始拆；拆开的办公室摆件会持续产出摸鱼币，用于购买更高一级的盒子；与此同时，隔壁工区会周期性刷新一颗可截胡的加急件，玩家需要在窗口打开时点按钮把它拖走，补足高阶收益。",
+    "controls": "点击“拿一盒”购买当前盒子；按住传送带或截胡区里的盒子并拖到下方空工位；窗口亮起时点击“截胡隔壁件”抢下高阶包裹；点击“重开这条线”恢复开局。",
+    "mechanics": [
+      "双传送带来源：上方固定是自购快递柜，另一条则是周期性出现的截胡窗口",
+      "拖回工位：盒子必须放进空工位里才会开始拆，保留原作“买回来还得带回家”的手感",
+      "定时孵化产币：每个工位都有独立拆盒进度，完成后转成稳定秒产摆件",
+      "高阶解锁：随着场上摆件增加，自购盒子和截胡件会逐步升阶，复刻增长斜坡",
+      "满位取舍：三格工位很快会塞满，错过腾位时截胡件会直接折现，形成短期策略点"
+    ],
+    "visual_language": "办公室快递柜主题，深青背景配薄荷绿高光，蛋和怪物都改成快递盒与工位摆件，用纯色图形和单字符号保持离线单文件轻量感。",
+    "state_model": "state.eggs 保存传送带或工位中的盲盒、来源与拆盒进度；state.units 记录已拆出的摆件 tier 与工位位置；state.coins 和 incomeTotal 构成养成经济；state.raidTimer 驱动隔壁加急件窗口。",
+    "share_hook": "“工位满了只能眼看加急件折现”这种办公室失败瞬间很适合截图传播。",
+    "known_constraints": [
+      "离线单文件",
+      "移动竖屏优先",
+      "无外链素材",
+      "保持 printer artifact 契约"
+    ],
+    "next_evolution_hooks": [
+      "加入工位扩容槽位",
+      "加入随机主管巡楼打断",
+      "加入盲盒图鉴和最高摸鱼币成绩"
+    ]
+  },
+  "files": {
+    "html": "office-egg-run.html"
+  },
+  "validation": {
+    "static_checked": true,
+    "browser_checked": false,
+    "notes": []
+  }
+}
